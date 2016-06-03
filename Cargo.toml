@@ -1,0 +1,42 @@
+[package]
+name = "httpbox"
+version = "0.1.0"
+authors = ["Kevin Stone <kevinastone@gmail.com>"]
+
+
+[dependencies.iron]
+version="*"
+default-features = false
+
+[dependencies.urlencoded]
+version="*"
+
+[dependencies.logger]
+version="*"
+
+[dependencies.router]
+version="*"
+
+[dependencies.mount]
+version="*"
+
+[dependencies.persistent]
+version="*"
+
+[dependencies.staticfile]
+version="*"
+
+[dependencies.cookie]
+version="*"
+
+[dependencies.bodyparser]
+version="*"
+
+[dependencies.docopt]
+version="*"
+
+[dependencies.rustc-serialize]
+version="*"
+
+[dependencies.num_cpus]
+version="*"
