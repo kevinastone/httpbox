@@ -40,3 +40,6 @@ version="*"
 
 [dependencies.num_cpus]
 version="*"
+
+[dependencies.rand]
+version="*"
