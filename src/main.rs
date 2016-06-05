@@ -50,11 +50,14 @@ fn main() {
     } else {
         8 * ::num_cpus::get()
     };
-    println!("Listening on {}:{} with {} threads", args.flag_host, args.flag_port, threads);
-    Iron::new(app::app()).listen_with(
-        (&args.flag_host[..], args.flag_port),
-        threads,
-        Protocol::Http,
-        None
-    ).unwrap();
+    println!("Listening on {}:{} with {} threads",
+             args.flag_host,
+             args.flag_port,
+             threads);
+    Iron::new(app::app())
+        .listen_with((&args.flag_host[..], args.flag_port),
+                     threads,
+                     Protocol::Http,
+                     None)
+        .unwrap();
 }

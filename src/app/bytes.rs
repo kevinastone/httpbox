@@ -1,4 +1,5 @@
 extern crate iron;
+extern crate modifier;
 extern crate rand;
 extern crate router;
 extern crate urlencoded;
@@ -9,6 +10,8 @@ use self::iron::status;
 use self::router::Router;
 use self::rand::{Rng, XorShiftRng};
 use self::urlencoded::{UrlEncodedQuery, QueryMap};
+use self::super::stream::StreamResponse;
+
 
 pub const SEED_QUERY_PARAM: &'static str = "seed";
 
@@ -17,10 +20,9 @@ fn to_bytes(val: u32) -> [u32; 4] {
 }
 
 pub fn seed(hashmap: Option<&QueryMap>) -> Option<u32> {
-    hashmap
-    .and_then(|hashmap| hashmap.get(SEED_QUERY_PARAM))
-    .and_then(|vals| vals.first())
-    .and_then(|val| val.parse::<u32>().ok())
+    hashmap.and_then(|hashmap| hashmap.get(SEED_QUERY_PARAM))
+        .and_then(|vals| vals.first())
+        .and_then(|val| val.parse::<u32>().ok())
 }
 
 pub fn rng(seed: Option<u32>) -> XorShiftRng {
@@ -30,10 +32,9 @@ pub fn rng(seed: Option<u32>) -> XorShiftRng {
 
 pub fn bytes(req: &mut Request) -> IronResult<Response> {
 
-    let count = itry!(
-        req.extensions.get::<Router>().unwrap().find("n").unwrap_or("1024").parse::<u32>(),
-        status::BadRequest
-    );
+    let count =
+        itry!(req.extensions.get::<Router>().unwrap().find("n").unwrap_or("1024").parse::<u32>(),
+              status::BadRequest);
 
     let seed_param = seed(req.get_ref::<UrlEncodedQuery>().ok());
 
@@ -41,6 +42,23 @@ pub fn bytes(req: &mut Request) -> IronResult<Response> {
     let bytes = (0..count).map(|_| rng.gen::<u8>()).collect::<Vec<u8>>();
 
     Ok(Response::with((status::Ok, bytes)))
+}
+
+pub fn stream_bytes(req: &mut Request) -> IronResult<Response> {
+
+    let count =
+        itry!(req.extensions.get::<Router>().unwrap().find("n").unwrap_or("1024").parse::<u32>(),
+              status::BadRequest);
+
+    let seed_param = seed(req.get_ref::<UrlEncodedQuery>().ok());
+
+    let mut rng = rng(seed_param);
+
+
+    let bytes = (0..count).map(|_| rng.gen::<u8>()).collect::<Vec<u8>>();
+
+    let reader = StreamResponse::new(bytes);
+    Ok(Response::with((status::Ok, reader)))
 }
 
 #[cfg(test)]
@@ -86,13 +104,13 @@ mod tests {
 
     mod rng {
         use super::super::*;
-        use super::super::rand::{Rng};
+        use super::super::rand::Rng;
 
         #[test]
         fn rng_no_seed() {
 
             rng(None);
-        }        
+        }
 
         #[test]
         fn rng_seed_consistent() {
@@ -102,6 +120,6 @@ mod tests {
             assert_eq!(rng.next_u32(), 1238u32);
             assert_eq!(rng.next_u32(), 2537104u32);
             assert_eq!(rng.next_u32(), 1234u32);
-        }        
+        }
     }
 }
