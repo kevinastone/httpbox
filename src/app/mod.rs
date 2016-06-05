@@ -4,7 +4,7 @@ use self::router::Router;
 
 mod bytes;
 mod headers;
-mod hello;
+mod index;
 mod ip;
 mod random;
 mod status_code;
@@ -13,7 +13,7 @@ mod user_agent;
 
 pub fn app() -> Router {
     let mut router = Router::new();
-    router.get("/", hello::hello);
+    router.get("/", index::index);
     router.get("/headers", headers::headers);
     router.get("/ip", ip::ip);
     router.get("/bytes/:n", bytes::bytes);
