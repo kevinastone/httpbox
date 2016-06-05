@@ -4,6 +4,7 @@ use self::router::Router;
 
 mod bytes;
 mod hello;
+mod random;
 mod status_code;
 mod stream;
 mod user_agent;
