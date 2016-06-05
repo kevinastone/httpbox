@@ -26,9 +26,6 @@ version="*"
 [dependencies.staticfile]
 version="*"
 
-[dependencies.cookie]
-version="*"
-
 [dependencies.bodyparser]
 version="*"
 

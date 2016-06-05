@@ -5,7 +5,7 @@ extern crate num_cpus;
 extern crate rustc_serialize;
 
 use docopt::Docopt;
-use iron::{Iron, Protocol};
+use iron::Protocol;
 
 mod app;
 
@@ -54,7 +54,7 @@ fn main() {
              args.flag_host,
              args.flag_port,
              threads);
-    Iron::new(app::app())
+    app::app()
         .listen_with((&args.flag_host[..], args.flag_port),
                      threads,
                      Protocol::Http,
