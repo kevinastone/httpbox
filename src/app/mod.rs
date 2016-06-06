@@ -6,7 +6,6 @@ use self::iron::middleware::Chain;
 use self::router::Router;
 
 mod bytes;
-mod cookie;
 mod cookies;
 mod headers;
 mod index;
@@ -21,6 +20,7 @@ pub fn app() -> Iron<Chain> {
     let mut router = Router::new();
     router.get("/", index::index);
     router.get("/cookies", cookies::cookies);
+    router.get("/cookies/set", cookies::set_cookies);
     router.get("/headers", headers::headers);
     router.get("/ip", ip::ip);
     router.get("/bytes/:n", bytes::bytes);
