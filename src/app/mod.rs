@@ -26,6 +26,7 @@ pub fn app() -> Iron<Chain> {
     router.get("/headers", headers::headers);
     router.get("/ip", ip::ip);
     router.get("/redirect-to", redirect::to);
+    router.get("/relative-redirect/:n", redirect::relative);
     router.get("/stream-bytes/:n", bytes::stream_bytes);
     router.get("/status/:code", status_code::status_code);
     router.get("/user-agent", user_agent::user_agent);

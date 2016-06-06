@@ -1,10 +1,13 @@
 extern crate iron;
+extern crate router;
 extern crate urlencoded;
 
 use self::iron::{Request, Response, IronResult, Url};
 use self::iron::Plugin;
-use self::iron::modifiers::Redirect;
+use self::iron::headers;
+use self::iron::modifiers::{Redirect, Header};
 use self::iron::status;
+use self::router::Router;
 use self::urlencoded::UrlEncodedQuery;
 
 
@@ -19,4 +22,24 @@ pub fn to(req: &mut Request) -> IronResult<Response> {
         .and_then(|url| Url::parse(url).ok()));
 
     Ok(Response::with((status::Found, Redirect(url))))
+}
+
+pub fn relative(req: &mut Request) -> IronResult<Response> {
+
+    let mut code = itry!(req.extensions
+        .get::<Router>()
+        .unwrap()
+        .find("n")
+        .unwrap_or("1")
+        .parse::<u16>());
+
+    code = code - 1;
+
+    let url = if code <= 0 {
+        String::from("/")
+    } else {
+        format!("/relative-redirect/{}", code)
+    };
+
+    Ok(Response::with((status::Found, Header(headers::Location(url)))))
 }
