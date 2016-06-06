@@ -46,6 +46,11 @@ pub fn relative(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Found, Header(headers::Location(url)))))
 }
 
+pub fn redirect(req: &mut Request) -> IronResult<Response> {
+
+    relative(req)
+}
+
 pub fn absolute(req: &mut Request) -> IronResult<Response> {
 
     let mut code = itry!(req.extensions
