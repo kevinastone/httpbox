@@ -2,10 +2,12 @@ extern crate iron;
 extern crate router;
 
 use self::iron::Iron;
+use self::iron::Handler;
 use self::iron::middleware::Chain;
 use self::router::Router;
 
 mod bytes;
+mod cache;
 mod cookies;
 mod headers;
 mod index;
@@ -16,11 +18,12 @@ mod status_code;
 mod stream;
 mod user_agent;
 
-pub fn app() -> Iron<Chain> {
+pub fn app() -> Iron<Box<Handler>> {
 
     let mut router = Router::new();
     router.get("/", index::index);
     router.get("/bytes/:n", bytes::bytes);
+    router.get("/cache", cache::cache);
     router.get("/cookies", cookies::cookies);
     router.get("/cookies/set", cookies::set_cookies);
     router.get("/headers", headers::headers);
@@ -34,5 +37,5 @@ pub fn app() -> Iron<Chain> {
     router.get("/user-agent", user_agent::user_agent);
 
     let chain = Chain::new(router);
-    Iron::new(chain)
+    Iron::new(Box::new(chain))
 }
