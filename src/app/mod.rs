@@ -24,6 +24,7 @@ pub fn app() -> Iron<Box<Handler>> {
     router.get("/", index::index);
     router.get("/bytes/:n", bytes::bytes);
     router.get("/cache", cache::cache);
+    router.get("/cache/:n", cache::set_cache);
     router.get("/cookies", cookies::cookies);
     router.get("/cookies/set", cookies::set_cookies);
     router.get("/headers", headers::headers);
