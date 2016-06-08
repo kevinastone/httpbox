@@ -6,6 +6,7 @@ use self::iron::Handler;
 use self::iron::middleware::Chain;
 use self::router::Router;
 
+mod auth;
 mod bytes;
 mod cache;
 mod cookies;
@@ -22,6 +23,7 @@ pub fn app() -> Iron<Box<Handler>> {
 
     let mut router = Router::new();
     router.get("/", index::index);
+    router.get("/basic-auth/:user/:passwd", auth::basic);
     router.get("/bytes/:n", bytes::bytes);
     router.get("/cache", cache::cache);
     router.get("/cache/:n", cache::set_cache);
