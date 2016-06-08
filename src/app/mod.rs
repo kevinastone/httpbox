@@ -37,6 +37,7 @@ pub fn app() -> Iron<Box<Handler>> {
     router.get("/absolute-redirect/:n", redirect::absolute);
     router.get("/stream-bytes/:n", bytes::stream_bytes);
     router.get("/relative-redirect/:n", redirect::relative);
+    router.get("/response-headers", headers::response_headers);
     router.get("/status/:code", status_code::status_code);
     router.get("/user-agent", user_agent::user_agent);
 
