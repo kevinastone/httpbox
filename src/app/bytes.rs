@@ -1,5 +1,4 @@
 extern crate iron;
-extern crate modifier;
 extern crate rand;
 extern crate router;
 extern crate urlencoded;
