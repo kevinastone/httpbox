@@ -24,6 +24,7 @@ pub fn app() -> Iron<Box<Handler>> {
     let mut router = Router::new();
     router.get("/", index::index);
     router.get("/basic-auth/:user/:passwd", auth::basic);
+    router.get("/bearer-auth/:token", auth::bearer);
     router.get("/bytes/:n", bytes::bytes);
     router.get("/cache", cache::cache);
     router.get("/cache/:n", cache::set_cache);
