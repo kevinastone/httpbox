@@ -43,3 +43,6 @@ version="*"
 
 [dependencies.modifier]
 version="*"
+
+[dev-dependencies.iron-test]
+version="*"

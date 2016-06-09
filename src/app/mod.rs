@@ -1,7 +1,6 @@
 extern crate iron;
 extern crate router;
 
-use self::iron::Iron;
 use self::iron::Handler;
 use self::iron::middleware::Chain;
 
@@ -22,7 +21,7 @@ mod user_agent;
 use self::routes::Routes;
 
 
-pub fn app() -> Iron<Box<Handler>> {
+pub fn app() -> Box<Handler> {
 
     let mut routes = Routes::new();
     routes.get("/", index::index);
@@ -45,5 +44,5 @@ pub fn app() -> Iron<Box<Handler>> {
     routes.get("/user-agent", user_agent::user_agent);
 
     let chain = Chain::new(routes.to_router());
-    Iron::new(Box::new(chain))
+    Box::new(chain)
 }
