@@ -49,7 +49,7 @@ mod test {
     extern crate iron_test;
 
     use super::super::app;
-    use iron::{Headers};
+    use iron::Headers;
     use self::iron_test::{request, response};
 
     #[test]

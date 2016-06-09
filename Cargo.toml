@@ -46,3 +46,6 @@ version="*"
 
 [dev-dependencies.iron-test]
 version="*"
+
+[dev-dependencies.time]
+version="*"
