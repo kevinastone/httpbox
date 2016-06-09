@@ -42,3 +42,41 @@ pub fn stream_bytes(req: &mut Request) -> IronResult<Response> {
     let reader = StreamResponse::new(bytes);
     Ok(Response::with((status::Ok, reader)))
 }
+
+#[cfg(test)]
+mod test {
+
+    extern crate iron_test;
+
+    use super::super::app;
+    use iron::{Headers};
+    use self::iron_test::{request, response};
+
+    #[test]
+    fn test_bytes() {
+
+        let app = app();
+
+        let res = request::get("http://localhost:3000/bytes/4?seed=1234",
+                               Headers::new(),
+                               &app)
+            .unwrap();
+
+        let result_body = response::extract_body_to_bytes(res);
+        assert_eq!(result_body, [148, 214, 144, 210])
+    }
+
+    #[test]
+    fn test_stream_bytes() {
+
+        let app = app();
+
+        let res = request::get("http://localhost:3000/stream-bytes/4?seed=1234",
+                               Headers::new(),
+                               &app)
+            .unwrap();
+
+        let result_body = response::extract_body_to_bytes(res);
+        assert_eq!(result_body, [148, 214, 144, 210])
+    }
+}
