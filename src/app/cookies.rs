@@ -39,7 +39,6 @@ pub fn set_cookies(req: &mut Request) -> IronResult<Response> {
 mod test {
 
     extern crate iron_test;
-    extern crate time;
 
     use super::super::app;
     use super::iron::headers;

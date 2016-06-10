@@ -32,7 +32,6 @@ pub fn response_headers(req: &mut Request) -> IronResult<Response> {
 mod test {
 
     extern crate iron_test;
-    extern crate time;
 
     use super::super::app;
     use iron::Headers;
