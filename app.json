@@ -1,0 +1,10 @@
+{
+  "name": "HTTPBox",
+  "description": "A http test service",
+  "repository": "https://github.com/kevinastone/httpbox",
+  "success_url": "/",
+  "keywords": ["rust", "iron"],
+  "buildpacks": [{
+    "url": "https://github.com/Hoverbear/heroku-buildpack-rust"
+  }]
+}
