@@ -18,8 +18,8 @@ impl StreamResponse {
 
 impl WriteBody for StreamResponse {
     fn write_body(&mut self, res: &mut ResponseBody) -> io::Result<()> {
-        for byte in self.data.clone() {
-            try!(res.write(&[byte]));
+        for byte in self.data.iter() {
+            try!(res.write(&[*byte]));
             try!(res.flush());
         }
 

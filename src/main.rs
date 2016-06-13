@@ -1,6 +1,8 @@
 extern crate docopt;
 #[macro_use(itry, iexpect)]
 extern crate iron;
+#[macro_use]
+extern crate lazy_static;
 extern crate num_cpus;
 extern crate rustc_serialize;
 

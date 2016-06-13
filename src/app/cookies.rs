@@ -1,4 +1,5 @@
 extern crate iron;
+extern crate lazy_static;
 extern crate urlencoded;
 
 use self::iron::Plugin;
@@ -9,11 +10,16 @@ use self::iron::status;
 use self::urlencoded::QueryMap;
 use self::urlencoded::UrlEncodedQuery;
 
+lazy_static! {
+    static ref EMPTY_COOKIES: headers::Cookie = headers::Cookie(Vec::new());
+    static ref EMPTY_QUERYMAP: QueryMap = QueryMap::new();
+}
+
+
 pub fn cookies(req: &mut Request) -> IronResult<Response> {
     let cookies = req.headers
         .get::<headers::Cookie>()
-        .and_then(|c| Some(c.clone()))
-        .unwrap_or_else(|| headers::Cookie(Vec::new()))
+        .unwrap_or(&EMPTY_COOKIES)
         .iter()
         .map(|c| format!("{}", c))
         .collect::<Vec<String>>()
@@ -24,8 +30,7 @@ pub fn cookies(req: &mut Request) -> IronResult<Response> {
 pub fn set_cookies(req: &mut Request) -> IronResult<Response> {
     let cookies = req.get_ref::<UrlEncodedQuery>()
         .ok()
-        .and_then(|c| Some(c.clone()))
-        .unwrap_or_else(|| QueryMap::new())
+        .unwrap_or(&EMPTY_QUERYMAP)
         .iter()
         .map(|(k, v)| headers::CookiePair::new(k.to_owned(), v.first().unwrap().to_owned()))
         .collect::<Vec<headers::CookiePair>>();

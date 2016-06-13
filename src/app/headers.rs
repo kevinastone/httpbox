@@ -1,4 +1,5 @@
 extern crate iron;
+extern crate lazy_static;
 extern crate urlencoded;
 
 use self::iron::{Request, Response, IronResult};
@@ -6,6 +7,10 @@ use self::iron::Plugin;
 use self::iron::status;
 use self::urlencoded::QueryMap;
 use self::urlencoded::UrlEncodedQuery;
+
+lazy_static! {
+    static ref EMPTY_QUERYMAP: QueryMap = QueryMap::new();
+}
 
 pub fn headers(req: &mut Request) -> IronResult<Response> {
     let headers = req.headers.iter().map(|h| format!("{}", h)).collect::<Vec<String>>().join("\n");
@@ -15,8 +20,7 @@ pub fn headers(req: &mut Request) -> IronResult<Response> {
 pub fn response_headers(req: &mut Request) -> IronResult<Response> {
     let headers = req.get_ref::<UrlEncodedQuery>()
         .ok()
-        .and_then(|c| Some(c.clone()))
-        .unwrap_or_else(|| QueryMap::new());
+        .unwrap_or(&EMPTY_QUERYMAP);
 
     let mut res = Response::with(status::Ok);
     for (name, value) in headers {

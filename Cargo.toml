@@ -44,6 +44,9 @@ version="*"
 [dependencies.modifier]
 version="*"
 
+[dependencies.lazy_static]
+version="*"
+
 [dev-dependencies.iron-test]
 version="*"
 
