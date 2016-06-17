@@ -2,9 +2,60 @@ extern crate iron;
 extern crate router;
 
 use self::iron::{Request, Response, IronResult};
+use self::iron::error::HttpError;
 use self::iron::headers;
+use self::iron::modifiers::Header;
 use self::iron::status;
 use self::router::Router;
+use std::fmt;
+use std::str::FromStr;
+
+const BASIC_REALM_PREAMBLE: &'static str = "Basic realm=";
+pub const REALM: &'static str = "User Visible Realm";
+
+#[derive(Clone, Debug, PartialEq)]
+struct BasicRealm(pub String);
+
+impl BasicRealm {
+    fn fmt_realm(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        try!(f.write_str(BASIC_REALM_PREAMBLE));
+        try!(f.write_str("\""));
+        try!(f.write_str(&self.0));
+        try!(f.write_str("\""));
+        Ok(())
+    }
+}
+
+impl FromStr for BasicRealm {
+    type Err = HttpError;
+
+    fn from_str(s: &str) -> Result<BasicRealm, HttpError> {
+        if s.starts_with(BASIC_REALM_PREAMBLE) {
+            Ok(BasicRealm(s[BASIC_REALM_PREAMBLE.len() + 1..s.len() - 1].to_owned()))
+        } else {
+            Err(HttpError::Header)
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+struct WWWAuthenticate(BasicRealm);
+
+impl headers::Header for WWWAuthenticate {
+    fn header_name() -> &'static str {
+        "WWW-Authenticate"
+    }
+
+    fn parse_header(raw: &[Vec<u8>]) -> Result<Self, HttpError> {
+        headers::parsing::from_one_raw_str(raw).map(WWWAuthenticate)
+    }
+}
+
+impl headers::HeaderFormat for WWWAuthenticate {
+    fn fmt_header(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        self.0.fmt_realm(f)
+    }
+}
 
 pub fn basic(req: &mut Request) -> IronResult<Response> {
 
@@ -17,9 +68,10 @@ pub fn basic(req: &mut Request) -> IronResult<Response> {
         .filter(|header| header.username == username && header.password == password)
         .next()
         .is_some() {
-        Ok(Response::with(status::Status::Ok))
+        Ok(Response::with((status::Status::Ok, "Authenticated")))
     } else {
-        Ok(Response::with(status::Status::Unauthorized))
+        Ok(Response::with((status::Status::Unauthorized,
+                           Header(WWWAuthenticate(BasicRealm(REALM.to_owned()))))))
     }
 }
 
@@ -33,7 +85,7 @@ pub fn bearer(req: &mut Request) -> IronResult<Response> {
         .filter(|header| header.token == token)
         .next()
         .is_some() {
-        Ok(Response::with(status::Status::Ok))
+        Ok(Response::with((status::Status::Ok, "Authenticated")))
     } else {
         Ok(Response::with(status::Status::Unauthorized))
     }
@@ -44,6 +96,7 @@ mod test {
 
     extern crate iron_test;
 
+    use super::REALM;
     use super::super::app;
     use super::iron::headers;
     use iron::{Headers, status};
@@ -59,7 +112,13 @@ mod test {
                                &app)
             .unwrap();
 
-        assert_eq!(res.status.unwrap(), status::Unauthorized)
+        assert_eq!(res.status.unwrap(), status::Unauthorized);
+        assert_eq!(res.headers
+                       .get_raw("WWW-Authenticate")
+                       .map(|v| &v[0])
+                       .and_then(|v| String::from_utf8(v.clone()).ok())
+                       .unwrap(),
+                   format!("Basic realm=\"{}\"", REALM))
     }
 
     #[test]
@@ -95,7 +154,13 @@ mod test {
                                &app)
             .unwrap();
 
-        assert_eq!(res.status.unwrap(), status::Unauthorized)
+        assert_eq!(res.status.unwrap(), status::Unauthorized);
+        assert_eq!(res.headers
+                       .get_raw("WWW-Authenticate")
+                       .map(|v| &v[0])
+                       .and_then(|v| String::from_utf8(v.clone()).ok())
+                       .unwrap(),
+                   format!("Basic realm=\"{}\"", REALM))
     }
 
     #[test]
