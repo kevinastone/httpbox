@@ -44,6 +44,9 @@ version="*"
 [dependencies.modifier]
 version="*"
 
+[dependencies.horrorshow]
+version="*"
+
 [dependencies.lazy_static]
 version="*"
 

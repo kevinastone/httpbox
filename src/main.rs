@@ -1,4 +1,6 @@
 extern crate docopt;
+#[macro_use]
+extern crate horrorshow;
 #[macro_use(itry, iexpect)]
 extern crate iron;
 #[macro_use]
