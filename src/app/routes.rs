@@ -49,12 +49,19 @@ impl Route {
         }
 
         let mut path = self.path.to_owned();
+        let mut query: Vec<String> = vec![];
 
         for (key, value) in self.example_params.iter() {
             let param = format!(":{}", key);
             if path.contains(&param[..]) {
                 path = path.replace(&param[..], value);
+            } else {
+                query.push(format!("{}={}", key, value))
             }
+        }
+
+        if !query.is_empty() {
+            path = format!("{}?{}", path, query.join("&"));
         }
         Some(path)
     }
