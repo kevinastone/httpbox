@@ -18,6 +18,14 @@ impl Handler for Index {
 
         let body = itry!(html! {
             html {
+                head {
+                    style {
+                        : "
+                        ul { list-style-type: none; }
+                        code { font-weight: bold; }
+                        "
+                    }
+                }
                 body {
                     h1 {
                         : "httpbox: HTTP Testing Service"
@@ -30,10 +38,14 @@ impl Handler for Index {
                             li {
                                 @ if let Some(example_path) = route.example_path() {
                                     a(href=example_path) {
-                                        : route.path
+                                        code {
+                                            : route.path
+                                        }
                                     }
                                 } else {
-                                    : route.path
+                                    code {
+                                        : route.path
+                                    }
                                 }
                                 span { : " - " }
                                 span { : route.description }

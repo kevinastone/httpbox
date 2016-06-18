@@ -2,6 +2,7 @@ extern crate iron;
 extern crate router;
 
 use self::iron::Handler;
+use self::iron::method::Method;
 use self::iron::middleware::Chain;
 
 mod auth;
@@ -36,6 +37,18 @@ pub fn app() -> Box<Handler> {
         .set_description("Returns GET data")
         .add_example_param("key", "val")
         .handle(method::get));
+    routes.add(Route::new("/post")
+        .set_method(Method::Post)
+        .set_description("Returns POST data")
+        .handle(method::post));
+    routes.add(Route::new("/put")
+        .set_method(Method::Put)
+        .set_description("Returns PUT data")
+        .handle(method::put));
+    routes.add(Route::new("/delete")
+        .set_method(Method::Delete)
+        .set_description("Returns DELETE data")
+        .handle(method::delete));
     routes.add(Route::new("/status/:code")
         .set_description("Returns given HTTP Status code")
         .add_example_param("code", "418")
