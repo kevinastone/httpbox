@@ -9,6 +9,7 @@ mod auth;
 mod bytes;
 mod cache;
 mod cookies;
+mod delay;
 mod headers;
 mod index;
 mod ip;
@@ -92,6 +93,10 @@ pub fn app() -> Box<Handler> {
     routes.add(Route::new("/cookies/set")
         .set_description("Sets one or more simple cookies")
         .handle(cookies::set_cookies));
+    routes.add(Route::new("/delay/:n")
+        .set_description("Delays responding for min(n, 10) seconds")
+        .add_example_param("n", "3")
+        .handle(delay::delay));
     routes.add(Route::new("/cache")
         .set_description("Returns 200 unless an If-Modified-Since or If-None-Match header is \
                           provided, when it returns a 304")
