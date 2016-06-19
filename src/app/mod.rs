@@ -41,6 +41,10 @@ pub fn app() -> Box<Handler> {
         .set_method(Method::Post)
         .set_description("Returns POST data")
         .handle(method::post));
+    routes.add(Route::new("/patch")
+        .set_method(Method::Patch)
+        .set_description("Returns PUT data")
+        .handle(method::patch));
     routes.add(Route::new("/put")
         .set_method(Method::Put)
         .set_description("Returns PUT data")

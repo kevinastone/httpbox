@@ -54,6 +54,20 @@ pub fn put(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((status::Ok, body_params.join("\n"))))
 }
 
+pub fn patch(req: &mut Request) -> IronResult<Response> {
+
+    let mut body_params: Vec<String> = vec![];
+    for (key, values) in req.get_ref::<UrlEncodedBody>()
+        .ok()
+        .unwrap_or(&EMPTY_QUERYMAP)
+        .iter() {
+
+        body_params.push(format!("{} = {}", key, values.join(", ")))
+    }
+
+    Ok(Response::with((status::Ok, body_params.join("\n"))))
+}
+
 pub fn delete(req: &mut Request) -> IronResult<Response> {
 
     let mut body_params: Vec<String> = vec![];
@@ -164,6 +178,38 @@ mod test {
                                headers,
                                "key=val&other=something&key=another",
                                &app)
+            .unwrap();
+
+        let result_body = response::extract_body_to_string(res);
+        let result: HashSet<&str> = HashSet::from_iter(result_body.split("\n"));
+        let expected = HashSet::from_iter(vec!["key = val, another", "other = something"]);
+        assert_eq!(expected, result)
+    }
+
+    #[test]
+    fn test_patch() {
+
+        let app = app();
+
+        let mut headers = Headers::new();
+        headers.set(headers::ContentType::form_url_encoded());
+        let res = request::patch("http://localhost:3000/patch", headers, "key=val", &app).unwrap();
+
+        let result_body = response::extract_body_to_string(res);
+        assert_eq!(result_body, "key = val")
+    }
+
+    #[test]
+    fn test_multi_patch() {
+
+        let app = app();
+
+        let mut headers = Headers::new();
+        headers.set(headers::ContentType::form_url_encoded());
+        let res = request::patch("http://localhost:3000/patch",
+                                 headers,
+                                 "key=val&other=something&key=another",
+                                 &app)
             .unwrap();
 
         let result_body = response::extract_body_to_string(res);
