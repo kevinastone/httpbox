@@ -1,21 +1,59 @@
 extern crate iron;
+extern crate modifier;
 extern crate rand;
 extern crate router;
 extern crate urlencoded;
 
 use self::iron::{Request, Response, IronResult};
 use self::iron::Plugin;
+use self::iron::headers::ContentLength;
+use self::iron::response::{ResponseBody, WriteBody};
 use self::iron::status;
+use self::modifier::Modifier;
 use self::rand::Rng;
 use self::router::Router;
 use self::urlencoded::UrlEncodedQuery;
-use self::super::stream::StreamResponse;
 use self::super::random::RandomGenerator;
 use super::util::parse_query_value;
+use std::io::{self, Write};
 
 
 pub const CHUNK_SIZE_QUERY_PARAM: &'static str = "chunk_size";
 pub const SEED_QUERY_PARAM: &'static str = "seed";
+
+
+pub struct ChunkedByteResponse {
+    data: Vec<u8>,
+    chunk_size: usize,
+}
+
+impl ChunkedByteResponse {
+    pub fn new(data: Vec<u8>, chunk_size: usize) -> Self {
+        ChunkedByteResponse {
+            data: data,
+            chunk_size: chunk_size,
+        }
+    }
+}
+
+impl WriteBody for ChunkedByteResponse {
+    fn write_body(&mut self, res: &mut ResponseBody) -> io::Result<()> {
+
+        for chunk in self.data.chunks(self.chunk_size) {
+            try!(res.write(chunk));
+            try!(res.flush());
+        }
+
+        Ok(())
+    }
+}
+
+impl Modifier<Response> for ChunkedByteResponse {
+    fn modify(self, res: &mut Response) {
+        res.headers.set(ContentLength(self.data.len() as u64));
+        res.body = Some(Box::new(self));
+    }
+}
 
 
 pub fn bytes(req: &mut Request) -> IronResult<Response> {
@@ -46,9 +84,9 @@ pub fn stream_bytes(req: &mut Request) -> IronResult<Response> {
 
     let mut rng = RandomGenerator::new(seed_param);
 
-    let iter = (0..count).map(|_| rng.gen::<u8>()).collect::<Vec<u8>>();
+    let iter = (0..count).map(|_| rng.gen::<u8>()).collect();
 
-    let reader = StreamResponse::new(iter, chunk_size);
+    let reader = ChunkedByteResponse::new(iter, chunk_size);
     Ok(Response::with((status::Ok, reader)))
 }
 
