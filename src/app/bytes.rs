@@ -55,8 +55,7 @@ impl Modifier<Response> for ChunkedByteResponse {
     }
 }
 
-
-pub fn bytes(req: &mut Request) -> IronResult<Response> {
+fn get_bytes(req: &mut Request) -> IronResult<Vec<u8>> {
 
     let count =
         itry!(req.extensions.get::<Router>().unwrap().find("n").unwrap_or("1024").parse::<u32>(),
@@ -65,28 +64,25 @@ pub fn bytes(req: &mut Request) -> IronResult<Response> {
     let seed_param = parse_query_value(req.get_ref::<UrlEncodedQuery>().ok(), SEED_QUERY_PARAM);
 
     let mut rng = RandomGenerator::new(seed_param);
-    let bytes = (0..count).map(|_| rng.gen::<u8>()).collect::<Vec<u8>>();
 
+    Ok((0..count).map(|_| rng.gen::<u8>()).collect::<Vec<u8>>())
+}
+
+
+pub fn bytes(req: &mut Request) -> IronResult<Response> {
+
+    let bytes = try!(get_bytes(req));
     Ok(Response::with((status::Ok, bytes)))
 }
 
 pub fn stream_bytes(req: &mut Request) -> IronResult<Response> {
 
-    let count =
-        itry!(req.extensions.get::<Router>().unwrap().find("n").unwrap_or("1024").parse::<u32>(),
-              status::BadRequest);
-
+    let bytes = try!(get_bytes(req));
     let chunk_size = parse_query_value(req.get_ref::<UrlEncodedQuery>().ok(),
                                        CHUNK_SIZE_QUERY_PARAM)
         .unwrap_or(1);
 
-    let seed_param = parse_query_value(req.get_ref::<UrlEncodedQuery>().ok(), SEED_QUERY_PARAM);
-
-    let mut rng = RandomGenerator::new(seed_param);
-
-    let iter = (0..count).map(|_| rng.gen::<u8>()).collect();
-
-    let reader = ChunkedByteResponse::new(iter, chunk_size);
+    let reader = ChunkedByteResponse::new(bytes, chunk_size);
     Ok(Response::with((status::Ok, reader)))
 }
 
