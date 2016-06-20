@@ -8,18 +8,23 @@ use std::io::{self, Write};
 
 pub struct StreamResponse {
     data: Vec<u8>,
+    chunk_size: usize,
 }
 
 impl StreamResponse {
-    pub fn new(data: Vec<u8>) -> Self {
-        StreamResponse { data: data }
+    pub fn new(data: Vec<u8>, chunk_size: usize) -> Self {
+        StreamResponse {
+            data: data,
+            chunk_size: chunk_size,
+        }
     }
 }
 
 impl WriteBody for StreamResponse {
     fn write_body(&mut self, res: &mut ResponseBody) -> io::Result<()> {
-        for byte in self.data.iter() {
-            try!(res.write(&[*byte]));
+
+        for chunk in self.data.chunks(self.chunk_size) {
+            try!(res.write(chunk));
             try!(res.flush());
         }
 

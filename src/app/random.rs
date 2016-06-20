@@ -1,11 +1,7 @@
 extern crate rand;
-extern crate urlencoded;
 
 use self::rand::{Rng, XorShiftRng};
-use self::urlencoded::QueryMap;
 
-
-pub const SEED_QUERY_PARAM: &'static str = "seed";
 
 fn to_bytes(val: u32) -> [u32; 4] {
     [val, val, val, val]
@@ -28,52 +24,8 @@ impl Rng for RandomGenerator {
     }
 }
 
-pub fn seed(hashmap: Option<&QueryMap>) -> Option<u32> {
-    hashmap.and_then(|hashmap| hashmap.get(SEED_QUERY_PARAM))
-        .and_then(|vals| vals.first())
-        .and_then(|val| val.parse::<u32>().ok())
-}
-
 #[cfg(test)]
 mod tests {
-
-    mod seed {
-
-        use super::super::*;
-        use super::super::urlencoded::QueryMap;
-
-        #[test]
-        fn parse_seed_missing() {
-            let query = QueryMap::new();
-
-            assert_eq!(seed(Some(&query)), None)
-        }
-
-        #[test]
-        fn parse_seed_empty() {
-            let mut query = QueryMap::new();
-            query.insert(String::from(SEED_QUERY_PARAM), vec![]);
-
-            assert_eq!(seed(Some(&query)), None)
-        }
-
-        #[test]
-        fn parse_seed_invalid() {
-            let mut query = QueryMap::new();
-            query.insert(String::from(SEED_QUERY_PARAM), vec![String::from("abcd")]);
-
-            assert_eq!(seed(Some(&query)), None)
-        }
-
-        #[test]
-        fn parse_seed_valid() {
-            let mut query = QueryMap::new();
-            query.insert(String::from(SEED_QUERY_PARAM), vec![String::from("1234")]);
-
-            assert_eq!(seed(Some(&query)), Some(1234))
-        }
-
-    }
 
     mod rng {
         use super::super::*;

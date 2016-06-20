@@ -20,6 +20,7 @@ mod routes;
 mod status_code;
 mod stream;
 mod user_agent;
+mod util;
 
 use self::index::IndexBuilder;
 use self::router::Router;
@@ -111,7 +112,7 @@ pub fn app() -> Box<Handler> {
         .add_example_param("n", "256")
         .handle(bytes::bytes));
     routes.add(Route::new("/stream-bytes/:n")
-        .set_description("Streams n random bytes of binary data, accepts optional seed parameter")
+        .set_description("Streams n random bytes of binary data, accepts optional seed and chunk_size integer parameters")
         .add_example_param("n", "256")
         .handle(bytes::stream_bytes));
 
