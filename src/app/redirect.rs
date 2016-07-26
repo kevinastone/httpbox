@@ -105,8 +105,7 @@ mod test {
         assert_eq!(res.status.unwrap(), status::Found);
 
         let location = res.headers.get::<headers::Location>().unwrap();
-        // TODO: Fix with new version of Iron that doesn't include the port
-        assert_eq!(location.0, "http://example.com:80/")
+        assert_eq!(location.0, "http://example.com/")
     }
 
     #[test]
