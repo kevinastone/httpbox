@@ -51,7 +51,9 @@ version="*"
 version="*"
 
 [dev-dependencies.iron-test]
-version="^0.4.0"
+# version="^0.4.0"
+git="https://github.com/reem/iron-test"
+rev="86341e56bc4c719e69991c022f4d5b71fbf9c080"
 
 [dev-dependencies.time]
 version="*"

@@ -31,9 +31,7 @@ mod test {
         assert_eq!(result_body, "iron-test")
     }
 
-    // Broken because iron-test overrides the user-agent
     #[test]
-    #[ignore]
     fn test_user_agent_custom() {
 
         let app = app();
