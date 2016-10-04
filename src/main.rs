@@ -14,21 +14,7 @@ use iron::{Iron, Protocol};
 mod app;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
-const USAGE: &'static str = "
-Httpbox.
-
-Usage:
-  httpbox [--host=<host>] [--port=<port>] [--threads=<threads>]
-  httpbox (-h | --help)
-  httpbox --version
-
-Options:
-  -h --help             Show this screen.
-  --version             Show version.
-  --host=<host>         Host address to listen on [default: localhost]
-  --port=<port>         Port to listen on [default: 3000]
-  --threads=<threads>   Number of threads to process requests
-";
+const NAME: &'static str = env!("CARGO_PKG_NAME");
 
 #[derive(Debug, RustcDecodable)]
 struct Args {
@@ -38,14 +24,27 @@ struct Args {
     flag_threads: usize,
 }
 
+macro_rules! usage {( $name:expr ) => (format!("
+Usage:
+  {name} [--host=<host>] [--port=<port>] [--threads=<threads>]
+  {name} (-h | --help)
+  {name} --version
+
+Options:
+  -h --help             Show this screen.
+  --version             Show version.
+  --host=<host>         Host address to listen on [default: localhost]
+  --port=<port>         Port to listen on [default: 3000]
+  --threads=<threads>   Number of threads to process requests
+", name=$name))}
 
 fn main() {
-    let args: Args = Docopt::new(USAGE)
+    let args: Args = Docopt::new(usage!(NAME))
         .and_then(|d| d.decode())
         .unwrap_or_else(|e| e.exit());
 
     if args.flag_version {
-        println!("httpbox v{}", VERSION);
+        println!("{name} v{version}", name = NAME, version = VERSION);
         return;
     }
 
