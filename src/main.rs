@@ -1,4 +1,4 @@
-extern crate docopt;
+extern crate clap;
 #[macro_use]
 extern crate horrorshow;
 #[macro_use(itry, iexpect)]
@@ -8,59 +8,64 @@ extern crate lazy_static;
 extern crate num_cpus;
 extern crate rustc_serialize;
 
-use docopt::Docopt;
+use clap::{App, Arg, Shell};
 use iron::{Iron, Protocol};
+use std::io;
 
 mod app;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const NAME: &'static str = env!("CARGO_PKG_NAME");
 
-#[derive(Debug, RustcDecodable)]
-struct Args {
-    flag_host: String,
-    flag_port: u16,
-    flag_version: bool,
-    flag_threads: usize,
+fn cli() -> App<'static, 'static> {
+    App::new(NAME)
+        .version(VERSION)
+        .arg(Arg::with_name("host")
+            .short("h")
+            .long("host")
+            .value_name("HOST")
+            .takes_value(true)
+            .default_value("localhost")
+            .help("Host address to listen on"))
+        .arg(Arg::with_name("port")
+            .short("p")
+            .long("port")
+            .value_name("PORT")
+            .takes_value(true)
+            .default_value("3000")
+            .help("Port to listen on"))
+        .arg(Arg::with_name("threads")
+            .long("threads")
+            .value_name("THREADS")
+            .takes_value(true)
+            .help("Number of threads to process requests"))
+        .arg(Arg::with_name("completions")
+            .long("completions")
+            .takes_value(true)
+            .value_name("SHELL")
+            .hidden(true)
+            .possible_values(&Shell::variants()))
 }
 
-macro_rules! usage {( $name:expr ) => (format!("
-Usage:
-  {name} [--host=<host>] [--port=<port>] [--threads=<threads>]
-  {name} (-h | --help)
-  {name} --version
-
-Options:
-  -h --help             Show this screen.
-  --version             Show version.
-  --host=<host>         Host address to listen on [default: localhost]
-  --port=<port>         Port to listen on [default: 3000]
-  --threads=<threads>   Number of threads to process requests
-", name=$name))}
-
 fn main() {
-    let args: Args = Docopt::new(usage!(NAME))
-        .and_then(|d| d.decode())
-        .unwrap_or_else(|e| e.exit());
+    let matches = cli().get_matches();
 
-    if args.flag_version {
-        println!("{name} v{version}", name = NAME, version = VERSION);
+    if let Some(shell) = matches.value_of("completions") {
+        cli().gen_completions_to(NAME, shell.parse::<Shell>().unwrap(), &mut io::stdout());
         return;
     }
 
-    let threads: usize = if args.flag_threads > 0 {
-        args.flag_threads
-    } else {
-        8 * ::num_cpus::get()
-    };
+    let host = matches.value_of("host").unwrap();
+    let port = matches.value_of("port").and_then(|p| p.parse::<u16>().ok()).unwrap();
+    let threads = matches.value_of("threads")
+        .and_then(|p| p.parse::<usize>().ok())
+        .unwrap_or_else(|| 8 * ::num_cpus::get());
     println!("Listening on {}:{} with {} threads",
-             args.flag_host,
-             args.flag_port,
-             threads);
+             host,
+             port,
+             threads,
+    );
     Iron::new(app::app())
-        .listen_with((&args.flag_host[..], args.flag_port),
-                     threads,
-                     Protocol::Http,
-                     None)
+        .listen_with((host, port), threads, Protocol::Http, None)
         .unwrap();
 }

@@ -29,8 +29,8 @@ version="*"
 [dependencies.bodyparser]
 version="*"
 
-[dependencies.docopt]
-version="*"
+[dependencies.clap]
+version="~2.16.1"
 
 [dependencies.rustc-serialize]
 version="*"
