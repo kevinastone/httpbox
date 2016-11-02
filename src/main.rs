@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate clap;
 #[macro_use]
 extern crate horrorshow;
@@ -8,7 +9,7 @@ extern crate lazy_static;
 extern crate num_cpus;
 extern crate rustc_serialize;
 
-use clap::{App, Arg, Shell};
+use clap::{App, Arg, Shell, Error, ErrorKind};
 use iron::{Iron, Protocol};
 use std::io;
 
@@ -55,11 +56,13 @@ fn main() {
         return;
     }
 
-    let host = matches.value_of("host").unwrap();
-    let port = matches.value_of("port").and_then(|p| p.parse::<u16>().ok()).unwrap();
-    let threads = matches.value_of("threads")
-        .and_then(|p| p.parse::<usize>().ok())
-        .unwrap_or_else(|| 8 * ::num_cpus::get());
+    let host = matches.value_of("host").expect("Invalid host");
+    let port = value_t_or_exit!(matches.value_of("port"), u16);
+    let threads = match value_t!(matches.value_of("threads"), usize) {
+        Ok(val) => val,
+        Err(Error{kind: ErrorKind::ArgumentNotFound, ..}) => 8 * ::num_cpus::get(),
+        Err(e) => e.exit(),
+    };
     println!("Listening on {}:{} with {} threads",
              host,
              port,
