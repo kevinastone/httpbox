@@ -60,7 +60,7 @@ fn main() {
     let port = value_t_or_exit!(matches.value_of("port"), u16);
     let threads = match value_t!(matches.value_of("threads"), usize) {
         Ok(val) => val,
-        Err(Error{kind: ErrorKind::ArgumentNotFound, ..}) => 8 * ::num_cpus::get(),
+        Err(Error { kind: ErrorKind::ArgumentNotFound, .. }) => 8 * ::num_cpus::get(),
         Err(e) => e.exit(),
     };
     println!("Listening on {}:{} with {} threads",

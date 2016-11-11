@@ -18,10 +18,10 @@ struct BasicRealm(pub String);
 
 impl BasicRealm {
     fn fmt_realm(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        try!(f.write_str(BASIC_REALM_PREAMBLE));
-        try!(f.write_str("\""));
-        try!(f.write_str(&self.0));
-        try!(f.write_str("\""));
+        f.write_str(BASIC_REALM_PREAMBLE)?;
+        f.write_str("\"")?;
+        f.write_str(&self.0)?;
+        f.write_str("\"")?;
         Ok(())
     }
 }

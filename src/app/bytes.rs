@@ -40,8 +40,8 @@ impl WriteBody for ChunkedByteResponse {
     fn write_body(&mut self, res: &mut ResponseBody) -> io::Result<()> {
 
         for chunk in self.data.chunks(self.chunk_size) {
-            try!(res.write(chunk));
-            try!(res.flush());
+            res.write(chunk)?;
+            res.flush()?;
         }
 
         Ok(())
@@ -71,13 +71,12 @@ fn get_bytes(req: &mut Request) -> IronResult<Vec<u8>> {
 
 pub fn bytes(req: &mut Request) -> IronResult<Response> {
 
-    let bytes = try!(get_bytes(req));
-    Ok(Response::with((status::Ok, bytes)))
+    Ok(Response::with((status::Ok, get_bytes(req)?)))
 }
 
 pub fn stream_bytes(req: &mut Request) -> IronResult<Response> {
 
-    let bytes = try!(get_bytes(req));
+    let bytes = get_bytes(req)?;
     let chunk_size = parse_query_value(req.get_ref::<UrlEncodedQuery>().ok(),
                                        CHUNK_SIZE_QUERY_PARAM)
         .unwrap_or(1);
