@@ -1,8 +1,11 @@
+extern crate bodyparser;
 extern crate iron;
 extern crate lazy_static;
 extern crate urlencoded;
 
 use self::iron::{Request, Response, IronResult};
+use self::iron::headers;
+use self::iron::mime;
 use self::iron::Plugin;
 use self::iron::status;
 use self::urlencoded::QueryMap;
@@ -10,6 +13,38 @@ use self::urlencoded::{UrlEncodedQuery, UrlEncodedBody};
 
 lazy_static! {
     static ref EMPTY_QUERYMAP: QueryMap = QueryMap::new();
+}
+
+fn parse_raw_body(req: &mut Request) -> IronResult<Response> {
+    let body = itry!(req.get::<bodyparser::Raw>()).unwrap_or_else(|| String::from(""));
+    Ok(Response::with((status::Ok, body)))
+}
+
+fn parse_url_encoded_body(req: &mut Request) -> IronResult<Response> {
+    let mut body_params: Vec<String> = vec![];
+    for (key, values) in req.get_ref::<UrlEncodedBody>()
+        .ok()
+        .unwrap_or(&EMPTY_QUERYMAP)
+        .iter() {
+
+        body_params.push(format!("{} = {}", key, values.join(", ")))
+    }
+
+    Ok(Response::with((status::Ok, body_params.join("\n"))))
+}
+
+fn parse_body(req: &mut Request) -> IronResult<Response> {
+
+    let headers = req.headers.clone();
+    let content_type = headers.get::<headers::ContentType>();
+
+    match content_type {
+        Some(content_type) => match content_type {
+            &headers::ContentType(mime::Mime(mime::TopLevel::Application, mime::SubLevel::WwwFormUrlEncoded, ..)) => parse_url_encoded_body(req),
+            _ => parse_raw_body(req),
+        },
+        _ => parse_raw_body(req),
+    }
 }
 
 pub fn get(req: &mut Request) -> IronResult<Response> {
@@ -27,59 +62,19 @@ pub fn get(req: &mut Request) -> IronResult<Response> {
 }
 
 pub fn post(req: &mut Request) -> IronResult<Response> {
-
-    let mut body_params: Vec<String> = vec![];
-    for (key, values) in req.get_ref::<UrlEncodedBody>()
-        .ok()
-        .unwrap_or(&EMPTY_QUERYMAP)
-        .iter() {
-
-        body_params.push(format!("{} = {}", key, values.join(", ")))
-    }
-
-    Ok(Response::with((status::Ok, body_params.join("\n"))))
+    parse_body(req)
 }
 
 pub fn put(req: &mut Request) -> IronResult<Response> {
-
-    let mut body_params: Vec<String> = vec![];
-    for (key, values) in req.get_ref::<UrlEncodedBody>()
-        .ok()
-        .unwrap_or(&EMPTY_QUERYMAP)
-        .iter() {
-
-        body_params.push(format!("{} = {}", key, values.join(", ")))
-    }
-
-    Ok(Response::with((status::Ok, body_params.join("\n"))))
+    parse_body(req)
 }
 
 pub fn patch(req: &mut Request) -> IronResult<Response> {
-
-    let mut body_params: Vec<String> = vec![];
-    for (key, values) in req.get_ref::<UrlEncodedBody>()
-        .ok()
-        .unwrap_or(&EMPTY_QUERYMAP)
-        .iter() {
-
-        body_params.push(format!("{} = {}", key, values.join(", ")))
-    }
-
-    Ok(Response::with((status::Ok, body_params.join("\n"))))
+    parse_body(req)
 }
 
 pub fn delete(req: &mut Request) -> IronResult<Response> {
-
-    let mut body_params: Vec<String> = vec![];
-    for (key, values) in req.get_ref::<UrlEncodedBody>()
-        .ok()
-        .unwrap_or(&EMPTY_QUERYMAP)
-        .iter() {
-
-        body_params.push(format!("{} = {}", key, values.join(", ")))
-    }
-
-    Ok(Response::with((status::Ok, body_params.join("\n"))))
+    parse_body(req)
 }
 
 #[cfg(test)]
