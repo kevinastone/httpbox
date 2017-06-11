@@ -2,11 +2,12 @@ extern crate iron;
 extern crate router;
 extern crate urlencoded;
 
-use self::iron::{Request, Response, IronResult, Url};
+use self::iron::{Request, Response, IronResult, Url as IronUrl};
 use self::iron::Plugin;
 use self::iron::headers;
 use self::iron::modifiers::{Redirect, Header};
 use self::iron::status;
+use self::iron::url::Url as RustUrl;
 use self::router::Router;
 use self::urlencoded::UrlEncodedQuery;
 
@@ -14,12 +15,20 @@ use self::urlencoded::UrlEncodedQuery;
 const URL_QUERY_PARAM: &'static str = "url";
 
 
+pub fn absolute_url<'a, 'b>(url: &'b str, base: &'a RustUrl) -> Option<IronUrl> {
+    base
+        .join(url)
+        .map_err(|e| e.to_string())
+        .and_then(|url| IronUrl::from_generic_url(url))
+        .ok()
+}
+
 pub fn to(req: &mut Request) -> IronResult<Response> {
     let url = iexpect!(req.get_ref::<UrlEncodedQuery>()
                            .ok()
                            .and_then(|hashmap| hashmap.get(URL_QUERY_PARAM))
                            .and_then(|vals| vals.first())
-                           .and_then(|url| Url::parse(url).ok()),
+                           .and_then(|url| IronUrl::parse(url).ok()),
                        status::BadRequest);
 
     Ok(Response::with((status::Found, Redirect(url))))
@@ -69,15 +78,8 @@ pub fn absolute(req: &mut Request) -> IronResult<Response> {
         format!("/absolute-redirect/{}", code)
     };
 
-    let url = iexpect!(req.url
-                           .clone()
-                           .into_generic_url()
-                           .join(&url[..])
-                           .map_err(|e| e.to_string())
-                           .and_then(|url| Url::from_generic_url(url))
-                           .ok(),
-                       status::BadRequest);
-
+    let base: RustUrl = req.url.clone().into();
+    let url = iexpect!(absolute_url(&url[..], &base), status::BadRequest);
     Ok(Response::with((status::Found, Redirect(url))))
 }
 
@@ -86,11 +88,22 @@ mod test {
 
     extern crate iron_test;
 
-    use super::super::app;
+    use super::absolute_url;
     use super::iron::headers;
+    use super::iron::url::Url as RustUrl;
+    use super::super::app;
     use iron::Headers;
     use iron::status;
     use self::iron_test::request;
+
+    #[test]
+    fn test_absolute_url() {
+        let base  = RustUrl::parse("https://example.com").unwrap();
+        assert_eq!(
+            absolute_url("/something", &base).unwrap().to_string(),
+            "https://example.com/something"
+        );
+    }
 
     #[test]
     fn test_redirect_to() {
