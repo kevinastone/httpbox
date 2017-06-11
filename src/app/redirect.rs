@@ -11,8 +11,17 @@ use self::iron::url::Url as RustUrl;
 use self::router::Router;
 use self::urlencoded::UrlEncodedQuery;
 
+use std::env;
+
 
 const URL_QUERY_PARAM: &'static str = "url";
+
+lazy_static! {
+    static ref BASE_URL: Option<RustUrl> =
+        env::var_os("BASE_URL")
+            .and_then(|os_str| os_str.into_string().ok())
+            .and_then(|url| RustUrl::parse(&url).ok());
+}
 
 
 pub fn absolute_url<'a, 'b>(url: &'b str, base: &'a RustUrl) -> Option<IronUrl> {
@@ -78,7 +87,7 @@ pub fn absolute(req: &mut Request) -> IronResult<Response> {
         format!("/absolute-redirect/{}", code)
     };
 
-    let base: RustUrl = req.url.clone().into();
+    let base: RustUrl = BASE_URL.clone().unwrap_or_else(|| req.url.clone().into());
     let url = iexpect!(absolute_url(&url[..], &base), status::BadRequest);
     Ok(Response::with((status::Found, Redirect(url))))
 }
