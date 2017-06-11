@@ -83,11 +83,12 @@ impl From<IndexBuilder> for Router {
         routes.insert(0, Route::new("/").set_description("This page"));
 
         for handler in source.0 {
-            router.route(handler.route.method.clone(), handler.route.path, handler);
+            let path = handler.route.path;
+            router.route(handler.route.method.clone(), handler.route.path, handler, path);
         }
 
         let index = Index(routes);
-        router.get("/", index);
+        router.get("/", index, "index");
 
         router
     }

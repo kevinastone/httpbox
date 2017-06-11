@@ -7,7 +7,7 @@ extern crate urlencoded;
 use self::iron::{Request, Response, IronResult};
 use self::iron::Plugin;
 use self::iron::headers::ContentLength;
-use self::iron::response::{ResponseBody, WriteBody};
+use self::iron::response::WriteBody;
 use self::iron::status;
 use self::modifier::Modifier;
 use self::rand::Rng;
@@ -37,7 +37,7 @@ impl ChunkedByteResponse {
 }
 
 impl WriteBody for ChunkedByteResponse {
-    fn write_body(&mut self, res: &mut ResponseBody) -> io::Result<()> {
+    fn write_body(&mut self, res: &mut Write) -> io::Result<()> {
 
         for chunk in self.data.chunks(self.chunk_size) {
             res.write(chunk)?;
