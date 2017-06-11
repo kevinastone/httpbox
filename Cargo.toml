@@ -11,6 +11,9 @@ default-features = false
 [dependencies.urlencoded]
 version="^0.5.0"
 
+[dependencies.cookie]
+version="*"
+
 [dependencies.logger]
 version="*"
 
