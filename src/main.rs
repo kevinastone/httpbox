@@ -10,7 +10,7 @@ extern crate num_cpus;
 extern crate rustc_serialize;
 
 use clap::{App, Arg, Shell, Error, ErrorKind};
-use iron::{Iron, Protocol};
+use iron::{Iron, Timeouts};
 use std::io;
 
 mod app;
@@ -68,7 +68,11 @@ fn main() {
              port,
              threads,
     );
-    Iron::new(app::app())
-        .listen_with((host, port), threads, Protocol::Http, None)
+    Iron {
+        handler: app::app(),
+        timeouts: Timeouts::default(),
+        threads: threads,
+    }
+        .http((host, port))
         .unwrap();
 }
