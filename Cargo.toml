@@ -30,7 +30,7 @@ version="*"
 version="*"
 
 [dependencies.bodyparser]
-version="*"
+version="^0.7.0"
 
 [dependencies.clap]
 version="~2.16.1"
