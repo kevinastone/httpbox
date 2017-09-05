@@ -92,9 +92,10 @@ mod test {
             .unwrap();
 
         let cookies = res.headers.get::<headers::SetCookie>().unwrap();
-        let cookie = cookies.0.first().and_then(|c| Cookie::parse(c).ok()).unwrap();
+        let cookie = cookies.0.first()
+            .map(|c| c.to_owned())
+            .and_then(|c| Cookie::parse(c).ok()).unwrap();
 
-        assert_eq!(cookie.name, "test");
-        assert_eq!(cookie.value, "value");
+        assert_eq!(cookie.name_value(), ("test", "value"));
     }
 }
