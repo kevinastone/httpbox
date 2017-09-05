@@ -33,7 +33,8 @@ impl Route {
     }
 
     pub fn add_example_param(mut self, name: &str, value: &str) -> Self {
-        self.example_params.insert(name.to_owned(), value.to_owned());
+        self.example_params
+            .insert(name.to_owned(), value.to_owned());
         self
     }
 

@@ -9,9 +9,9 @@ pub const X_FORWARD_FOR: &'static str = "X-Forwarded-For";
 
 pub fn ip(req: &mut Request) -> IronResult<Response> {
     let remote_ip = iexpect!(req.headers
-        .get_raw(X_FORWARD_FOR)
-        .and_then(|h| headers::parsing::from_one_raw_str(h).ok())
-        .or_else(|| Some(req.remote_addr.ip().to_string())));
+                                 .get_raw(X_FORWARD_FOR)
+                                 .and_then(|h| headers::parsing::from_one_raw_str(h).ok())
+                                 .or_else(|| Some(req.remote_addr.ip().to_string())));
 
     Ok(Response::with((status::Ok, remote_ip)))
 }

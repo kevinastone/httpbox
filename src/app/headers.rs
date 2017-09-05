@@ -13,7 +13,11 @@ lazy_static! {
 }
 
 pub fn headers(req: &mut Request) -> IronResult<Response> {
-    let headers = req.headers.iter().map(|h| format!("{}", h).trim().to_owned()).collect::<Vec<String>>().join("\n");
+    let headers = req.headers
+        .iter()
+        .map(|h| format!("{}", h).trim().to_owned())
+        .collect::<Vec<String>>()
+        .join("\n");
     Ok(Response::with((status::Ok, headers.to_string())))
 }
 
@@ -53,7 +57,8 @@ mod test {
 
         let result_body = response::extract_body_to_string(res);
         assert!(result_body.contains("X-Request-ID: 1234"));
-        assert_eq!(result_body, "Content-Length: 0\nX-Request-ID: 1234\nUser-Agent: iron-test")
+        assert_eq!(result_body,
+                   "Content-Length: 0\nX-Request-ID: 1234\nUser-Agent: iron-test")
     }
 
     #[test]
@@ -64,7 +69,7 @@ mod test {
         let res = request::get("http://localhost:3000/response-headers?X-Request-ID=1234",
                                Headers::new(),
                                &app)
-            .unwrap();
+                .unwrap();
         assert_eq!(res.headers
                        .get_raw("X-Request-ID")
                        .map(|v| &v[0])

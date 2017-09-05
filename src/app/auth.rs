@@ -60,14 +60,18 @@ impl headers::HeaderFormat for WWWAuthenticate {
 pub fn basic(req: &mut Request) -> IronResult<Response> {
 
     let username = iexpect!(req.extensions.get::<Router>().unwrap().find("user"));
-    let password = req.extensions.get::<Router>().unwrap().find("passwd").map(|s| s.to_owned());
+    let password = req.extensions
+        .get::<Router>()
+        .unwrap()
+        .find("passwd")
+        .map(|s| s.to_owned());
 
     if req.headers
-        .get::<headers::Authorization<headers::Basic>>()
-        .iter()
-        .filter(|header| header.username == username && header.password == password)
-        .next()
-        .is_some() {
+           .get::<headers::Authorization<headers::Basic>>()
+           .iter()
+           .filter(|header| header.username == username && header.password == password)
+           .next()
+           .is_some() {
         Ok(Response::with((status::Status::Ok, "Authenticated")))
     } else {
         Ok(Response::with((status::Status::Unauthorized,
@@ -80,11 +84,11 @@ pub fn bearer(req: &mut Request) -> IronResult<Response> {
     let token = iexpect!(req.extensions.get::<Router>().unwrap().find("token"));
 
     if req.headers
-        .get::<headers::Authorization<headers::Bearer>>()
-        .iter()
-        .filter(|header| header.token == token)
-        .next()
-        .is_some() {
+           .get::<headers::Authorization<headers::Bearer>>()
+           .iter()
+           .filter(|header| header.token == token)
+           .next()
+           .is_some() {
         Ok(Response::with((status::Status::Ok, "Authenticated")))
     } else {
         Ok(Response::with(status::Status::Unauthorized))
@@ -110,7 +114,7 @@ mod test {
         let res = request::get("http://localhost:3000/basic-auth/my-username/my-password",
                                Headers::new(),
                                &app)
-            .unwrap();
+                .unwrap();
 
         assert_eq!(res.status.unwrap(), status::Unauthorized);
         assert_eq!(res.headers
@@ -127,14 +131,14 @@ mod test {
         let app = app();
         let mut headers = Headers::new();
         headers.set(headers::Authorization(headers::Basic {
-            username: "my-username".to_owned(),
-            password: Some("my-password".to_owned()),
-        }));
+                                               username: "my-username".to_owned(),
+                                               password: Some("my-password".to_owned()),
+                                           }));
 
         let res = request::get("http://localhost:3000/basic-auth/my-username/my-password",
                                headers,
                                &app)
-            .unwrap();
+                .unwrap();
 
         assert_eq!(res.status.unwrap(), status::Ok)
     }
@@ -145,14 +149,14 @@ mod test {
         let app = app();
         let mut headers = Headers::new();
         headers.set(headers::Authorization(headers::Basic {
-            username: "my-username".to_owned(),
-            password: Some("not-my-password".to_owned()),
-        }));
+                                               username: "my-username".to_owned(),
+                                               password: Some("not-my-password".to_owned()),
+                                           }));
 
         let res = request::get("http://localhost:3000/basic-auth/my-username/my-password",
                                headers,
                                &app)
-            .unwrap();
+                .unwrap();
 
         assert_eq!(res.status.unwrap(), status::Unauthorized);
         assert_eq!(res.headers
@@ -171,7 +175,7 @@ mod test {
         let res = request::get("http://localhost:3000/bearer-auth/my-token",
                                Headers::new(),
                                &app)
-            .unwrap();
+                .unwrap();
 
         assert_eq!(res.status.unwrap(), status::Unauthorized)
     }

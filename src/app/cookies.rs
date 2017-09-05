@@ -72,8 +72,8 @@ mod test {
         let app = app();
 
         let mut headers = Headers::new();
-        headers.set(headers::Cookie(vec![Cookie::new("test".to_owned(),
-                                                                  "value".to_owned()).to_string()]));
+        headers.set(headers::Cookie(vec![Cookie::new("test".to_owned(), "value".to_owned())
+                                             .to_string()]));
 
         let res = request::get("http://localhost:3000/cookies", headers, &app).unwrap();
 
@@ -89,12 +89,15 @@ mod test {
         let res = request::get("http://localhost:3000/cookies/set?test=value",
                                Headers::new(),
                                &app)
-            .unwrap();
+                .unwrap();
 
         let cookies = res.headers.get::<headers::SetCookie>().unwrap();
-        let cookie = cookies.0.first()
+        let cookie = cookies
+            .0
+            .first()
             .map(|c| c.to_owned())
-            .and_then(|c| Cookie::parse(c).ok()).unwrap();
+            .and_then(|c| Cookie::parse(c).ok())
+            .unwrap();
 
         assert_eq!(cookie.name_value(), ("test", "value"));
     }

@@ -23,9 +23,9 @@ fn parse_raw_body(req: &mut Request) -> IronResult<Response> {
 fn parse_url_encoded_body(req: &mut Request) -> IronResult<Response> {
     let mut body_params: Vec<String> = vec![];
     for (key, values) in req.get_ref::<UrlEncodedBody>()
-        .ok()
-        .unwrap_or(&EMPTY_QUERYMAP)
-        .iter() {
+            .ok()
+            .unwrap_or(&EMPTY_QUERYMAP)
+            .iter() {
 
         body_params.push(format!("{} = {}", key, values.join(", ")))
     }
@@ -39,10 +39,14 @@ fn parse_body(req: &mut Request) -> IronResult<Response> {
     let content_type = headers.get::<headers::ContentType>();
 
     match content_type {
-        Some(content_type) => match content_type {
-            &headers::ContentType(mime::Mime(mime::TopLevel::Application, mime::SubLevel::WwwFormUrlEncoded, ..)) => parse_url_encoded_body(req),
-            _ => parse_raw_body(req),
-        },
+        Some(content_type) => {
+            match content_type {
+                &headers::ContentType(mime::Mime(mime::TopLevel::Application,
+                                                 mime::SubLevel::WwwFormUrlEncoded,
+                                                 ..)) => parse_url_encoded_body(req),
+                _ => parse_raw_body(req),
+            }
+        }
         _ => parse_raw_body(req),
     }
 }
@@ -51,9 +55,9 @@ pub fn get(req: &mut Request) -> IronResult<Response> {
 
     let mut query_params: Vec<String> = vec![];
     for (key, values) in req.get_ref::<UrlEncodedQuery>()
-        .ok()
-        .unwrap_or(&EMPTY_QUERYMAP)
-        .iter() {
+            .ok()
+            .unwrap_or(&EMPTY_QUERYMAP)
+            .iter() {
 
         query_params.push(format!("{} = {}", key, values.join(", ")))
     }
@@ -109,7 +113,7 @@ mod test {
         let res = request::get("http://localhost:3000/get?key=val&other=something&key=another",
                                Headers::new(),
                                &app)
-            .unwrap();
+                .unwrap();
 
         let result_body = response::extract_body_to_string(res);
         let result: HashSet<&str> = HashSet::from_iter(result_body.split("\n"));
@@ -141,7 +145,7 @@ mod test {
                                 headers,
                                 "key=val&other=something&key=another",
                                 &app)
-            .unwrap();
+                .unwrap();
 
         let result_body = response::extract_body_to_string(res);
         let result: HashSet<&str> = HashSet::from_iter(result_body.split("\n"));
@@ -173,7 +177,7 @@ mod test {
                                headers,
                                "key=val&other=something&key=another",
                                &app)
-            .unwrap();
+                .unwrap();
 
         let result_body = response::extract_body_to_string(res);
         let result: HashSet<&str> = HashSet::from_iter(result_body.split("\n"));
@@ -205,7 +209,7 @@ mod test {
                                  headers,
                                  "key=val&other=something&key=another",
                                  &app)
-            .unwrap();
+                .unwrap();
 
         let result_body = response::extract_body_to_string(res);
         let result: HashSet<&str> = HashSet::from_iter(result_body.split("\n"));

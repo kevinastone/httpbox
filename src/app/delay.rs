@@ -17,7 +17,11 @@ fn sleep(seconds: u64) {
 
 pub fn delay(req: &mut Request) -> IronResult<Response> {
 
-    let delay = req.extensions.get::<Router>().unwrap().find("n").unwrap_or("10");
+    let delay = req.extensions
+        .get::<Router>()
+        .unwrap()
+        .find("n")
+        .unwrap_or("10");
     let delay = itry!(delay.parse::<u64>(), status::BadRequest);
     let delay = min(delay, 10);
 

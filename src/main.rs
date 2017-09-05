@@ -22,30 +22,30 @@ fn cli() -> App<'static, 'static> {
     App::new(NAME)
         .version(VERSION)
         .arg(Arg::with_name("host")
-            .short("h")
-            .long("host")
-            .value_name("HOST")
-            .takes_value(true)
-            .default_value("localhost")
-            .help("Host address to listen on"))
+                 .short("h")
+                 .long("host")
+                 .value_name("HOST")
+                 .takes_value(true)
+                 .default_value("localhost")
+                 .help("Host address to listen on"))
         .arg(Arg::with_name("port")
-            .short("p")
-            .long("port")
-            .value_name("PORT")
-            .takes_value(true)
-            .default_value("3000")
-            .help("Port to listen on"))
+                 .short("p")
+                 .long("port")
+                 .value_name("PORT")
+                 .takes_value(true)
+                 .default_value("3000")
+                 .help("Port to listen on"))
         .arg(Arg::with_name("threads")
-            .long("threads")
-            .value_name("THREADS")
-            .takes_value(true)
-            .help("Number of threads to process requests"))
+                 .long("threads")
+                 .value_name("THREADS")
+                 .takes_value(true)
+                 .help("Number of threads to process requests"))
         .arg(Arg::with_name("completions")
-            .long("completions")
-            .takes_value(true)
-            .value_name("SHELL")
-            .hidden(true)
-            .possible_values(&Shell::variants()))
+                 .long("completions")
+                 .takes_value(true)
+                 .value_name("SHELL")
+                 .hidden(true)
+                 .possible_values(&Shell::variants()))
 }
 
 fn main() {
@@ -69,10 +69,10 @@ fn main() {
              threads,
     );
     Iron {
-        handler: app::app(),
-        timeouts: Timeouts::default(),
-        threads: threads,
-    }
+            handler: app::app(),
+            timeouts: Timeouts::default(),
+            threads: threads,
+        }
         .http((host, port))
         .unwrap();
 }

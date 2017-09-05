@@ -25,8 +25,7 @@ lazy_static! {
 
 
 pub fn absolute_url<'a, 'b>(url: &'b str, base: &'a RustUrl) -> Option<IronUrl> {
-    base
-        .join(url)
+    base.join(url)
         .map_err(|e| e.to_string())
         .and_then(|url| IronUrl::from_generic_url(url))
         .ok()
@@ -107,11 +106,9 @@ mod test {
 
     #[test]
     fn test_absolute_url() {
-        let base  = RustUrl::parse("https://example.com").unwrap();
-        assert_eq!(
-            absolute_url("/something", &base).unwrap().to_string(),
-            "https://example.com/something"
-        );
+        let base = RustUrl::parse("https://example.com").unwrap();
+        assert_eq!(absolute_url("/something", &base).unwrap().to_string(),
+                   "https://example.com/something");
     }
 
     #[test]
@@ -122,7 +119,7 @@ mod test {
         let res = request::get("http://localhost:3000/redirect-to?url=http://example.com",
                                Headers::new(),
                                &app)
-            .unwrap();
+                .unwrap();
 
         assert_eq!(res.status.unwrap(), status::Found);
 
@@ -164,7 +161,7 @@ mod test {
         let res = request::get("http://localhost:3000/relative-redirect/5",
                                Headers::new(),
                                &app)
-            .unwrap();
+                .unwrap();
 
         assert_eq!(res.status.unwrap(), status::Found);
 
@@ -180,7 +177,7 @@ mod test {
         let res = request::get("http://localhost:3000/relative-redirect/1",
                                Headers::new(),
                                &app)
-            .unwrap();
+                .unwrap();
 
         assert_eq!(res.status.unwrap(), status::Found);
 
@@ -196,7 +193,7 @@ mod test {
         let res = request::get("http://localhost:3000/absolute-redirect/5",
                                Headers::new(),
                                &app)
-            .unwrap();
+                .unwrap();
 
         assert_eq!(res.status.unwrap(), status::Found);
 
@@ -212,7 +209,7 @@ mod test {
         let res = request::get("http://localhost:3000/absolute-redirect/1",
                                Headers::new(),
                                &app)
-            .unwrap();
+                .unwrap();
 
         assert_eq!(res.status.unwrap(), status::Found);
 

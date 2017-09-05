@@ -55,7 +55,7 @@ impl Handler for Index {
                 }
             }
         }
-            .into_string());
+                                 .into_string());
 
         Ok(Response::with((status::Ok, Header(headers::ContentType::html()), body)))
     }
@@ -79,12 +79,19 @@ impl From<IndexBuilder> for Router {
     fn from(source: IndexBuilder) -> Router {
         let mut router = Router::new();
 
-        let mut routes = source.0.iter().map(|h| h.route.clone()).collect::<Vec<Route>>();
+        let mut routes = source
+            .0
+            .iter()
+            .map(|h| h.route.clone())
+            .collect::<Vec<Route>>();
         routes.insert(0, Route::new("/").set_description("This page"));
 
         for handler in source.0 {
             let path = handler.route.path;
-            router.route(handler.route.method.clone(), handler.route.path, handler, path);
+            router.route(handler.route.method.clone(),
+                         handler.route.path,
+                         handler,
+                         path);
         }
 
         let index = Index(routes);

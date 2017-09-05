@@ -4,7 +4,8 @@ use std::str::FromStr;
 
 
 pub fn parse_query_value<T: FromStr>(hashmap: Option<&QueryMap>, name: &str) -> Option<T> {
-    hashmap.and_then(|hashmap| hashmap.get(name))
+    hashmap
+        .and_then(|hashmap| hashmap.get(name))
         .and_then(|vals| vals.first())
         .and_then(|val| val.parse::<T>().ok())
 }
