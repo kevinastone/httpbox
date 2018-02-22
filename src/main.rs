@@ -9,7 +9,7 @@ extern crate lazy_static;
 extern crate num_cpus;
 extern crate rustc_serialize;
 
-use clap::{App, Arg, Shell, Error, ErrorKind};
+use clap::{App, Arg, Error, ErrorKind, Shell};
 use iron::{Iron, Timeouts};
 use std::io;
 
@@ -21,31 +21,39 @@ const NAME: &'static str = env!("CARGO_PKG_NAME");
 fn cli() -> App<'static, 'static> {
     App::new(NAME)
         .version(VERSION)
-        .arg(Arg::with_name("host")
-                 .short("h")
-                 .long("host")
-                 .value_name("HOST")
-                 .takes_value(true)
-                 .default_value("localhost")
-                 .help("Host address to listen on"))
-        .arg(Arg::with_name("port")
-                 .short("p")
-                 .long("port")
-                 .value_name("PORT")
-                 .takes_value(true)
-                 .default_value("3000")
-                 .help("Port to listen on"))
-        .arg(Arg::with_name("threads")
-                 .long("threads")
-                 .value_name("THREADS")
-                 .takes_value(true)
-                 .help("Number of threads to process requests"))
-        .arg(Arg::with_name("completions")
-                 .long("completions")
-                 .takes_value(true)
-                 .value_name("SHELL")
-                 .hidden(true)
-                 .possible_values(&Shell::variants()))
+        .arg(
+            Arg::with_name("host")
+                .short("h")
+                .long("host")
+                .value_name("HOST")
+                .takes_value(true)
+                .default_value("localhost")
+                .help("Host address to listen on"),
+        )
+        .arg(
+            Arg::with_name("port")
+                .short("p")
+                .long("port")
+                .value_name("PORT")
+                .takes_value(true)
+                .default_value("3000")
+                .help("Port to listen on"),
+        )
+        .arg(
+            Arg::with_name("threads")
+                .long("threads")
+                .value_name("THREADS")
+                .takes_value(true)
+                .help("Number of threads to process requests"),
+        )
+        .arg(
+            Arg::with_name("completions")
+                .long("completions")
+                .takes_value(true)
+                .value_name("SHELL")
+                .hidden(true)
+                .possible_values(&Shell::variants()),
+        )
 }
 
 fn main() {
@@ -60,19 +68,17 @@ fn main() {
     let port = value_t_or_exit!(matches.value_of("port"), u16);
     let threads = match value_t!(matches.value_of("threads"), usize) {
         Ok(val) => val,
-        Err(Error { kind: ErrorKind::ArgumentNotFound, .. }) => 8 * ::num_cpus::get(),
+        Err(Error {
+            kind: ErrorKind::ArgumentNotFound,
+            ..
+        }) => 8 * ::num_cpus::get(),
         Err(e) => e.exit(),
     };
-    println!("Listening on {}:{} with {} threads",
-             host,
-             port,
-             threads,
-    );
+    println!("Listening on {}:{} with {} threads", host, port, threads,);
     Iron {
-            handler: app::app(),
-            timeouts: Timeouts::default(),
-            threads: threads,
-        }
-        .http((host, port))
+        handler: app::app(),
+        timeouts: Timeouts::default(),
+        threads: threads,
+    }.http((host, port))
         .unwrap();
 }

@@ -5,7 +5,7 @@ extern crate urlencoded;
 
 use self::cookie::Cookie;
 use self::iron::Plugin;
-use self::iron::{Request, Response, IronResult};
+use self::iron::{IronResult, Request, Response};
 use self::iron::headers;
 use self::iron::modifiers::Header;
 use self::iron::status;
@@ -16,7 +16,6 @@ lazy_static! {
     static ref EMPTY_COOKIES: headers::Cookie = headers::Cookie(Vec::new());
     static ref EMPTY_QUERYMAP: QueryMap = QueryMap::new();
 }
-
 
 pub fn cookies(req: &mut Request) -> IronResult<Response> {
     let cookies = req.headers
@@ -57,7 +56,6 @@ mod test {
 
     #[test]
     fn test_no_cookies() {
-
         let app = app();
 
         let res = request::get("http://localhost:3000/cookies", Headers::new(), &app).unwrap();
@@ -68,12 +66,12 @@ mod test {
 
     #[test]
     fn test_cookies() {
-
         let app = app();
 
         let mut headers = Headers::new();
-        headers.set(headers::Cookie(vec![Cookie::new("test".to_owned(), "value".to_owned())
-                                             .to_string()]));
+        headers.set(headers::Cookie(vec![
+            Cookie::new("test".to_owned(), "value".to_owned()).to_string(),
+        ]));
 
         let res = request::get("http://localhost:3000/cookies", headers, &app).unwrap();
 
@@ -83,13 +81,13 @@ mod test {
 
     #[test]
     fn test_set_cookies() {
-
         let app = app();
 
-        let res = request::get("http://localhost:3000/cookies/set?test=value",
-                               Headers::new(),
-                               &app)
-                .unwrap();
+        let res = request::get(
+            "http://localhost:3000/cookies/set?test=value",
+            Headers::new(),
+            &app,
+        ).unwrap();
 
         let cookies = res.headers.get::<headers::SetCookie>().unwrap();
         let cookie = cookies

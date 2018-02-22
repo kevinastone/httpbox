@@ -1,11 +1,10 @@
 extern crate iron;
 
-use self::iron::{Request, Response, IronResult};
+use self::iron::{IronResult, Request, Response};
 use self::iron::headers::UserAgent;
 use self::iron::status;
 
 pub fn user_agent(req: &mut Request) -> IronResult<Response> {
-
     let user_agent = iexpect!(req.headers.get::<UserAgent>());
     Ok(Response::with((status::Ok, user_agent.to_string())))
 }
@@ -22,7 +21,6 @@ mod test {
 
     #[test]
     fn test_user_agent() {
-
         let app = app();
 
         let res = request::get("http://localhost:3000/user-agent", Headers::new(), &app).unwrap();
@@ -33,7 +31,6 @@ mod test {
 
     #[test]
     fn test_user_agent_custom() {
-
         let app = app();
 
         let mut headers = Headers::new();

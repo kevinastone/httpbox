@@ -1,16 +1,16 @@
 extern crate iron;
 extern crate router;
 
-use self::iron::{Request, Response, IronResult};
+use self::iron::{IronResult, Request, Response};
 use self::iron::headers;
 use self::iron::modifiers::Header;
 use self::iron::status;
 use self::router::Router;
 
 pub fn cache(req: &mut Request) -> IronResult<Response> {
-
-    if req.headers.get::<headers::IfModifiedSince>().is_some() ||
-       req.headers.get::<headers::IfNoneMatch>().is_some() {
+    if req.headers.get::<headers::IfModifiedSince>().is_some()
+        || req.headers.get::<headers::IfNoneMatch>().is_some()
+    {
         Ok(Response::with(status::Status::NotModified))
     } else {
         Ok(Response::with(status::Status::Ok))
@@ -21,8 +21,12 @@ pub fn set_cache(req: &mut Request) -> IronResult<Response> {
     let n = iexpect!(req.extensions.get::<Router>().unwrap().find("n"));
     let n = itry!(n.parse::<u32>(), status::BadRequest);
 
-    Ok(Response::with((status::Status::Ok,
-                       Header(headers::CacheControl(vec![headers::CacheDirective::MaxAge(n)])))))
+    Ok(Response::with((
+        status::Status::Ok,
+        Header(headers::CacheControl(vec![
+            headers::CacheDirective::MaxAge(n),
+        ])),
+    )))
 }
 
 #[cfg(test)]
@@ -39,7 +43,6 @@ mod test {
 
     #[test]
     fn test_cache_no_headers() {
-
         let app = app();
 
         let res = request::get("http://localhost:3000/cache", Headers::new(), &app).unwrap();
@@ -49,7 +52,6 @@ mod test {
 
     #[test]
     fn test_cache_if_modified_since() {
-
         let app = app();
 
         let mut headers = Headers::new();
@@ -62,7 +64,6 @@ mod test {
 
     #[test]
     fn test_cache_if_none_match() {
-
         let app = app();
 
         let mut headers = Headers::new();
@@ -75,7 +76,6 @@ mod test {
 
     #[test]
     fn test_set_cache() {
-
         let app = app();
 
         let res = request::get("http://localhost:3000/cache/30", Headers::new(), &app).unwrap();

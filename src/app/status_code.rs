@@ -1,12 +1,11 @@
 extern crate iron;
 extern crate router;
 
-use self::iron::{Request, Response, IronResult};
+use self::iron::{IronResult, Request, Response};
 use self::iron::status;
 use self::router::Router;
 
 pub fn status_code(req: &mut Request) -> IronResult<Response> {
-
     let code = req.extensions
         .get::<Router>()
         .unwrap()
@@ -29,7 +28,6 @@ mod test {
 
     #[test]
     fn test_status_code() {
-
         let app = app();
 
         let res = request::get("http://localhost:3000/status/429", Headers::new(), &app).unwrap();

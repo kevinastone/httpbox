@@ -2,7 +2,6 @@ extern crate rand;
 
 use self::rand::{Rng, XorShiftRng};
 
-
 fn to_bytes(val: u32) -> [u32; 4] {
     [val, val, val, val]
 }
@@ -14,7 +13,9 @@ pub struct RandomGenerator {
 impl RandomGenerator {
     pub fn new(seed: Option<u32>) -> Self {
         let seed = seed.unwrap_or_else(|| rand::thread_rng().gen::<u32>());
-        RandomGenerator { rng: rand::SeedableRng::from_seed(to_bytes(seed)) }
+        RandomGenerator {
+            rng: rand::SeedableRng::from_seed(to_bytes(seed)),
+        }
     }
 }
 
@@ -33,13 +34,11 @@ mod tests {
 
         #[test]
         fn rng_no_seed() {
-
             RandomGenerator::new(None);
         }
 
         #[test]
         fn rng_seed_consistent() {
-
             let mut rng = RandomGenerator::new(Some(1234));
             assert_eq!(rng.next_u32(), 2537108u32);
             assert_eq!(rng.next_u32(), 1238u32);

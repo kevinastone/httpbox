@@ -1,7 +1,7 @@
 extern crate iron;
 extern crate router;
 
-use self::iron::{Request, Response, IronResult};
+use self::iron::{IronResult, Request, Response};
 use self::iron::status;
 use self::router::Router;
 use std::cmp::min;
@@ -16,7 +16,6 @@ fn sleep(seconds: u64) {
 }
 
 pub fn delay(req: &mut Request) -> IronResult<Response> {
-
     let delay = req.extensions
         .get::<Router>()
         .unwrap()
@@ -42,7 +41,6 @@ mod test {
 
     #[test]
     fn test_sleep() {
-
         let app = app();
 
         let res = request::get("http://localhost:3000/delay/3", Headers::new(), &app).unwrap();

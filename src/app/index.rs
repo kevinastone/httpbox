@@ -3,7 +3,7 @@ extern crate iron;
 extern crate router;
 
 use horrorshow::prelude::*;
-use self::iron::{Request, Response, IronResult, Handler};
+use self::iron::{Handler, IronResult, Request, Response};
 use self::iron::headers;
 use self::iron::modifiers::Header;
 use self::iron::status;
@@ -15,49 +15,53 @@ pub struct Index(Vec<Route>);
 
 impl Handler for Index {
     fn handle(&self, _req: &mut Request) -> IronResult<Response> {
-
-        let body = itry!(html! {
-            html {
-                head {
-                    style {
-                        : "
-                        ul { list-style-type: none; }
-                        code { font-weight: bold; }
-                        "
+        let body = itry!(
+            html! {
+                html {
+                    head {
+                        style {
+                            : "
+                            ul { list-style-type: none; }
+                            code { font-weight: bold; }
+                            "
+                        }
                     }
-                }
-                body {
-                    h1 {
-                        : "httpbox: HTTP Testing Service"
-                    }
-                    h2 {
-                        : "Endpoints"
-                    }
-                    ul {
-                        @ for route in self.0.iter() {
-                            li {
-                                @ if let Some(example_path) = route.example_path() {
-                                    a(href=example_path) {
+                    body {
+                        h1 {
+                            : "httpbox: HTTP Testing Service"
+                        }
+                        h2 {
+                            : "Endpoints"
+                        }
+                        ul {
+                            @ for route in self.0.iter() {
+                                li {
+                                    @ if let Some(example_path) = route.example_path() {
+                                        a(href=example_path) {
+                                            code {
+                                                : route.path
+                                            }
+                                        }
+                                    } else {
                                         code {
                                             : route.path
                                         }
                                     }
-                                } else {
-                                    code {
-                                        : route.path
-                                    }
+                                    span { : " - " }
+                                    span { : route.description }
                                 }
-                                span { : " - " }
-                                span { : route.description }
                             }
                         }
                     }
                 }
-            }
-        }
-                                 .into_string());
+            }.into_string()
+        );
 
-        Ok(Response::with((status::Ok, Header(headers::ContentType::html()), body)))
+        Ok(Response::with((
+            status::Ok,
+            Header(headers::ContentType::html()),
+            body,
+        )))
     }
 }
 
@@ -88,10 +92,12 @@ impl From<IndexBuilder> for Router {
 
         for handler in source.0 {
             let path = handler.route.path;
-            router.route(handler.route.method.clone(),
-                         handler.route.path,
-                         handler,
-                         path);
+            router.route(
+                handler.route.method.clone(),
+                handler.route.path,
+                handler,
+                path,
+            );
         }
 
         let index = Index(routes);

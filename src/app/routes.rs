@@ -1,6 +1,6 @@
 extern crate iron;
 
-use self::iron::{Request, Response, IronResult, Handler};
+use self::iron::{Handler, IronResult, Request, Response};
 use self::iron::method::Method;
 use std::collections::HashMap;
 
@@ -43,7 +43,6 @@ impl Route {
     }
 
     pub fn example_path(&self) -> Option<String> {
-
         if self.method != Method::Get {
             return None;
         }
