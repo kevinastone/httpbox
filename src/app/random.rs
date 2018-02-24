@@ -1,6 +1,6 @@
 extern crate rand;
 
-use self::rand::{Rng, XorShiftRng};
+use rand::{Rng, XorShiftRng};
 
 fn to_bytes(val: u32) -> [u32; 4] {
     [val, val, val, val]
@@ -27,23 +27,21 @@ impl Rng for RandomGenerator {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
 
-    mod rng {
-        use super::super::*;
-        use super::super::rand::Rng;
+    use rand::Rng;
 
-        #[test]
-        fn rng_no_seed() {
-            RandomGenerator::new(None);
-        }
+    #[test]
+    fn rng_no_seed() {
+        RandomGenerator::new(None);
+    }
 
-        #[test]
-        fn rng_seed_consistent() {
-            let mut rng = RandomGenerator::new(Some(1234));
-            assert_eq!(rng.next_u32(), 2537108u32);
-            assert_eq!(rng.next_u32(), 1238u32);
-            assert_eq!(rng.next_u32(), 2537104u32);
-            assert_eq!(rng.next_u32(), 1234u32);
-        }
+    #[test]
+    fn rng_seed_consistent() {
+        let mut rng = RandomGenerator::new(Some(1234));
+        assert_eq!(rng.next_u32(), 2537108u32);
+        assert_eq!(rng.next_u32(), 1238u32);
+        assert_eq!(rng.next_u32(), 2537104u32);
+        assert_eq!(rng.next_u32(), 1234u32);
     }
 }

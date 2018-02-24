@@ -1,37 +1,51 @@
-extern crate iron;
-extern crate router;
+extern crate gotham;
+extern crate hyper;
+extern crate mime;
+extern crate serde;
 
-use self::iron::{IronResult, Request, Response};
-use self::iron::status;
-use self::router::Router;
+use app::response::bad_request;
+use gotham::http::response::create_response;
+use gotham::state::{FromState, State};
 
-pub fn status_code(req: &mut Request) -> IronResult<Response> {
-    let code = req.extensions
-        .get::<Router>()
-        .unwrap()
-        .find("code")
-        .unwrap_or("200");
-    let code = itry!(code.parse::<u16>(), status::BadRequest);
+use hyper::{Response, StatusCode};
 
-    Ok(Response::with(status::Status::from_u16(code)))
+#[derive(Deserialize, StateData, StaticResponseExtender)]
+pub struct StatusCodeParams {
+    code: u16,
+}
+
+pub fn status_code(mut state: State) -> (State, Response) {
+    let params = StatusCodeParams::take_from(&mut state);
+
+    match StatusCode::try_from(params.code) {
+        Ok(status) => {
+            let res = create_response(
+                &state,
+                status,
+                Some((vec![], mime::TEXT_PLAIN)),
+            );
+            (state, res)
+        }
+        Err(_) => bad_request(state),
+    }
 }
 
 #[cfg(test)]
 mod test {
+    use super::super::router;
 
-    extern crate iron_test;
-
-    use super::super::app;
-    use iron::Headers;
-    use iron::status;
-    use self::iron_test::request;
+    use gotham::test::TestServer;
+    use hyper::StatusCode;
 
     #[test]
     fn test_status_code() {
-        let app = app();
+        let test_server = TestServer::new(router()).unwrap();
+        let response = test_server
+            .client()
+            .get("http://localhost:3000/status/429")
+            .perform()
+            .unwrap();
 
-        let res = request::get("http://localhost:3000/status/429", Headers::new(), &app).unwrap();
-
-        assert_eq!(res.status.unwrap(), status::TooManyRequests);
+        assert_eq!(response.status(), StatusCode::TooManyRequests);
     }
 }

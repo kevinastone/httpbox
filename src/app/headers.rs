@@ -1,82 +1,86 @@
-extern crate iron;
-extern crate lazy_static;
-extern crate urlencoded;
+extern crate gotham;
+extern crate hyper;
+extern crate mime;
 
-use self::iron::{IronResult, Request, Response};
-use self::iron::Plugin;
-use self::iron::status;
-use self::urlencoded::QueryMap;
-use self::urlencoded::UrlEncodedQuery;
+use app::response::ok;
+use gotham::http::response::create_response;
+use gotham::state::{FromState, State};
+use hyper::{Headers, Response, StatusCode, Uri};
+use url::form_urlencoded;
 
-lazy_static! {
-    static ref EMPTY_QUERYMAP: QueryMap = QueryMap::new();
-}
-
-pub fn headers(req: &mut Request) -> IronResult<Response> {
-    let headers = req.headers
+pub fn headers(state: State) -> (State, Response) {
+    let headers = Headers::borrow_from(&state)
         .iter()
         .map(|h| format!("{}", h).trim().to_owned())
         .collect::<Vec<String>>()
         .join("\n");
-    Ok(Response::with((status::Ok, headers.to_string())))
+
+    ok(state, headers.to_string())
 }
 
-pub fn response_headers(req: &mut Request) -> IronResult<Response> {
-    let headers = req.get_ref::<UrlEncodedQuery>()
-        .ok()
-        .unwrap_or(&EMPTY_QUERYMAP);
+pub fn response_headers(state: State) -> (State, Response) {
+    let response_headers: Vec<(String, String)> = {
+        Uri::borrow_from(&state)
+            .query()
+            .map(|query| form_urlencoded::parse(query.as_bytes()))
+            .map(|pairs| pairs.into_owned().collect())
+            .unwrap_or_else(|| vec![])
+    };
 
-    let mut res = Response::with(status::Ok);
-    for (name, value) in headers {
-        let encoded_vals = value.iter().map(|s| s.clone().into_bytes()).collect();
-        res.headers.set_raw(name.to_owned(), encoded_vals);
+    let mut res = create_response(
+        &state,
+        StatusCode::Ok,
+        Some((vec![], mime::TEXT_PLAIN)),
+    );
+
+    {
+        let headers = res.headers_mut();
+        for (key, value) in response_headers {
+            headers.set_raw(key, value);
+        }
     }
 
-    Ok(res)
+    (state, res)
 }
 
 #[cfg(test)]
 mod test {
+    use super::super::router;
 
-    extern crate iron_test;
+    use gotham::test::TestServer;
+    use hyper::StatusCode;
 
-    use super::super::app;
-    use iron::Headers;
-    use self::iron_test::{request, response};
+    header! { (XRequestID, "X-Request-ID") => [String] }
 
     #[test]
     fn test_headers() {
-        let app = app();
+        let test_server = TestServer::new(router()).unwrap();
+        let response = test_server
+            .client()
+            .get("http://localhost:3000/headers")
+            .with_header(XRequestID(String::from("1234")))
+            .perform()
+            .unwrap();
 
-        let mut headers = Headers::new();
-        headers.set_raw("X-Request-ID", vec![String::from("1234").into_bytes()]);
-
-        let res = request::get("http://localhost:3000/headers", headers, &app).unwrap();
-
-        let result_body = response::extract_body_to_string(res);
+        assert_eq!(response.status(), StatusCode::Ok);
+        let result_body = response.read_utf8_body().unwrap();
         assert!(result_body.contains("X-Request-ID: 1234"));
-        assert_eq!(
-            result_body,
-            "Content-Length: 0\nX-Request-ID: 1234\nUser-Agent: iron-test"
-        )
+        assert_eq!(result_body, "Host: localhost:3000\nX-Request-ID: 1234")
     }
 
     #[test]
     fn test_response_headers() {
-        let app = app();
+        let test_server = TestServer::new(router()).unwrap();
+        let response = test_server
+            .client()
+            .get("http://localhost:3000/response-headers?X-Request-ID=1234")
+            .perform()
+            .unwrap();
 
-        let res = request::get(
-            "http://localhost:3000/response-headers?X-Request-ID=1234",
-            Headers::new(),
-            &app,
-        ).unwrap();
+        assert_eq!(response.status(), StatusCode::Ok);
         assert_eq!(
-            res.headers
-                .get_raw("X-Request-ID")
-                .map(|v| &v[0])
-                .and_then(|v| String::from_utf8(v.clone()).ok())
-                .unwrap(),
-            "1234"
+            response.headers().get::<XRequestID>().unwrap(),
+            &XRequestID(String::from("1234"))
         )
     }
 }
