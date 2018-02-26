@@ -2,8 +2,7 @@ extern crate gotham;
 extern crate hyper;
 extern crate mime;
 
-use app::response::ok;
-use gotham::http::response::create_response;
+use app::response::{empty_response, ok};
 use gotham::state::{FromState, State};
 use hyper::{Headers, Response, StatusCode, Uri};
 use url::form_urlencoded;
@@ -27,12 +26,7 @@ pub fn response_headers(state: State) -> (State, Response) {
             .unwrap_or_else(|| vec![])
     };
 
-    let mut res = create_response(
-        &state,
-        StatusCode::Ok,
-        Some((vec![], mime::TEXT_PLAIN)),
-    );
-
+    let mut res = empty_response(&state, StatusCode::Ok);
     {
         let headers = res.headers_mut();
         for (key, value) in response_headers {

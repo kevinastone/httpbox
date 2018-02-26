@@ -3,8 +3,7 @@ extern crate hyper;
 extern crate mime;
 extern crate serde;
 
-use app::response::bad_request;
-use gotham::http::response::create_response;
+use app::response::{bad_request, empty_response};
 use gotham::state::{FromState, State};
 
 use hyper::{Response, StatusCode};
@@ -19,11 +18,7 @@ pub fn status_code(mut state: State) -> (State, Response) {
 
     match StatusCode::try_from(params.code) {
         Ok(status) => {
-            let res = create_response(
-                &state,
-                status,
-                Some((vec![], mime::TEXT_PLAIN)),
-            );
+            let res = empty_response(&state, status);
             (state, res)
         }
         Err(_) => bad_request(state),

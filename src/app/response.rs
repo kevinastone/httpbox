@@ -6,21 +6,17 @@ use gotham::http::response::create_response;
 use gotham::state::State;
 use hyper::{header, Response, StatusCode};
 
+pub fn empty_response(state: &State, status: StatusCode) -> Response {
+    create_response(state, status, Some((vec![], mime::TEXT_PLAIN)))
+}
+
 pub fn bad_request(state: State) -> (State, Response) {
-    let res = create_response(
-        &state,
-        StatusCode::BadRequest,
-        Some((vec![], mime::TEXT_PLAIN)),
-    );
+    let res = empty_response(&state, StatusCode::BadRequest);
     (state, res)
 }
 
 pub fn internal_server_error(state: State) -> (State, Response) {
-    let res = create_response(
-        &state,
-        StatusCode::InternalServerError,
-        Some((vec![], mime::TEXT_PLAIN)),
-    );
+    let res = empty_response(&state, StatusCode::InternalServerError);
     (state, res)
 }
 
@@ -37,11 +33,7 @@ where
 }
 
 pub fn redirect_to(state: State, url: String) -> (State, Response) {
-    let mut res = create_response(
-        &state,
-        StatusCode::Found,
-        Some((vec![], mime::TEXT_PLAIN)),
-    );
+    let mut res = empty_response(&state, StatusCode::Found);
     {
         let headers = res.headers_mut();
         headers.set(header::Location::new(url));

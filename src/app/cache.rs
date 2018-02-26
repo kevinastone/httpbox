@@ -2,8 +2,7 @@ extern crate gotham;
 extern crate hyper;
 extern crate mime;
 
-use app::response::ok;
-use gotham::http::response::create_response;
+use app::response::{empty_response, ok};
 use gotham::state::{FromState, State};
 
 use hyper::{header, Headers, Response, StatusCode};
@@ -18,11 +17,7 @@ pub fn cache(mut state: State) -> (State, Response) {
     if headers.get::<header::IfModifiedSince>().is_some()
         || headers.get::<header::IfNoneMatch>().is_some()
     {
-        let res = create_response(
-            &state,
-            StatusCode::NotModified,
-            Some((vec![], mime::TEXT_PLAIN)),
-        );
+        let res = empty_response(&state, StatusCode::NotModified);
         (state, res)
     } else {
         ok(state, vec![])
@@ -32,11 +27,7 @@ pub fn cache(mut state: State) -> (State, Response) {
 pub fn set_cache(mut state: State) -> (State, Response) {
     let n = CacheTimeParams::take_from(&mut state).n;
 
-    let mut res = create_response(
-        &state,
-        StatusCode::Ok,
-        Some((vec![], mime::TEXT_PLAIN)),
-    );
+    let mut res = empty_response(&state, StatusCode::Ok);
     {
         let headers = res.headers_mut();
         headers.set(header::CacheControl(vec![

@@ -4,8 +4,7 @@ extern crate mime;
 
 mod header;
 
-use app::response::ok;
-use gotham::http::response::create_response;
+use app::response::{empty_response, ok};
 use gotham::state::{FromState, State};
 
 use hyper::{Headers, Response, StatusCode};
@@ -45,11 +44,7 @@ pub fn basic(mut state: State) -> (State, Response) {
     {
         Some(_) => ok(state, String::from("Authenticated").into_bytes()),
         None => {
-            let mut res = create_response(
-                &state,
-                StatusCode::Unauthorized,
-                Some((vec![], mime::TEXT_PLAIN)),
-            );
+            let mut res = empty_response(&state, StatusCode::Unauthorized);
             {
                 let headers = res.headers_mut();
                 headers.set(WWWAuthenticate(BasicRealm(REALM.to_owned())))
@@ -70,11 +65,7 @@ pub fn bearer(mut state: State) -> (State, Response) {
     {
         Some(_) => ok(state, String::from("Authenticated").into_bytes()),
         None => {
-            let res = create_response(
-                &state,
-                StatusCode::Unauthorized,
-                Some((vec![], mime::TEXT_PLAIN)),
-            );
+            let mut res = empty_response(&state, StatusCode::Unauthorized);
             (state, res)
         }
     }

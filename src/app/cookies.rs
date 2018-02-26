@@ -4,9 +4,8 @@ extern crate hyper;
 extern crate lazy_static;
 extern crate mime;
 
-use app::response::ok;
+use app::response::{empty_response, ok};
 use cookie::Cookie;
-use gotham::http::response::create_response;
 use gotham::state::{FromState, State};
 use hyper::{header, Headers, Response, StatusCode, Uri};
 use url::form_urlencoded;
@@ -38,11 +37,7 @@ pub fn set_cookies(state: State) -> (State, Response) {
         .map(|c| c.to_string())
         .collect();
 
-    let mut res = create_response(
-        &state,
-        StatusCode::Ok,
-        Some((vec![], mime::TEXT_PLAIN)),
-    );
+    let mut res = empty_response(&state, StatusCode::Ok);
     {
         let headers = res.headers_mut();
         headers.set(header::SetCookie(cookies))
