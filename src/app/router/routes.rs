@@ -90,7 +90,7 @@ impl<'a> Into<FrozenRoute<'a>> for Route<'a> {
             path: self.path,
             method: self.method,
             description: self.description,
-            example_params: self.example_params.clone(),
+            example_params: self.example_params,
         }
     }
 }
