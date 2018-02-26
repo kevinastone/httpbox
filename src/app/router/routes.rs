@@ -27,7 +27,6 @@ impl<'a> Route<'a> {
         self
     }
 
-    #[allow(dead_code)]
     pub fn set_method(mut self, method: Method) -> Self {
         self.method = method;
         self

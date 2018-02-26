@@ -112,7 +112,6 @@ where
         route
     }
 
-    #[allow(dead_code)]
     pub fn closure<R, F>(&mut self, route: R, closure: F) -> FrozenRoute<'a>
     where
         F: FnOnce(&FrozenRoute<'a>, &mut RouterBuilder<C, P>),
