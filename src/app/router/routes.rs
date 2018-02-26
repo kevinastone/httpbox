@@ -1,19 +1,19 @@
-extern crate iron;
+extern crate hyper;
 
-use self::iron::{Handler, IronResult, Request, Response};
-use self::iron::method::Method;
+use hyper::Method;
 use std::collections::HashMap;
+use std::convert::Into;
 
-#[derive(Clone)]
-pub struct Route {
-    pub path: &'static str,
+#[derive(Debug)]
+pub struct Route<'a> {
+    pub path: &'a str,
     pub method: Method,
-    pub description: Option<&'static str>,
+    pub description: Option<&'a str>,
     pub example_params: HashMap<String, String>,
 }
 
-impl Route {
-    pub fn new(path: &'static str) -> Self {
+impl<'a> Route<'a> {
+    pub fn new(path: &'a str) -> Self {
         Route {
             path: path,
             method: Method::Get,
@@ -22,11 +22,12 @@ impl Route {
         }
     }
 
-    pub fn set_description(mut self, description: &'static str) -> Self {
+    pub fn set_description(mut self, description: &'a str) -> Self {
         self.description = Some(description);
         self
     }
 
+    #[allow(dead_code)]
     pub fn set_method(mut self, method: Method) -> Self {
         self.method = method;
         self
@@ -37,9 +38,27 @@ impl Route {
             .insert(name.to_owned(), value.to_owned());
         self
     }
+}
 
-    pub fn handle<H: Handler>(self, handler: H) -> RouteHandler {
-        RouteHandler::new(self, Box::new(handler))
+#[derive(Debug, Clone)]
+pub struct FrozenRoute<'a> {
+    path: &'a str,
+    method: Method,
+    description: Option<&'a str>,
+    example_params: HashMap<String, String>,
+}
+
+impl<'a> FrozenRoute<'a> {
+    pub fn path(&self) -> &'a str {
+        return self.path;
+    }
+
+    pub fn method(&self) -> Method {
+        return self.method.clone();
+    }
+
+    pub fn description(&self) -> Option<&'a str> {
+        return self.description;
     }
 
     pub fn example_path(&self) -> Option<String> {
@@ -66,22 +85,13 @@ impl Route {
     }
 }
 
-pub struct RouteHandler {
-    pub route: Route,
-    pub handler: Box<Handler>,
-}
-
-impl RouteHandler {
-    pub fn new(route: Route, handler: Box<Handler>) -> Self {
-        RouteHandler {
-            route: route,
-            handler: handler,
+impl<'a> Into<FrozenRoute<'a>> for Route<'a> {
+    fn into(self) -> FrozenRoute<'a> {
+        FrozenRoute {
+            path: self.path,
+            method: self.method,
+            description: self.description,
+            example_params: self.example_params.clone(),
         }
-    }
-}
-
-impl Handler for RouteHandler {
-    fn handle(&self, req: &mut Request) -> IronResult<Response> {
-        self.handler.handle(req)
     }
 }

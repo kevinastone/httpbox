@@ -1,44 +1,55 @@
-extern crate iron;
+extern crate gotham;
+extern crate hyper;
+extern crate mime;
 
-use self::iron::{IronResult, Request, Response};
-use self::iron::headers::UserAgent;
-use self::iron::status;
+use app::response::{bad_request, ok};
+use gotham::state::{FromState, State};
 
-pub fn user_agent(req: &mut Request) -> IronResult<Response> {
-    let user_agent = iexpect!(req.headers.get::<UserAgent>());
-    Ok(Response::with((status::Ok, user_agent.to_string())))
+use hyper::{Headers, Response};
+use hyper::header::UserAgent;
+
+pub fn user_agent(state: State) -> (State, Response) {
+    match Headers::borrow_from(&state)
+        .get::<UserAgent>()
+        .map(|ua| ua.to_string())
+    {
+        Some(user_agent) => ok(state, user_agent.into_bytes()),
+        None => bad_request(state),
+    }
 }
 
 #[cfg(test)]
 mod test {
+    use super::UserAgent;
+    use super::super::router;
 
-    extern crate iron_test;
-
-    use super::super::app;
-    use super::iron::headers;
-    use iron::Headers;
-    use self::iron_test::{request, response};
+    use gotham::test::TestServer;
+    use hyper::StatusCode;
 
     #[test]
     fn test_user_agent() {
-        let app = app();
+        let test_server = TestServer::new(router()).unwrap();
+        let response = test_server
+            .client()
+            .get("http://localhost:3000/user-agent")
+            .perform()
+            .unwrap();
 
-        let res = request::get("http://localhost:3000/user-agent", Headers::new(), &app).unwrap();
-
-        let result_body = response::extract_body_to_string(res);
-        assert_eq!(result_body, "iron-test")
+        assert_eq!(response.status(), StatusCode::BadRequest);
     }
 
     #[test]
     fn test_user_agent_custom() {
-        let app = app();
+        let test_server = TestServer::new(router()).unwrap();
+        let response = test_server
+            .client()
+            .get("http://localhost:3000/user-agent")
+            .with_header(UserAgent::new(String::from("HTTPBoxBot/1.0")))
+            .perform()
+            .unwrap();
 
-        let mut headers = Headers::new();
-        headers.set(headers::UserAgent("CustomAgent/1.0".to_owned()));
-
-        let res = request::get("http://localhost:3000/user-agent", headers, &app).unwrap();
-
-        let result_body = response::extract_body_to_string(res);
-        assert_eq!(result_body, "CustomAgent/1.0")
+        assert_eq!(response.status(), StatusCode::Ok);
+        let result_body = response.read_utf8_body().unwrap();
+        assert_eq!(result_body, "HTTPBoxBot/1.0");
     }
 }

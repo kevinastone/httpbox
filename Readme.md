@@ -4,7 +4,7 @@
 
 httpbox is an HTTP test tool that provides a number of endpoints for testing a
 variety of HTTP features similar to [httpbin](http://httpbin.org).  It is
-written in [Rust](https://www.rust-lang.org) and uses the [Iron web framework](http://ironframework.io).
+written in [Rust](https://www.rust-lang.org) and uses the [Gotham web framework](http://gotham.rs).
 
 You can see it in action [here](http://whispering-shelf-71295.herokuapp.com).
 

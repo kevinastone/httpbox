@@ -1,102 +1,107 @@
 extern crate cookie;
-extern crate iron;
+extern crate gotham;
+extern crate hyper;
 extern crate lazy_static;
-extern crate urlencoded;
+extern crate mime;
 
-use self::cookie::Cookie;
-use self::iron::Plugin;
-use self::iron::{IronResult, Request, Response};
-use self::iron::headers;
-use self::iron::modifiers::Header;
-use self::iron::status;
-use self::urlencoded::QueryMap;
-use self::urlencoded::UrlEncodedQuery;
+use app::response::ok;
+use cookie::Cookie;
+use gotham::http::response::create_response;
+use gotham::state::{FromState, State};
+use hyper::{header, Headers, Response, StatusCode, Uri};
+use url::form_urlencoded;
 
 lazy_static! {
-    static ref EMPTY_COOKIES: headers::Cookie = headers::Cookie(Vec::new());
-    static ref EMPTY_QUERYMAP: QueryMap = QueryMap::new();
+    static ref EMPTY_COOKIES: header::Cookie = header::Cookie::new();
 }
 
-pub fn cookies(req: &mut Request) -> IronResult<Response> {
-    let cookies = req.headers
-        .get::<headers::Cookie>()
+pub fn cookies(state: State) -> (State, Response) {
+    let cookies = Headers::borrow_from(&state)
+        .get::<header::Cookie>()
         .unwrap_or(&EMPTY_COOKIES)
         .iter()
-        .map(|c| c.to_owned())
+        .map(|(k, v)| format!("{} = {}", k, v))
         .collect::<Vec<String>>()
         .join("\n");
-    Ok(Response::with((status::Ok, cookies.to_string())))
+
+    ok(state, cookies.into_bytes())
 }
 
-pub fn set_cookies(req: &mut Request) -> IronResult<Response> {
-    let cookies = req.get_ref::<UrlEncodedQuery>()
-        .ok()
-        .unwrap_or(&EMPTY_QUERYMAP)
+pub fn set_cookies(state: State) -> (State, Response) {
+    let cookies: Vec<(String)> = Uri::borrow_from(&state)
+        .query()
+        .map(|query| form_urlencoded::parse(query.as_bytes()))
+        .map(|pairs| pairs.into_owned().collect())
+        .unwrap_or_else(|| vec![])
         .iter()
-        .map(|(k, v)| Cookie::new(k.to_owned(), v.first().unwrap().to_owned()))
+        .map(|&(ref k, ref v)| Cookie::new(k.to_owned(), v.to_owned()))
         .map(|c| c.to_string())
         .collect();
 
-    let cookies = headers::SetCookie(cookies);
-
-    Ok(Response::with((status::Ok, Header(cookies))))
+    let mut res = create_response(
+        &state,
+        StatusCode::Ok,
+        Some((vec![], mime::TEXT_PLAIN)),
+    );
+    {
+        let headers = res.headers_mut();
+        headers.set(header::SetCookie(cookies))
+    }
+    (state, res)
 }
 
 #[cfg(test)]
 mod test {
+    use super::header;
+    use super::super::router;
 
-    extern crate cookie;
-    extern crate iron_test;
-
-    use super::super::app;
-    use super::iron::headers;
-    use iron::Headers;
-    use self::cookie::Cookie;
-    use self::iron_test::{request, response};
+    use gotham::test::TestServer;
+    use hyper::StatusCode;
 
     #[test]
     fn test_no_cookies() {
-        let app = app();
-
-        let res = request::get("http://localhost:3000/cookies", Headers::new(), &app).unwrap();
-
-        let result_body = response::extract_body_to_string(res);
+        let test_server = TestServer::new(router()).unwrap();
+        let response = test_server
+            .client()
+            .get("http://localhost:3000/cookies")
+            .perform()
+            .unwrap();
+        assert_eq!(response.status(), StatusCode::Ok);
+        let result_body = response.read_utf8_body().unwrap();
         assert_eq!(result_body, "")
     }
 
     #[test]
     fn test_cookies() {
-        let app = app();
+        let mut cookie = header::Cookie::new();
+        cookie.set("test", "value");
 
-        let mut headers = Headers::new();
-        headers.set(headers::Cookie(vec![
-            Cookie::new("test".to_owned(), "value".to_owned()).to_string(),
-        ]));
+        let test_server = TestServer::new(router()).unwrap();
+        let response = test_server
+            .client()
+            .get("http://localhost:3000/cookies")
+            .with_header(cookie)
+            .perform()
+            .unwrap();
 
-        let res = request::get("http://localhost:3000/cookies", headers, &app).unwrap();
-
-        let result_body = response::extract_body_to_string(res);
-        assert_eq!(result_body, "test=value")
+        assert_eq!(response.status(), StatusCode::Ok);
+        let result_body = response.read_utf8_body().unwrap();
+        assert_eq!(result_body, "test = value")
     }
 
     #[test]
     fn test_set_cookies() {
-        let app = app();
-
-        let res = request::get(
-            "http://localhost:3000/cookies/set?test=value",
-            Headers::new(),
-            &app,
-        ).unwrap();
-
-        let cookies = res.headers.get::<headers::SetCookie>().unwrap();
-        let cookie = cookies
-            .0
-            .first()
-            .map(|c| c.to_owned())
-            .and_then(|c| Cookie::parse(c).ok())
+        let test_server = TestServer::new(router()).unwrap();
+        let response = test_server
+            .client()
+            .get("http://localhost:3000/cookies/set?test=value")
+            .perform()
             .unwrap();
 
-        assert_eq!(cookie.name_value(), ("test", "value"));
+        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(
+            response.headers().get::<header::SetCookie>().unwrap(),
+            &header::SetCookie(vec![String::from("test=value")])
+        )
     }
 }

@@ -1,0 +1,11 @@
+# write_mode="Overwrite"
+
+# match_block_trailing_comma = true
+max_width = 80
+
+# reorder_imported_name = true
+# reorder_imports = true
+# reorder_extern_crates = true
+# reorder_modules = true
+
+# use_try_shorthand = true

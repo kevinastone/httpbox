@@ -1,53 +1,75 @@
-extern crate iron;
-extern crate router;
+extern crate futures;
+extern crate futures_timer;
+extern crate gotham;
+extern crate hyper;
+extern crate mime;
 
-use self::iron::{IronResult, Request, Response};
-use self::iron::status;
-use self::router::Router;
+use app::response::ok;
+use futures::{future, Future};
+use futures_timer::Delay;
+use gotham::state::{FromState, State};
+use gotham::handler::{HandlerFuture, IntoHandlerError};
 use std::cmp::min;
-use std::thread;
 use std::time::Duration;
 
-fn sleep(seconds: u64) {
-    // Only delay when not testing
-    if !(cfg!(test)) {
-        thread::sleep(Duration::from_secs(seconds));
-    }
+#[derive(Deserialize, StateData, StaticResponseExtender)]
+pub struct DelayParams {
+    n: u64,
 }
 
-pub fn delay(req: &mut Request) -> IronResult<Response> {
-    let delay = req.extensions
-        .get::<Router>()
-        .unwrap()
-        .find("n")
-        .unwrap_or("10");
-    let delay = itry!(delay.parse::<u64>(), status::BadRequest);
-    let delay = min(delay, 10);
+fn sleep_duration(seconds: u64) -> u64 {
+    // Only delay when not testing
+    if !(cfg!(test)) {
+        return seconds;
+    }
+    return 0;
+}
 
-    sleep(delay);
+pub fn delay(mut state: State) -> Box<HandlerFuture> {
+    let params = DelayParams::take_from(&mut state);
+    let delay = min(params.n, 10);
 
-    Ok(Response::with((status::Ok, delay.to_string())))
+    let f = Delay::new(Duration::from_secs(sleep_duration(delay))).then(
+        move |result| match result {
+            Err(e) => future::err((state, e.into_handler_error())),
+            Ok(()) => future::ok(ok(state, format!("{}", delay).into_bytes())),
+        },
+    );
+
+    Box::new(f)
 }
 
 #[cfg(test)]
 mod test {
-
-    extern crate iron_test;
-
-    use super::super::app;
-    use iron::Headers;
-    use iron::status;
-    use self::iron_test::{request, response};
+    use gotham::test::TestServer;
+    use hyper::StatusCode;
+    use super::super::router;
 
     #[test]
     fn test_sleep() {
-        let app = app();
+        let test_server = TestServer::new(router()).unwrap();
+        let response = test_server
+            .client()
+            .get("http://localhost:3000/delay/3")
+            .perform()
+            .unwrap();
 
-        let res = request::get("http://localhost:3000/delay/3", Headers::new(), &app).unwrap();
+        assert_eq!(response.status(), StatusCode::Ok);
+        let result_body = response.read_utf8_body().unwrap();
+        assert_eq!(result_body, "3");
+    }
 
-        assert_eq!(res.status.unwrap(), status::Ok);
+    #[test]
+    fn test_sleep_too_long() {
+        let test_server = TestServer::new(router()).unwrap();
+        let response = test_server
+            .client()
+            .get("http://localhost:3000/delay/33")
+            .perform()
+            .unwrap();
 
-        let result_body = response::extract_body_to_string(res);
-        assert_eq!(result_body, "3")
+        assert_eq!(response.status(), StatusCode::Ok);
+        let result_body = response.read_utf8_body().unwrap();
+        assert_eq!(result_body, "10");
     }
 }

@@ -1,17 +1,28 @@
 #[macro_use]
 extern crate clap;
+extern crate cookie;
+extern crate futures;
+extern crate futures_timer;
+extern crate gotham;
+#[macro_use]
+extern crate gotham_derive;
 #[macro_use]
 extern crate horrorshow;
-#[macro_use(itry, iexpect)]
-extern crate iron;
+#[allow(unused_imports)]
+#[macro_use]
+extern crate hyper;
 #[macro_use]
 extern crate lazy_static;
 extern crate num_cpus;
-extern crate rustc_serialize;
+extern crate rand;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate url;
 
 use clap::{App, Arg, Error, ErrorKind, Shell};
-use iron::{Iron, Timeouts};
 use std::io;
+use std::net::ToSocketAddrs;
 
 mod app;
 
@@ -60,7 +71,11 @@ fn main() {
     let matches = cli().get_matches();
 
     if let Some(shell) = matches.value_of("completions") {
-        cli().gen_completions_to(NAME, shell.parse::<Shell>().unwrap(), &mut io::stdout());
+        cli().gen_completions_to(
+            NAME,
+            shell.parse::<Shell>().unwrap(),
+            &mut io::stdout(),
+        );
         return;
     }
 
@@ -71,14 +86,15 @@ fn main() {
         Err(Error {
             kind: ErrorKind::ArgumentNotFound,
             ..
-        }) => 8 * ::num_cpus::get(),
+        }) => ::num_cpus::get(),
         Err(e) => e.exit(),
     };
+
+    let addr = (host, port)
+        .to_socket_addrs()
+        .ok()
+        .and_then(|iter| iter.last())
+        .expect(&format!("Invalid listening address: {}:{}", host, port)[..]);
     println!("Listening on {}:{} with {} threads", host, port, threads,);
-    Iron {
-        handler: app::app(),
-        timeouts: Timeouts::default(),
-        threads: threads,
-    }.http((host, port))
-        .unwrap();
+    gotham::start_with_num_threads(addr, threads, app::router())
 }

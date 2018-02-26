@@ -1,60 +1,26 @@
 [package]
 name = "httpbox"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Kevin Stone <kevinastone@gmail.com>"]
 
+[dependencies]
 
-[dependencies.iron]
-version="^0.5.0"
-default-features = false
+clap="~2.16.1"
+cookie = "0.10"
+hyper = "0.11"
+futures = "0.1"
+futures-timer = "0.1"
+horrorshow = "^0.6.2"
+lazy_static = "*"
+mime = "0.3"
+num_cpus = "*"
+rand = "*"
+serde = "1"
+serde_derive = "1"
+url = "*"
 
-[dependencies.urlencoded]
-version="^0.5.0"
+[dependencies.gotham]
+git="https://github.com/gotham-rs/gotham"
 
-[dependencies.cookie]
-version="*"
-
-[dependencies.logger]
-version="*"
-
-[dependencies.router]
-version="^0.5.1"
-
-[dependencies.mount]
-version="*"
-
-[dependencies.persistent]
-version="*"
-
-[dependencies.staticfile]
-version="*"
-
-[dependencies.bodyparser]
-version="^0.7.0"
-
-[dependencies.clap]
-version="~2.16.1"
-
-[dependencies.rustc-serialize]
-version="*"
-
-[dependencies.num_cpus]
-version="*"
-
-[dependencies.rand]
-version="*"
-
-[dependencies.modifier]
-version="*"
-
-[dependencies.horrorshow]
-version="^0.6.2"
-
-[dependencies.lazy_static]
-version="*"
-
-[dev-dependencies.iron-test]
-version="^0.5.0"
-
-[dev-dependencies.time]
-version="*"
+[dependencies.gotham_derive]
+git="https://github.com/gotham-rs/gotham"
