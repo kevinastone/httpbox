@@ -43,4 +43,16 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::TooManyRequests);
     }
+
+    #[test]
+    fn test_bad_status_code() {
+        let test_server = TestServer::new(router()).unwrap();
+        let response = test_server
+            .client()
+            .get("http://localhost:3000/status/999")
+            .perform()
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BadRequest);
+    }
 }
