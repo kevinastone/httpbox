@@ -15,6 +15,18 @@ pub fn bad_request(state: State) -> (State, Response) {
     (state, res)
 }
 
+pub fn html<B>(state: State, body: B) -> (State, Response)
+where
+    B: Into<Vec<u8>>,
+{
+    let res = create_response(
+        &state,
+        StatusCode::Ok,
+        Some((body.into(), mime::TEXT_HTML)),
+    );
+    (state, res)
+}
+
 pub fn internal_server_error(state: State) -> (State, Response) {
     let res = empty_response(&state, StatusCode::InternalServerError);
     (state, res)

@@ -3,7 +3,7 @@ extern crate horrorshow;
 extern crate hyper;
 extern crate mime;
 
-use app::response::ok;
+use app::response::html;
 use gotham::handler::{Handler, HandlerFuture, IntoHandlerFuture, NewHandler};
 use gotham::state::State;
 use horrorshow::prelude::*;
@@ -16,7 +16,7 @@ pub struct Index(String);
 
 impl Handler for Index {
     fn handle(self, state: State) -> Box<HandlerFuture> {
-        ok(state, self.0.into_bytes()).into_handler_future()
+        html(state, self.0.into_bytes()).into_handler_future()
     }
 }
 
