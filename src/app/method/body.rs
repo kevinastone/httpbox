@@ -57,35 +57,24 @@ fn content_type_decoder(mut state: &State) -> ContentTypeDecoder {
 }
 
 pub fn parse_body(mut state: State) -> Box<HandlerFuture> {
-    let f = Body::take_from(&mut state).concat2().then(
-        |raw_body| match raw_body {
-            Err(e) => return future::err((state, e.into_handler_error())),
-            Ok(valid_body) => {
-                let payload = match content_type_decoder(&mut state) {
-                    ContentTypeDecoder::UrlEncoded => {
-                        parse_url_encoded_body(valid_body.to_vec())
-                            .map_err(|e| BodyParseError(e.to_string()))
-                    }
-                    ContentTypeDecoder::Raw => {
-                        String::from_utf8(valid_body.to_vec())
-                            .map_err(|e| BodyParseError(e.to_string()))
-                    }
-                };
-                match payload {
-                    Ok(content) => {
-                        return future::ok(ok(state, content.into_bytes()))
-                    }
-                    Err(e) => {
-                        return future::err((
-                            state,
-                            e.into_handler_error()
-                                .with_status(StatusCode::BadRequest),
-                        ))
-                    }
+    let f = Body::take_from(&mut state).concat2().then(|raw_body| {
+        let valid_body = future_try_or_error_response!(state, raw_body);
+        let content = future_try_or_error_response!(
+            StatusCode::BadRequest,
+            state,
+            match content_type_decoder(&mut state) {
+                ContentTypeDecoder::UrlEncoded => {
+                    parse_url_encoded_body(valid_body.to_vec())
+                        .map_err(|e| BodyParseError(e.to_string()))
+                }
+                ContentTypeDecoder::Raw => {
+                    String::from_utf8(valid_body.to_vec())
+                        .map_err(|e| BodyParseError(e.to_string()))
                 }
             }
-        },
-    );
+        );
+        future::ok(ok(state, content.into_bytes()))
+    });
 
     Box::new(f)
 }

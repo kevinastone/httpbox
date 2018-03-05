@@ -2,20 +2,20 @@ extern crate gotham;
 extern crate hyper;
 extern crate mime;
 
-use app::response::{bad_request, ok};
+use app::response::ok;
 use gotham::state::{FromState, State};
 
 use hyper::{Headers, Response};
 use hyper::header::UserAgent;
 
 pub fn user_agent(state: State) -> (State, Response) {
-    match Headers::borrow_from(&state)
-        .get::<UserAgent>()
-        .map(|ua| ua.to_string())
-    {
-        Some(user_agent) => ok(state, user_agent.into_bytes()),
-        None => bad_request(state),
-    }
+    let user_agent = expect_or_error_response!(
+        state,
+        Headers::borrow_from(&state)
+            .get::<UserAgent>()
+            .map(|ua| ua.to_string())
+    );
+    ok(state, user_agent.into_bytes())
 }
 
 #[cfg(test)]

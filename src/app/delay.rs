@@ -30,9 +30,9 @@ pub fn delay(mut state: State) -> Box<HandlerFuture> {
     let delay = min(params.n, 10);
 
     let f = Delay::new(Duration::from_secs(sleep_duration(delay))).then(
-        move |result| match result {
-            Err(e) => future::err((state, e.into_handler_error())),
-            Ok(()) => future::ok(ok(state, format!("{}", delay).into_bytes())),
+        move |result| {
+            future_try_or_error_response!(state, result);
+            future::ok(ok(state, format!("{}", delay).into_bytes()))
         },
     );
 
