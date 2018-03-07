@@ -4,7 +4,7 @@ extern crate mime;
 
 mod uri;
 
-use app::response::{bad_request, redirect_to};
+use app::response::redirect_to;
 use gotham::state::{FromState, State};
 use hyper::{Response, Uri};
 use self::uri::{absolute_url, join_url};
@@ -23,10 +23,8 @@ pub struct RedirectUrlParams {
 
 pub fn to(mut state: State) -> (State, Response) {
     let query = RedirectUrlParams::take_from(&mut state);
-    match Url::parse(&query.url[..]) {
-        Ok(url) => redirect_to(state, url.to_string()),
-        Err(_) => bad_request(state),
-    }
+    let url = try_or_error_response!(state, Url::parse(&query.url[..]));
+    redirect_to(state, url.to_string())
 }
 
 pub fn relative(mut state: State) -> (State, Response) {
@@ -58,10 +56,11 @@ pub fn absolute(mut state: State) -> (State, Response) {
 
     let uri = Uri::borrow_from(&state).clone();
     let base = absolute_url(&state, uri);
-    match base.and_then(|base| join_url(&url[..], &base)) {
-        Some(url) => redirect_to(state, url.to_string()),
-        None => bad_request(state),
-    }
+    let url = expect_or_error_response!(
+        state,
+        base.and_then(|base| join_url(&url[..], &base))
+    );
+    redirect_to(state, url.to_string())
 }
 
 #[cfg(test)]

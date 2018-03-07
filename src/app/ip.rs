@@ -14,16 +14,15 @@ fn client_ip_addr(state: &State) -> Option<String> {
 }
 
 pub fn ip(state: State) -> (State, Response) {
-    match {
-        let headers = Headers::borrow_from(&state);
-        headers
+    let remote_ip = expect_or_error_response!(
+        internal_server_error,
+        state,
+        Headers::borrow_from(&state)
             .get_raw(X_FORWARD_FOR)
             .map(|h| header::parsing::from_one_raw_str(h).ok())
             .unwrap_or_else(|| client_ip_addr(&state))
-    } {
-        Some(remote_ip) => ok(state, remote_ip.into_bytes()),
-        None => internal_server_error(state),
-    }
+    );
+    ok(state, remote_ip.into_bytes())
 }
 
 #[cfg(test)]

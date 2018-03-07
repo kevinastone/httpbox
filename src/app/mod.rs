@@ -1,5 +1,8 @@
 extern crate gotham;
 
+#[macro_use]
+mod macros;
+
 mod auth;
 mod bytes;
 mod cache;

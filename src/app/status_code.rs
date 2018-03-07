@@ -3,7 +3,7 @@ extern crate hyper;
 extern crate mime;
 extern crate serde;
 
-use app::response::{bad_request, empty_response};
+use app::response::empty_response;
 use gotham::state::{FromState, State};
 
 use hyper::{Response, StatusCode};
@@ -16,13 +16,10 @@ pub struct StatusCodeParams {
 pub fn status_code(mut state: State) -> (State, Response) {
     let params = StatusCodeParams::take_from(&mut state);
 
-    match StatusCode::try_from(params.code) {
-        Ok(status) => {
-            let res = empty_response(&state, status);
-            (state, res)
-        }
-        Err(_) => bad_request(state),
-    }
+    let status_code =
+        try_or_error_response!(state, StatusCode::try_from(params.code));
+    let res = empty_response(&state, status_code);
+    (state, res)
 }
 
 #[cfg(test)]
