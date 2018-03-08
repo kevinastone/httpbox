@@ -18,9 +18,6 @@ rand = "*"
 serde = "1"
 serde_derive = "1"
 url = "*"
+gotham = "^0.2"
+gotham_derive = "^0.2"
 
-[dependencies.gotham]
-git="https://github.com/gotham-rs/gotham"
-
-[dependencies.gotham_derive]
-git="https://github.com/gotham-rs/gotham"

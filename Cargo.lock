@@ -67,8 +67,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "borrow-bag"
-version = "0.4.0"
-source = "git+https://github.com/gotham-rs/gotham#0e3d1599cfb4f33df5ea96ea875cc9db2ba621fd"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "skeptic 0.13.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -207,12 +207,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "gotham"
-version = "0.2.0-dev"
-source = "git+https://github.com/gotham-rs/gotham#0e3d1599cfb4f33df5ea96ea875cc9db2ba621fd"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "base64 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "borrow-bag 0.4.0 (git+https://github.com/gotham-rs/gotham)",
+ "borrow-bag 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "crossbeam 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.18 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -233,8 +233,8 @@ dependencies = [
 
 [[package]]
 name = "gotham_derive"
-version = "0.2.0-dev"
-source = "git+https://github.com/gotham-rs/gotham#0e3d1599cfb4f33df5ea96ea875cc9db2ba621fd"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "quote 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "syn 0.12.13 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -258,8 +258,8 @@ dependencies = [
  "cookie 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures-timer 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "gotham 0.2.0-dev (git+https://github.com/gotham-rs/gotham)",
- "gotham_derive 0.2.0-dev (git+https://github.com/gotham-rs/gotham)",
+ "gotham 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gotham_derive 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "horrorshow 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.11.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -951,7 +951,7 @@ dependencies = [
 "checksum bitflags 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "aad18937a628ec6abcd26d1489012cc0e18c21798210f491af69ded9b881106d"
 "checksum bitflags 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "4efd02e230a02e18f92fc2735f44597385ed02ad8f831e7c1c1156ee5e1ab3a5"
 "checksum bitflags 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "b3c30d3802dfb7281680d6285f2ccdaa8c2d8fee41f93805dba5c4cf50dc23cf"
-"checksum borrow-bag 0.4.0 (git+https://github.com/gotham-rs/gotham)" = "<none>"
+"checksum borrow-bag 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a8cf5fa928e26316f52e1ce2afbcb7a0f8e28caa9e59e1a7e63d8d78d85ba56f"
 "checksum bytecount 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "af27422163679dea46a1a7239dffff64d3dcdc3ba5fe9c49c789fbfe0eb949de"
 "checksum byteorder 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "652805b7e73fada9d85e9a6682a4abd490cb52d96aeecc12e33a0de34dfd0d23"
 "checksum bytes 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)" = "1b7db437d718977f6dc9b2e3fd6fc343c02ac6b899b73fdd2179163447bd9ce9"
@@ -970,8 +970,8 @@ dependencies = [
 "checksum futures-cpupool 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)" = "ab90cde24b3319636588d0c35fe03b1333857621051837ed769faefb4c2162e4"
 "checksum futures-timer 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "a5cedfe9b6dc756220782cc1ba5bcb1fa091cdcba155e40d3556159c3db58043"
 "checksum glob 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)" = "8be18de09a56b60ed0edf84bc9df007e30040691af7acd1c41874faac5895bfb"
-"checksum gotham 0.2.0-dev (git+https://github.com/gotham-rs/gotham)" = "<none>"
-"checksum gotham_derive 0.2.0-dev (git+https://github.com/gotham-rs/gotham)" = "<none>"
+"checksum gotham 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "4b03128abbca7352079769c0ffcaebfc1563ef690622613abb759f795f587be9"
+"checksum gotham_derive 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d310018ef4eb6536b4972b1dc72aec0a33e5bff494e18038389ec64394fa692d"
 "checksum horrorshow 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "d587765115bf4e613f0c88e3fcad077dc9b1a339de89912f6a75f21049938bce"
 "checksum httparse 1.2.4 (registry+https://github.com/rust-lang/crates.io-index)" = "c2f407128745b78abc95c0ffbe4e5d37427fdc0d45470710cfef8c44522a2e37"
 "checksum hyper 0.11.19 (registry+https://github.com/rust-lang/crates.io-index)" = "47659bb1cb7ef3cd7b4f9bd2a11349b8d92097d34f9597a3c09e9bcefaf92b61"
