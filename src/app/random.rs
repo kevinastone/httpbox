@@ -1,47 +1,43 @@
+extern crate byteorder;
 extern crate rand;
 
-use rand::{Rng, XorShiftRng};
+use byteorder::{LittleEndian, WriteBytesExt};
+use rand::prelude::*;
+use std::iter::repeat;
 
-fn to_bytes(val: u32) -> [u32; 4] {
-    [val, val, val, val]
+
+fn to_bytes(val: u32) -> [u8; 32] {
+
+    let mut slice = vec![];
+    slice.write_u32::<LittleEndian>(val).unwrap();
+    let slice = &slice[..];
+    let mut array = [0; 32];
+    array.copy_from_slice(
+        &repeat(slice).take(8).collect::<Vec<&[u8]>>().concat()
+    );
+    array
 }
 
-pub struct RandomGenerator {
-    rng: XorShiftRng,
-}
-
-impl RandomGenerator {
-    pub fn new(seed: Option<u32>) -> Self {
-        let seed = seed.unwrap_or_else(|| rand::thread_rng().gen::<u32>());
-        RandomGenerator {
-            rng: rand::SeedableRng::from_seed(to_bytes(seed)),
-        }
-    }
-}
-
-impl Rng for RandomGenerator {
-    fn next_u32(&mut self) -> u32 {
-        self.rng.next_u32()
-    }
+pub fn rng(seed: Option<u32>) -> StdRng {
+    let seed = seed.unwrap_or_else(|| thread_rng().gen::<u32>());
+    StdRng::from_seed(to_bytes(seed))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    use rand::Rng;
-
     #[test]
     fn rng_no_seed() {
-        RandomGenerator::new(None);
+        rng(None);
     }
 
     #[test]
     fn rng_seed_consistent() {
-        let mut rng = RandomGenerator::new(Some(1234));
-        assert_eq!(rng.next_u32(), 2537108u32);
-        assert_eq!(rng.next_u32(), 1238u32);
-        assert_eq!(rng.next_u32(), 2537104u32);
-        assert_eq!(rng.next_u32(), 1234u32);
+        let mut rng = rng(Some(1234));
+        assert_eq!(rng.next_u32(), 956056973u32);
+        assert_eq!(rng.next_u32(), 667675964u32);
+        assert_eq!(rng.next_u32(), 1063033695u32);
+        assert_eq!(rng.next_u32(), 1062349892u32);
     }
 }

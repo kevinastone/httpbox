@@ -5,6 +5,7 @@ authors = ["Kevin Stone <kevinastone@gmail.com>"]
 
 [dependencies]
 
+byteorder="^1.2.4"
 clap="~2.16.1"
 cookie = "0.10"
 hyper = "0.11"
@@ -14,7 +15,7 @@ horrorshow = "^0.6.2"
 lazy_static = "*"
 mime = "0.3"
 num_cpus = "*"
-rand = "*"
+rand = "^0.5"
 serde = "1"
 serde_derive = "1"
 url = "*"

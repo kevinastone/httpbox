@@ -3,7 +3,7 @@ extern crate hyper;
 extern crate mime;
 extern crate rand;
 
-use app::random::RandomGenerator;
+use app::random::rng;
 use gotham::http::response::{create_response, set_headers};
 use gotham::state::{FromState, State};
 use hyper::{Body, Response, StatusCode};
@@ -24,7 +24,7 @@ fn get_bytes(mut state: &State) -> Vec<u8> {
     let count = BytesPathParams::borrow_from(&mut state).n;
     let seed = BytesQueryParams::borrow_from(&mut state).seed;
 
-    let mut rng = RandomGenerator::new(seed);
+    let mut rng = rng(seed);
     (0..count).map(|_| rng.gen::<u8>()).collect::<Vec<u8>>()
 }
 
@@ -73,7 +73,7 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::Ok);
         let result_body = response.read_body().unwrap();
-        assert_eq!(result_body, [148, 214, 144, 210])
+        assert_eq!(result_body, [141, 60, 95, 68])
     }
 
     #[test]
@@ -87,7 +87,7 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::Ok);
         let result_body = response.read_body().unwrap();
-        assert_eq!(result_body, [148, 214, 144, 210])
+        assert_eq!(result_body, [141, 60, 95, 68])
     }
 
     #[test]
@@ -101,6 +101,6 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::Ok);
         let result_body = response.read_body().unwrap();
-        assert_eq!(result_body, [148, 214, 144, 210])
+        assert_eq!(result_body, [141, 60, 95, 68])
     }
 }

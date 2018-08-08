@@ -301,6 +301,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "httpbox"
 version = "0.2.0"
 dependencies = [
+ "byteorder 1.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.16.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "cookie 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.23 (registry+https://github.com/rust-lang/crates.io-index)",
