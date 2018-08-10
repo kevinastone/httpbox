@@ -17,7 +17,8 @@ pub struct BytesPathParams {
 #[derive(Deserialize, StateData, StaticResponseExtender)]
 pub struct BytesQueryParams {
     seed: Option<u32>,
-    #[allow(dead_code)] chunk_size: Option<usize>,
+    #[allow(dead_code)]
+    chunk_size: Option<usize>,
 }
 
 fn get_bytes(mut state: &State) -> Vec<u8> {
@@ -73,7 +74,7 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::Ok);
         let result_body = response.read_body().unwrap();
-        assert_eq!(result_body, [141, 60, 95, 68])
+        assert_eq!(result_body, [149, 120, 12, 223])
     }
 
     #[test]
@@ -87,7 +88,7 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::Ok);
         let result_body = response.read_body().unwrap();
-        assert_eq!(result_body, [141, 60, 95, 68])
+        assert_eq!(result_body, [149, 120, 12, 223])
     }
 
     #[test]
@@ -101,6 +102,6 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::Ok);
         let result_body = response.read_body().unwrap();
-        assert_eq!(result_body, [141, 60, 95, 68])
+        assert_eq!(result_body, [149, 120, 12, 223])
     }
 }
