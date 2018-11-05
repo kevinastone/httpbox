@@ -37,30 +37,8 @@ impl<'a> Route<'a> {
             .insert(name.to_owned(), value.to_owned());
         self
     }
-}
 
-#[derive(Debug, Clone)]
-pub struct FrozenRoute<'a> {
-    path: &'a str,
-    method: Method,
-    description: Option<&'a str>,
-    example_params: HashMap<String, String>,
-}
-
-impl<'a> FrozenRoute<'a> {
-    pub fn path(&self) -> &'a str {
-        return self.path;
-    }
-
-    pub fn method(&self) -> Method {
-        return self.method.clone();
-    }
-
-    pub fn description(&self) -> Option<&'a str> {
-        return self.description;
-    }
-
-    pub fn example_path(&self) -> Option<String> {
+    fn example_path(self: &Self) -> Option<String> {
         if self.method != Method::Get {
             return None;
         }
@@ -82,15 +60,43 @@ impl<'a> FrozenRoute<'a> {
         }
         Some(path)
     }
+
+}
+
+#[derive(Debug, Clone)]
+pub struct FrozenRoute<'a> {
+    path: &'a str,
+    method: Method,
+    description: Option<&'a str>,
+    example_path: Option<String>,
+}
+
+impl<'a> FrozenRoute<'a> {
+    pub fn path(&self) -> &'a str {
+        return self.path;
+    }
+
+    pub fn method(&self) -> Method {
+        return self.method.clone();
+    }
+
+    pub fn description(&self) -> Option<&'a str> {
+        return self.description;
+    }
+
+    pub fn example_path(&self) -> Option<String> {
+        return self.example_path.clone();
+    }
 }
 
 impl<'a> Into<FrozenRoute<'a>> for Route<'a> {
     fn into(self) -> FrozenRoute<'a> {
+        let example_path = self.example_path();
         FrozenRoute {
             path: self.path,
             method: self.method,
             description: self.description,
-            example_params: self.example_params,
+            example_path: example_path,
         }
     }
 }

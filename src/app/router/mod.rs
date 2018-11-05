@@ -169,7 +169,7 @@ pub fn router() -> Router {
                     .add_example_param("n", "256"),
             );
 
-        let mut routes = installer.routes.clone();
+        let mut routes = installer.routes();
         installer.closure(
             Route::new("/").set_description("This page"),
             move |route, builder| {

@@ -14,8 +14,8 @@ where
     C: PipelineHandleChain<P> + Copy + Send + Sync + 'static,
     P: Send + Sync + RefUnwindSafe + 'static,
 {
-    pub builder: &'a mut RouterBuilder<'b, C, P>,
-    pub routes: Vec<FrozenRoute<'a>>,
+    builder: &'a mut RouterBuilder<'b, C, P>,
+    routes: Vec<FrozenRoute<'a>>,
 }
 
 impl<'a, 'b, C, P> RouteInstaller<'a, 'b, C, P>
@@ -42,6 +42,10 @@ where
             assoc.request(vec![method]).to(handler)
         });
         route
+    }
+
+    pub fn routes(&self) -> Vec<FrozenRoute<'a>> {
+        self.routes.clone()
     }
 
     pub fn install_with_path_extractor<H, R, PE>(
