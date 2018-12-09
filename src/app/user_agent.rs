@@ -1,27 +1,22 @@
-extern crate gotham;
-extern crate hyper;
-extern crate mime;
-
 use crate::app::response::ok;
 use gotham::state::{FromState, State};
 
-use hyper::header::UserAgent;
-use hyper::{Headers, Response};
+use hyper::{Body, HeaderMap, Response};
 
-pub fn user_agent(state: State) -> (State, Response) {
+pub fn user_agent(state: State) -> (State, Response<Body>) {
     let user_agent = expect_or_error_response!(
         state,
-        Headers::borrow_from(&state)
-            .get::<UserAgent>()
-            .map(|ua| ua.to_string())
+        HeaderMap::borrow_from(&state)
+            .get(http::header::USER_AGENT)
+            .and_then(|hv| hv.to_str().ok())
+            .map(String::from)
     );
-    ok(state, user_agent.into_bytes())
+    ok(state, user_agent)
 }
 
 #[cfg(test)]
 mod test {
     use super::super::router;
-    use super::UserAgent;
 
     use gotham::test::TestServer;
     use hyper::StatusCode;
@@ -35,7 +30,7 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::BadRequest);
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 
     #[test]
@@ -44,11 +39,14 @@ mod test {
         let response = test_server
             .client()
             .get("http://localhost:3000/user-agent")
-            .with_header(UserAgent::new(String::from("HTTPBoxBot/1.0")))
+            .with_header(
+                http::header::USER_AGENT,
+                http::header::HeaderValue::from_static("HTTPBoxBot/1.0"),
+            )
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_utf8_body().unwrap();
         assert_eq!(result_body, "HTTPBoxBot/1.0");
     }

@@ -1,11 +1,10 @@
-extern crate gotham;
-
 use super::FrozenRoute;
 
 use gotham::extractor::{PathExtractor, QueryStringExtractor};
 use gotham::handler::Handler;
 use gotham::pipeline::chain::PipelineHandleChain;
 use gotham::router::builder::*;
+use hyper::Body;
 use std::convert::Into;
 use std::panic::RefUnwindSafe;
 
@@ -25,7 +24,7 @@ where
 {
     pub fn new(builder: &'a mut RouterBuilder<'b, C, P>) -> Self {
         RouteInstaller {
-            builder: builder,
+            builder,
             routes: vec![],
         }
     }
@@ -56,7 +55,7 @@ where
     where
         H: Handler + RefUnwindSafe + Send + Sync + Copy + 'static,
         R: Into<FrozenRoute<'a>>,
-        PE: PathExtractor + Send + Sync + 'static,
+        PE: PathExtractor<Body> + Send + Sync + 'static,
     {
         let route: FrozenRoute = route.into();
         self.routes.push(route.clone());
@@ -78,7 +77,7 @@ where
     where
         H: Handler + RefUnwindSafe + Send + Sync + Copy + 'static,
         R: Into<FrozenRoute<'a>>,
-        QSE: QueryStringExtractor + Send + Sync + 'static,
+        QSE: QueryStringExtractor<Body> + Send + Sync + 'static,
     {
         let route: FrozenRoute = route.into();
         self.routes.push(route.clone());
@@ -100,8 +99,8 @@ where
     where
         H: Handler + RefUnwindSafe + Send + Sync + Copy + 'static,
         R: Into<FrozenRoute<'a>>,
-        PE: PathExtractor + Send + Sync + 'static,
-        QSE: QueryStringExtractor + Send + Sync + 'static,
+        PE: PathExtractor<Body> + Send + Sync + 'static,
+        QSE: QueryStringExtractor<Body> + Send + Sync + 'static,
     {
         let route: FrozenRoute = route.into();
         self.routes.push(route.clone());

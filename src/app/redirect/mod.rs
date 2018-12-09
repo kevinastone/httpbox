@@ -1,13 +1,11 @@
-extern crate gotham;
-extern crate hyper;
-extern crate mime;
-
 mod uri;
 
 use self::uri::{absolute_url, join_url};
 use crate::app::response::redirect_to;
 use gotham::state::{FromState, State};
-use hyper::{Response, Uri};
+use gotham_derive::{StateData, StaticResponseExtender};
+use hyper::{Body, Response, Uri};
+use serde_derive::Deserialize;
 use std::cmp::min;
 use url::Url;
 
@@ -21,34 +19,34 @@ pub struct RedirectUrlParams {
     url: String,
 }
 
-pub fn to(mut state: State) -> (State, Response) {
+pub fn to(mut state: State) -> (State, Response<Body>) {
     let query = RedirectUrlParams::take_from(&mut state);
     let url = try_or_error_response!(state, Url::parse(&query.url[..]));
-    redirect_to(state, url.to_string())
+    redirect_to(state, &url.to_string())
 }
 
-pub fn relative(mut state: State) -> (State, Response) {
+pub fn relative(mut state: State) -> (State, Response<Body>) {
     let mut n = RedirectCountParams::take_from(&mut state).n;
     n = min(n - 1, 100);
 
-    let url = if n <= 0 {
+    let url = if n == 0 {
         String::from("/")
     } else {
         format!("/relative-redirect/{}", n)
     };
 
-    redirect_to(state, url)
+    redirect_to(state, &url)
 }
 
-pub fn redirect(state: State) -> (State, Response) {
+pub fn redirect(state: State) -> (State, Response<Body>) {
     relative(state)
 }
 
-pub fn absolute(mut state: State) -> (State, Response) {
+pub fn absolute(mut state: State) -> (State, Response<Body>) {
     let mut n = RedirectCountParams::take_from(&mut state).n;
     n = min(n - 1, 100);
 
-    let url = if n <= 0 {
+    let url = if n == 0 {
         String::from("/")
     } else {
         format!("/absolute-redirect/{}", n)
@@ -60,7 +58,7 @@ pub fn absolute(mut state: State) -> (State, Response) {
         state,
         base.and_then(|base| join_url(&url[..], &base))
     );
-    redirect_to(state, url.to_string())
+    redirect_to(state, &url.to_string())
 }
 
 #[cfg(test)]
@@ -68,7 +66,7 @@ mod test {
     use super::super::router;
 
     use gotham::test::TestServer;
-    use hyper::header::Location;
+    use http::header;
     use hyper::StatusCode;
 
     #[test]
@@ -80,10 +78,10 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Found);
+        assert_eq!(response.status(), StatusCode::FOUND);
         assert_eq!(
-            response.headers().get::<Location>().unwrap(),
-            &Location::new(String::from("http://example.com/"))
+            response.headers().get(header::LOCATION).unwrap(),
+            header::HeaderValue::from_static("http://example.com/")
         )
     }
 
@@ -96,10 +94,10 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Found);
+        assert_eq!(response.status(), StatusCode::FOUND);
         assert_eq!(
-            response.headers().get::<Location>().unwrap(),
-            &Location::new(String::from("/relative-redirect/4"))
+            response.headers().get(header::LOCATION).unwrap(),
+            header::HeaderValue::from_static("/relative-redirect/4")
         )
     }
 
@@ -112,10 +110,10 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Found);
+        assert_eq!(response.status(), StatusCode::FOUND);
         assert_eq!(
-            response.headers().get::<Location>().unwrap(),
-            &Location::new(String::from("/"))
+            response.headers().get(header::LOCATION).unwrap(),
+            header::HeaderValue::from_static("/")
         )
     }
 
@@ -128,10 +126,10 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Found);
+        assert_eq!(response.status(), StatusCode::FOUND);
         assert_eq!(
-            response.headers().get::<Location>().unwrap(),
-            &Location::new(String::from("/relative-redirect/4"))
+            response.headers().get(header::LOCATION).unwrap(),
+            header::HeaderValue::from_static("/relative-redirect/4")
         )
     }
 
@@ -144,10 +142,10 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Found);
+        assert_eq!(response.status(), StatusCode::FOUND);
         assert_eq!(
-            response.headers().get::<Location>().unwrap(),
-            &Location::new(String::from("/"))
+            response.headers().get(header::LOCATION).unwrap(),
+            header::HeaderValue::from_static("/")
         )
     }
 
@@ -160,12 +158,12 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Found);
+        assert_eq!(response.status(), StatusCode::FOUND);
         assert_eq!(
-            response.headers().get::<Location>().unwrap(),
-            &Location::new(String::from(
+            response.headers().get(header::LOCATION).unwrap(),
+            header::HeaderValue::from_static(
                 "http://localhost:3000/absolute-redirect/4"
-            ))
+            )
         )
     }
 
@@ -178,10 +176,10 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Found);
+        assert_eq!(response.status(), StatusCode::FOUND);
         assert_eq!(
-            response.headers().get::<Location>().unwrap(),
-            &Location::new(String::from("http://localhost:3000/"))
+            response.headers().get(header::LOCATION).unwrap(),
+            header::HeaderValue::from_static("http://localhost:3000/")
         )
     }
 }

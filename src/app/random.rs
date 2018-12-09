@@ -1,6 +1,3 @@
-extern crate byteorder;
-extern crate rand;
-
 use byteorder::{LittleEndian, WriteBytesExt};
 use rand::prelude::*;
 use rand::prng::chacha::ChaChaRng;

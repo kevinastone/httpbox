@@ -1,23 +1,23 @@
-extern crate gotham;
-extern crate hyper;
-extern crate mime;
-
-use crate::app::response::{empty_response, ok};
+use crate::app::response::{bad_request, empty_response, ok};
 use gotham::state::{FromState, State};
-use hyper::{Headers, Response, StatusCode, Uri};
+use http::header;
+use hyper::{Body, HeaderMap, Response, StatusCode, Uri};
+use std::str::FromStr;
 use url::form_urlencoded;
 
-pub fn headers(state: State) -> (State, Response) {
-    let headers = Headers::borrow_from(&state)
+pub fn headers(state: State) -> (State, Response<Body>) {
+    let headers = HeaderMap::borrow_from(&state)
         .iter()
-        .map(|h| format!("{}", h).trim().to_owned())
+        .map(|(n, v)| {
+            format!("{}: {}", n, v.to_str().unwrap()).trim().to_owned()
+        })
         .collect::<Vec<String>>()
         .join("\n");
 
     ok(state, headers.to_string())
 }
 
-pub fn response_headers(state: State) -> (State, Response) {
+pub fn response_headers(state: State) -> (State, Response<Body>) {
     let response_headers: Vec<(String, String)> = {
         Uri::borrow_from(&state)
             .query()
@@ -26,15 +26,30 @@ pub fn response_headers(state: State) -> (State, Response) {
             .unwrap_or_else(|| vec![])
     };
 
-    let mut res = empty_response(&state, StatusCode::Ok);
-    {
-        let headers = res.headers_mut();
-        for (key, value) in response_headers {
-            headers.set_raw(key, value);
+    let headers: Result<Vec<_>, String> = response_headers
+        .iter()
+        .map(|(key, value)| {
+            let name =
+                header::HeaderName::from_str(key).map_err(|e| e.to_string())?;
+            let value = header::HeaderValue::from_str(value)
+                .map_err(|e| e.to_string())?;
+
+            Ok((name, value))
+        })
+        .collect();
+
+    match headers {
+        Err(_) => bad_request(state),
+        Ok(hdrs) => {
+            let mut res = empty_response(&state, StatusCode::OK);
+            let headers = res.headers_mut();
+            for (key, value) in hdrs {
+                headers.insert(key, value);
+            }
+
+            (state, res)
         }
     }
-
-    (state, res)
 }
 
 #[cfg(test)]
@@ -42,9 +57,8 @@ mod test {
     use super::super::router;
 
     use gotham::test::TestServer;
+    use http::header;
     use hyper::StatusCode;
-
-    header! { (XRequestID, "X-Request-ID") => [String] }
 
     #[test]
     fn test_headers() {
@@ -52,14 +66,17 @@ mod test {
         let response = test_server
             .client()
             .get("http://localhost:3000/headers")
-            .with_header(XRequestID(String::from("1234")))
+            .with_header(
+                "X-Request-ID",
+                header::HeaderValue::from_static("1234"),
+            )
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_utf8_body().unwrap();
-        assert!(result_body.contains("X-Request-ID: 1234"));
-        assert_eq!(result_body, "Host: localhost:3000\nX-Request-ID: 1234")
+        assert!(result_body.contains("x-request-id: 1234"));
+        assert_eq!(result_body, "x-request-id: 1234\nhost: localhost:3000")
     }
 
     #[test]
@@ -71,10 +88,7 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
-        assert_eq!(
-            response.headers().get::<XRequestID>().unwrap(),
-            &XRequestID(String::from("1234"))
-        )
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.headers().get("X-Request-ID").unwrap(), "1234")
     }
 }

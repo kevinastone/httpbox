@@ -1,5 +1,3 @@
-extern crate gotham;
-
 mod installer;
 mod routes;
 
@@ -43,25 +41,25 @@ pub fn router() -> Router {
         installer.install(
             method::post,
             Route::new("/post")
-                .set_method(Method::Post)
+                .set_method(Method::POST)
                 .set_description("Returns POST data"),
         );
         installer.install(
             method::patch,
             Route::new("/patch")
-                .set_method(Method::Patch)
+                .set_method(Method::PATCH)
                 .set_description("Returns PUT data"),
         );
         installer.install(
             method::put,
             Route::new("/put")
-                .set_method(Method::Put)
+                .set_method(Method::PUT)
                 .set_description("Returns PUT data"),
         );
         installer.install(
             method::delete,
             Route::new("/delete")
-                .set_method(Method::Delete)
+                .set_method(Method::DELETE)
                 .set_description("Returns DELETE data"),
         );
         installer.install_with_path_extractor::<_, _, StatusCodeParams>(

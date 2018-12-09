@@ -1,5 +1,3 @@
-extern crate hyper;
-
 use hyper::Method;
 use std::collections::HashMap;
 use std::convert::Into;
@@ -15,8 +13,8 @@ pub struct Route<'a> {
 impl<'a> Route<'a> {
     pub fn new(path: &'a str) -> Self {
         Route {
-            path: path,
-            method: Method::Get,
+            path,
+            method: Method::GET,
             description: None,
             example_params: HashMap::new(),
         }
@@ -39,7 +37,7 @@ impl<'a> Route<'a> {
     }
 
     fn example_path(self: &Self) -> Option<String> {
-        if self.method != Method::Get {
+        if self.method != Method::GET {
             return None;
         }
 
@@ -60,7 +58,6 @@ impl<'a> Route<'a> {
         }
         Some(path)
     }
-
 }
 
 #[derive(Debug, Clone)]
@@ -73,19 +70,19 @@ pub struct FrozenRoute<'a> {
 
 impl<'a> FrozenRoute<'a> {
     pub fn path(&self) -> &'a str {
-        return self.path;
+        self.path
     }
 
     pub fn method(&self) -> Method {
-        return self.method.clone();
+        self.method.clone()
     }
 
     pub fn description(&self) -> Option<&'a str> {
-        return self.description;
+        self.description
     }
 
     pub fn example_path(&self) -> Option<String> {
-        return self.example_path.clone();
+        self.example_path.clone()
     }
 }
 
@@ -96,7 +93,7 @@ impl<'a> Into<FrozenRoute<'a>> for Route<'a> {
             path: self.path,
             method: self.method,
             description: self.description,
-            example_path: example_path,
+            example_path,
         }
     }
 }

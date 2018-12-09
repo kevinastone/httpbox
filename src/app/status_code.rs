@@ -1,20 +1,18 @@
-extern crate gotham;
-extern crate hyper;
-extern crate mime;
-extern crate serde;
-
 use crate::app::response::empty_response;
 use gotham::state::{FromState, State};
+use gotham_derive::{StateData, StaticResponseExtender};
 
-use hyper::{Response, StatusCode};
+use http::HttpTryFrom;
+use hyper::{Body, Response, StatusCode};
+use serde_derive::Deserialize;
 
 #[derive(Deserialize, StateData, StaticResponseExtender)]
 pub struct StatusCodeParams {
     code: u16,
 }
 
-pub fn status_code(mut state: State) -> (State, Response) {
-    let params = StatusCodeParams::take_from(&mut state);
+pub fn status_code(state: State) -> (State, Response<Body>) {
+    let params = StatusCodeParams::borrow_from(&state);
 
     let status_code =
         try_or_error_response!(state, StatusCode::try_from(params.code));
@@ -38,7 +36,7 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::TooManyRequests);
+        assert_eq!(response.status(), StatusCode::TOO_MANY_REQUESTS);
     }
 
     #[test]
@@ -50,6 +48,6 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::BadRequest);
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 }

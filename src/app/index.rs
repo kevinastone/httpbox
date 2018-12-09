@@ -1,22 +1,18 @@
-extern crate gotham;
-extern crate horrorshow;
-extern crate hyper;
-extern crate mime;
-
 use crate::app::response::html;
 use crate::app::router::FrozenRoute;
+use gotham::error::*;
 use gotham::handler::{Handler, HandlerFuture, IntoHandlerFuture, NewHandler};
 use gotham::state::State;
 use horrorshow::helper::doctype;
 use horrorshow::prelude::*;
-use std::io;
+use horrorshow::{append_html, html};
 
 #[derive(Debug, Clone)]
 pub struct Index(String);
 
 impl Handler for Index {
     fn handle(self, state: State) -> Box<HandlerFuture> {
-        html(state, self.0.into_bytes()).into_handler_future()
+        html(state, self.0).into_handler_future()
     }
 }
 
@@ -25,13 +21,13 @@ pub struct IndexNewHandler(String);
 impl NewHandler for IndexNewHandler {
     type Instance = Index;
 
-    fn new_handler(&self) -> io::Result<Self::Instance> {
+    fn new_handler(&self) -> Result<Self::Instance> {
         Ok(Index(self.0.clone()))
     }
 }
 
 pub fn render_index(routes: &[FrozenRoute]) -> String {
-    let body = html! {
+    (html! {
         : doctype::HTML;
         html {
             head {
@@ -70,10 +66,9 @@ pub fn render_index(routes: &[FrozenRoute]) -> String {
                 }
             }
         }
-    }
+    })
     .into_string()
-    .unwrap();
-    body
+    .unwrap()
 }
 
 impl<'a> From<&'a [FrozenRoute<'a>]> for IndexNewHandler {

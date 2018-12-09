@@ -1,38 +1,42 @@
-extern crate gotham;
-extern crate hyper;
-extern crate mime;
-
 use crate::app::response::{empty_response, ok};
 use gotham::state::{FromState, State};
+use gotham_derive::{StateData, StaticResponseExtender};
 
-use hyper::{header, Headers, Response, StatusCode};
+use http::header;
+use hyper::{Body, HeaderMap, Response, StatusCode};
+use hyperx::header as headerx;
+use serde_derive::Deserialize;
 
 #[derive(Deserialize, StateData, StaticResponseExtender)]
 pub struct CacheTimeParams {
     n: u32,
 }
 
-pub fn cache(mut state: State) -> (State, Response) {
-    let headers = Headers::take_from(&mut state);
-    if headers.get::<header::IfModifiedSince>().is_some()
-        || headers.get::<header::IfNoneMatch>().is_some()
+pub fn cache(mut state: State) -> (State, Response<Body>) {
+    let headers = HeaderMap::take_from(&mut state);
+    if headers.get(header::IF_MODIFIED_SINCE).is_some()
+        || headers.get(header::IF_NONE_MATCH).is_some()
     {
-        let res = empty_response(&state, StatusCode::NotModified);
+        let res = empty_response(&state, StatusCode::NOT_MODIFIED);
         (state, res)
     } else {
         ok(state, vec![])
     }
 }
 
-pub fn set_cache(mut state: State) -> (State, Response) {
+pub fn set_cache(mut state: State) -> (State, Response<Body>) {
     let n = CacheTimeParams::take_from(&mut state).n;
 
-    let mut res = empty_response(&state, StatusCode::Ok);
+    let mut res = empty_response(&state, StatusCode::OK);
     {
         let headers = res.headers_mut();
-        headers.set(header::CacheControl(vec![header::CacheDirective::MaxAge(
-            n,
-        )]))
+        headers.insert(
+            header::CACHE_CONTROL,
+            header::HeaderValue::from_str(
+                &headerx::CacheDirective::MaxAge(n).to_string(),
+            )
+            .unwrap(),
+        );
     }
     (state, res)
 }
@@ -42,10 +46,9 @@ mod test {
     use super::super::router;
 
     use gotham::test::TestServer;
-    use hyper::header::{
-        CacheControl, CacheDirective, HttpDate, IfModifiedSince, IfNoneMatch,
-    };
+    use http::header;
     use hyper::StatusCode;
+    use hyperx::header::{CacheDirective, HttpDate};
     use std::time::SystemTime;
 
     #[test]
@@ -57,7 +60,7 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
     }
 
     #[test]
@@ -66,11 +69,17 @@ mod test {
         let response = test_server
             .client()
             .get("http://localhost:3000/cache")
-            .with_header(IfModifiedSince(HttpDate::from(SystemTime::now())))
+            .with_header(
+                header::IF_MODIFIED_SINCE,
+                header::HeaderValue::from_str(
+                    &HttpDate::from(SystemTime::now()).to_string(),
+                )
+                .unwrap(),
+            )
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::NotModified);
+        assert_eq!(response.status(), StatusCode::NOT_MODIFIED);
     }
 
     #[test]
@@ -79,11 +88,14 @@ mod test {
         let response = test_server
             .client()
             .get("http://localhost:3000/cache")
-            .with_header(IfNoneMatch::Any)
+            .with_header(
+                header::IF_NONE_MATCH,
+                header::HeaderValue::from_static("*"),
+            )
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::NotModified);
+        assert_eq!(response.status(), StatusCode::NOT_MODIFIED);
     }
 
     #[test]
@@ -95,10 +107,13 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(
-            response.headers().get::<CacheControl>().unwrap(),
-            &CacheControl(vec![CacheDirective::MaxAge(30)])
+            response.headers().get(header::CACHE_CONTROL).unwrap(),
+            header::HeaderValue::from_str(
+                &CacheDirective::MaxAge(30).to_string()
+            )
+            .unwrap()
         )
     }
 }
