@@ -2,12 +2,12 @@ extern crate gotham;
 extern crate hyper;
 extern crate mime;
 
-use app::response::ok;
+use crate::app::response::ok;
 use futures::{future, Future, Stream};
-use gotham::state::{FromState, State};
 use gotham::handler::{HandlerFuture, IntoHandlerError};
-use hyper::{Body, Headers, StatusCode};
+use gotham::state::{FromState, State};
 use hyper::header::ContentType;
+use hyper::{Body, Headers, StatusCode};
 use std::error;
 use std::fmt;
 use std::io;

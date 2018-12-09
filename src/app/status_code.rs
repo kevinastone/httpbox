@@ -3,7 +3,7 @@ extern crate hyper;
 extern crate mime;
 extern crate serde;
 
-use app::response::empty_response;
+use crate::app::response::empty_response;
 use gotham::state::{FromState, State};
 
 use hyper::{Response, StatusCode};

@@ -3,13 +3,13 @@ extern crate horrorshow;
 extern crate hyper;
 extern crate mime;
 
-use app::response::html;
+use crate::app::response::html;
+use crate::app::router::FrozenRoute;
 use gotham::handler::{Handler, HandlerFuture, IntoHandlerFuture, NewHandler};
 use gotham::state::State;
-use horrorshow::prelude::*;
 use horrorshow::helper::doctype;
+use horrorshow::prelude::*;
 use std::io;
-use app::router::FrozenRoute;
 
 #[derive(Debug, Clone)]
 pub struct Index(String);
@@ -70,8 +70,9 @@ pub fn render_index(routes: &[FrozenRoute]) -> String {
                 }
             }
         }
-    }.into_string()
-        .unwrap();
+    }
+    .into_string()
+    .unwrap();
     body
 }
 

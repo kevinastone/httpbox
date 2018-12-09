@@ -2,7 +2,7 @@ extern crate gotham;
 extern crate hyper;
 extern crate mime;
 
-use app::response::{empty_response, ok};
+use crate::app::response::{empty_response, ok};
 use gotham::state::{FromState, State};
 use hyper::{Headers, Response, StatusCode, Uri};
 use url::form_urlencoded;

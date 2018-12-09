@@ -4,11 +4,11 @@ extern crate mime;
 
 mod body;
 
-use app::response::ok;
-use gotham::state::{FromState, State};
-use gotham::handler::HandlerFuture;
-use hyper::{Response, Uri};
 use self::body::parse_body;
+use crate::app::response::ok;
+use gotham::handler::HandlerFuture;
+use gotham::state::{FromState, State};
+use hyper::{Response, Uri};
 use url::form_urlencoded;
 
 pub fn get(state: State) -> (State, Response) {
@@ -45,8 +45,8 @@ pub fn delete(state: State) -> Box<HandlerFuture> {
 
 #[cfg(test)]
 mod test {
-    use super::mime;
     use super::super::router;
+    use super::mime;
 
     use gotham::test::TestServer;
     use hyper::StatusCode;

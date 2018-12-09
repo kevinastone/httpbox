@@ -3,7 +3,7 @@ extern crate hyper;
 extern crate mime;
 extern crate rand;
 
-use app::random::rng;
+use crate::app::random::rng;
 use gotham::http::response::{create_response, set_headers};
 use gotham::state::{FromState, State};
 use hyper::{Body, Response, StatusCode};

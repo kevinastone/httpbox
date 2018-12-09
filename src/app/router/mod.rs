@@ -3,20 +3,20 @@ extern crate gotham;
 mod installer;
 mod routes;
 
+use self::installer::RouteInstaller;
 pub use self::routes::FrozenRoute;
 use self::routes::Route;
-use self::installer::RouteInstaller;
 
-use app::*;
-use app::auth::{BasicAuthParams, BearerParams};
-use app::bytes::{BytesPathParams, BytesQueryParams};
-use app::cache::CacheTimeParams;
-use app::delay::DelayParams;
-use app::index::IndexNewHandler;
-use app::redirect::{RedirectCountParams, RedirectUrlParams};
-use app::status_code::StatusCodeParams;
-use gotham::router::Router;
+use crate::app::auth::{BasicAuthParams, BearerParams};
+use crate::app::bytes::{BytesPathParams, BytesQueryParams};
+use crate::app::cache::CacheTimeParams;
+use crate::app::delay::DelayParams;
+use crate::app::index::IndexNewHandler;
+use crate::app::redirect::{RedirectCountParams, RedirectUrlParams};
+use crate::app::status_code::StatusCodeParams;
+use crate::app::*;
 use gotham::router::builder::*;
+use gotham::router::Router;
 use hyper::Method;
 
 pub fn router() -> Router {

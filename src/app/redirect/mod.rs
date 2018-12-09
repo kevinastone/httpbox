@@ -4,10 +4,10 @@ extern crate mime;
 
 mod uri;
 
-use app::response::redirect_to;
+use self::uri::{absolute_url, join_url};
+use crate::app::response::redirect_to;
 use gotham::state::{FromState, State};
 use hyper::{Response, Uri};
-use self::uri::{absolute_url, join_url};
 use std::cmp::min;
 use url::Url;
 
@@ -68,8 +68,8 @@ mod test {
     use super::super::router;
 
     use gotham::test::TestServer;
-    use hyper::StatusCode;
     use hyper::header::Location;
+    use hyper::StatusCode;
 
     #[test]
     fn test_redirect_to() {

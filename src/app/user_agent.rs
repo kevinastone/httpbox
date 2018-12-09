@@ -2,11 +2,11 @@ extern crate gotham;
 extern crate hyper;
 extern crate mime;
 
-use app::response::ok;
+use crate::app::response::ok;
 use gotham::state::{FromState, State};
 
-use hyper::{Headers, Response};
 use hyper::header::UserAgent;
+use hyper::{Headers, Response};
 
 pub fn user_agent(state: State) -> (State, Response) {
     let user_agent = expect_or_error_response!(
@@ -20,8 +20,8 @@ pub fn user_agent(state: State) -> (State, Response) {
 
 #[cfg(test)]
 mod test {
-    use super::UserAgent;
     use super::super::router;
+    use super::UserAgent;
 
     use gotham::test::TestServer;
     use hyper::StatusCode;

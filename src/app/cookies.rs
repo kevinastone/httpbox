@@ -4,7 +4,7 @@ extern crate hyper;
 extern crate lazy_static;
 extern crate mime;
 
-use app::response::{empty_response, ok};
+use crate::app::response::{empty_response, ok};
 use cookie::Cookie;
 use gotham::state::{FromState, State};
 use hyper::{header, Headers, Response, StatusCode, Uri};
@@ -47,8 +47,8 @@ pub fn set_cookies(state: State) -> (State, Response) {
 
 #[cfg(test)]
 mod test {
-    use super::header;
     use super::super::router;
+    use super::header;
 
     use gotham::test::TestServer;
     use hyper::StatusCode;

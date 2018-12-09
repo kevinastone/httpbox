@@ -2,7 +2,7 @@ extern crate gotham;
 extern crate hyper;
 extern crate mime;
 
-use app::response::{internal_server_error, ok};
+use crate::app::response::{internal_server_error, ok};
 use gotham::state::{client_addr, FromState, State};
 
 use hyper::{header, Headers, Response};
@@ -27,8 +27,8 @@ pub fn ip(state: State) -> (State, Response) {
 
 #[cfg(test)]
 mod test {
-    use super::X_FORWARD_FOR;
     use super::super::router;
+    use super::X_FORWARD_FOR;
 
     use gotham::test::TestServer;
     use hyper::StatusCode;

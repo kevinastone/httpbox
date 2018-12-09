@@ -4,11 +4,11 @@ extern crate gotham;
 extern crate hyper;
 extern crate mime;
 
-use app::response::ok;
+use crate::app::response::ok;
 use futures::{future, Future};
 use futures_timer::Delay;
-use gotham::state::{FromState, State};
 use gotham::handler::{HandlerFuture, IntoHandlerError};
+use gotham::state::{FromState, State};
 use std::cmp::min;
 use std::time::Duration;
 
@@ -41,9 +41,9 @@ pub fn delay(mut state: State) -> Box<HandlerFuture> {
 
 #[cfg(test)]
 mod test {
+    use super::super::router;
     use gotham::test::TestServer;
     use hyper::StatusCode;
-    use super::super::router;
 
     #[test]
     fn test_sleep() {

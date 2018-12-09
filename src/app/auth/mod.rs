@@ -4,12 +4,12 @@ extern crate mime;
 
 mod header;
 
-use app::response::{empty_response, ok};
+use crate::app::response::{empty_response, ok};
 use gotham::state::{FromState, State};
 
-use hyper::{Headers, Response, StatusCode};
-use hyper::header::{Authorization, Basic, Bearer};
 use self::header::{BasicRealm, WWWAuthenticate};
+use hyper::header::{Authorization, Basic, Bearer};
+use hyper::{Headers, Response, StatusCode};
 
 pub const REALM: &'static str = "User Visible Realm";
 
@@ -65,7 +65,7 @@ pub fn bearer(mut state: State) -> (State, Response) {
     {
         Some(_) => ok(state, String::from("Authenticated").into_bytes()),
         None => {
-            let mut res = empty_response(&state, StatusCode::Unauthorized);
+            let res = empty_response(&state, StatusCode::Unauthorized);
             (state, res)
         }
     }
@@ -73,12 +73,12 @@ pub fn bearer(mut state: State) -> (State, Response) {
 
 #[cfg(test)]
 mod test {
-    use super::{BasicRealm, WWWAuthenticate, REALM};
     use super::super::router;
+    use super::{BasicRealm, WWWAuthenticate, REALM};
 
     use gotham::test::TestServer;
-    use hyper::StatusCode;
     use hyper::header::{Authorization, Basic, Bearer};
+    use hyper::StatusCode;
 
     #[test]
     fn test_basic_no_authorization() {

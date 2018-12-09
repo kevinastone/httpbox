@@ -2,7 +2,7 @@ extern crate gotham;
 extern crate hyper;
 extern crate mime;
 
-use app::response::{empty_response, ok};
+use crate::app::response::{empty_response, ok};
 use gotham::state::{FromState, State};
 
 use hyper::{header, Headers, Response, StatusCode};
@@ -30,9 +30,9 @@ pub fn set_cache(mut state: State) -> (State, Response) {
     let mut res = empty_response(&state, StatusCode::Ok);
     {
         let headers = res.headers_mut();
-        headers.set(header::CacheControl(vec![
-            header::CacheDirective::MaxAge(n),
-        ]))
+        headers.set(header::CacheControl(vec![header::CacheDirective::MaxAge(
+            n,
+        )]))
     }
     (state, res)
 }
@@ -42,9 +42,10 @@ mod test {
     use super::super::router;
 
     use gotham::test::TestServer;
+    use hyper::header::{
+        CacheControl, CacheDirective, HttpDate, IfModifiedSince, IfNoneMatch,
+    };
     use hyper::StatusCode;
-    use hyper::header::{CacheControl, CacheDirective, HttpDate,
-                        IfModifiedSince, IfNoneMatch};
     use std::time::SystemTime;
 
     #[test]
