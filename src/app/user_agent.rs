@@ -1,15 +1,14 @@
 use crate::app::response::ok;
 use gotham::state::{FromState, State};
-
+use headers_ext::{HeaderMapExt, UserAgent};
 use hyper::{Body, HeaderMap, Response};
 
 pub fn user_agent(state: State) -> (State, Response<Body>) {
     let user_agent = expect_or_error_response!(
         state,
         HeaderMap::borrow_from(&state)
-            .get(http::header::USER_AGENT)
-            .and_then(|hv| hv.to_str().ok())
-            .map(String::from)
+            .typed_get::<UserAgent>()
+            .map(|ua| ua.to_string())
     );
     ok(state, user_agent)
 }
@@ -19,6 +18,7 @@ mod test {
     use super::super::router;
 
     use gotham::test::TestServer;
+    use http::header;
     use hyper::StatusCode;
 
     #[test]
@@ -40,8 +40,8 @@ mod test {
             .client()
             .get("http://localhost:3000/user-agent")
             .with_header(
-                http::header::USER_AGENT,
-                http::header::HeaderValue::from_static("HTTPBoxBot/1.0"),
+                header::USER_AGENT,
+                header::HeaderValue::from_static("HTTPBoxBot/1.0"),
             )
             .perform()
             .unwrap();

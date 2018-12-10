@@ -1,3 +1,4 @@
+use failure::{bail, Fallible};
 use gotham::state::{FromState, State};
 use http::header;
 use hyper::{HeaderMap, Uri};
@@ -6,47 +7,44 @@ use std::env;
 use url::Url;
 
 lazy_static! {
-    static ref BASE_URL: Option<Url> = env::var_os("BASE_URL")
-        .and_then(|os_str| os_str.into_string().ok())
-        .and_then(|url| Url::parse(&url).ok());
+    static ref BASE_URL: Option<Url> =
+        env::var_os("BASE_URL")?.into_string().ok()?.parse().ok();
 }
 
 pub fn join_url(url: &str, base: &Url) -> Option<Url> {
     base.join(url).ok()
 }
 
-fn host_to_uri(host: &str, relative_uri: &str) -> Result<Uri, String> {
-    format!(
+fn host_to_uri(host: &str, relative_uri: &str) -> Fallible<Uri> {
+    Ok(format!(
         "{}://{}",
         "http", // FIXME: Determine protocol
         host,
     )
-    .parse::<Url>()
-    .and_then(|url| url.join(relative_uri))
-    .map_err(|e| e.to_string())
-    .map(|url| url.to_string())
-    .and_then(|url_str| url_str.parse::<Uri>().map_err(|e| e.to_string()))
+    .parse::<Url>()?
+    .join(relative_uri)?
+    .to_string()
+    .parse()?)
 }
 
-fn absolute_uri(state: &State, uri: Uri) -> Result<Uri, String> {
+fn absolute_uri(state: &State, uri: Uri) -> Fallible<Uri> {
     if uri.scheme_part().is_some() {
         Ok(uri)
     } else {
-        match HeaderMap::borrow_from(&state).get(header::HOST) {
-            Some(host) => {
-                host_to_uri(host.to_str().unwrap(), &uri.to_string()[..])
-            }
-            None => Err("No host header found".into()),
+        match HeaderMap::borrow_from(&state)
+            .get(header::HOST)
+            .and_then(|host| host.to_str().ok())
+        {
+            Some(host) => host_to_uri(host, &uri.to_string()),
+            None => bail!("No host header found"),
         }
     }
 }
 
 pub fn absolute_url(state: &State, uri: Uri) -> Option<Url> {
-    BASE_URL.clone().or_else(|| {
-        absolute_uri(&state, uri)
-            .ok()
-            .and_then(|abs_uri| Url::parse(&abs_uri.to_string()[..]).ok())
-    })
+    BASE_URL
+        .clone()
+        .or_else(|| absolute_uri(&state, uri).ok()?.to_string().parse().ok())
 }
 
 #[cfg(test)]
@@ -54,7 +52,8 @@ mod test {
     use super::{absolute_uri, join_url};
 
     use gotham::state::State;
-    use http::header;
+    use headers_ext::{HeaderMapExt, Host};
+    use http::uri::Authority;
     use hyper::{HeaderMap, Uri};
     use url::Url;
 
@@ -71,10 +70,9 @@ mod test {
     fn test_absolute_uri() {
         State::with_new(|state| {
             let mut headers = HeaderMap::new();
-            headers.insert(
-                header::HOST,
-                header::HeaderValue::from_static("example.com"),
-            );
+            headers.typed_insert(Host::from(Authority::from_static(
+                "example.com",
+            )));
             state.put(headers);
 
             let relative_uri = "/first/second?a=1&b=2".parse::<Uri>().unwrap();
@@ -90,10 +88,9 @@ mod test {
     fn test_absolute_uri_with_port() {
         State::with_new(|state| {
             let mut headers = HeaderMap::new();
-            headers.insert(
-                header::HOST,
-                header::HeaderValue::from_static("example.com:1234"),
-            );
+            headers.typed_insert(Host::from(Authority::from_static(
+                "example.com:1234",
+            )));
             state.put(headers);
 
             let relative_uri = "/first/second".parse::<Uri>().unwrap();

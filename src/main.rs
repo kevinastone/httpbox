@@ -4,6 +4,9 @@ use std::net::ToSocketAddrs;
 
 mod app;
 
+#[cfg(test)]
+mod test;
+
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const NAME: &str = env!("CARGO_PKG_NAME");
 
