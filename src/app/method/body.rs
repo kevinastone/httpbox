@@ -1,42 +1,14 @@
 use crate::app::response::ok;
+use failure::{Error, Fallible};
 use futures::{future, Future, Stream};
 use gotham::handler::{HandlerFuture, IntoHandlerError};
 use gotham::state::{FromState, State};
 use http::header;
 use hyper::{Body, HeaderMap, StatusCode};
-use lazy_static::lazy_static;
-use std::error;
-use std::fmt;
-use std::io;
+use hyperx::header::{ContentType, Header, Raw};
 use url::form_urlencoded;
 
-lazy_static! {
-    static ref TEXT_PLAIN: header::HeaderValue =
-        header::HeaderValue::from_static("text/plain");
-    static ref FORM_URL_ENCODED: header::HeaderValue =
-        header::HeaderValue::from_static("application/x-www-form-urlencoded");
-}
-
-#[derive(Debug)]
-struct BodyParseError(String);
-
-impl fmt::Display for BodyParseError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "BodyParseError: {}", self.0)
-    }
-}
-
-impl error::Error for BodyParseError {
-    fn description(&self) -> &str {
-        "Failed to parse the body"
-    }
-
-    fn cause(&self) -> Option<&error::Error> {
-        None
-    }
-}
-
-fn parse_url_encoded_body(raw_body: &[u8]) -> io::Result<String> {
+fn parse_url_encoded_body(raw_body: &[u8]) -> Fallible<String> {
     Ok(form_urlencoded::parse(&raw_body[..])
         .map(|(key, value)| format!("{} = {}", key, value))
         .collect::<Vec<String>>()
@@ -49,16 +21,18 @@ enum ContentTypeDecoder {
 }
 
 fn content_type_decoder(state: &State) -> ContentTypeDecoder {
-    if HeaderMap::borrow_from(&state)
+    let content_type = HeaderMap::borrow_from(&state)
         .get(header::CONTENT_TYPE)
-        .unwrap_or(&TEXT_PLAIN)
-        .to_str()
-        .unwrap()
-        == FORM_URL_ENCODED.to_str().unwrap()
-    {
-        ContentTypeDecoder::UrlEncoded
-    } else {
-        ContentTypeDecoder::Raw
+        .and_then(|hv| hv.to_str().ok())
+        .and_then(|raw| ContentType::parse_header(&Raw::from(raw)).ok())
+        .map(|content_type| content_type.0)
+        .unwrap_or(mime::TEXT_PLAIN);
+
+    match (content_type.type_(), content_type.subtype()) {
+        (mime::APPLICATION, mime::WWW_FORM_URLENCODED) => {
+            ContentTypeDecoder::UrlEncoded
+        }
+        _ => ContentTypeDecoder::Raw,
     }
 }
 
@@ -70,12 +44,11 @@ pub fn parse_body(mut state: State) -> Box<HandlerFuture> {
             state,
             match content_type_decoder(&state) {
                 ContentTypeDecoder::UrlEncoded => {
-                    parse_url_encoded_body(&valid_body)
-                        .map_err(|e| BodyParseError(e.to_string()))
+                    parse_url_encoded_body(&valid_body).map_err(|e| e.compat())
                 }
                 ContentTypeDecoder::Raw => {
                     String::from_utf8(valid_body.to_vec())
-                        .map_err(|e| BodyParseError(e.to_string()))
+                        .map_err(|e| Error::from(e).compat())
                 }
             }
         );
@@ -83,4 +56,76 @@ pub fn parse_body(mut state: State) -> Box<HandlerFuture> {
     });
 
     Box::new(f)
+}
+
+#[cfg(test)]
+mod test {
+    use super::{
+        content_type_decoder, parse_url_encoded_body, ContentTypeDecoder,
+    };
+
+    use gotham::state::State;
+    use http::header;
+    use hyper::HeaderMap;
+
+    #[test]
+    fn test_parse_url_encoded_body() {
+        assert_eq!(
+            parse_url_encoded_body(
+                "first=one&second=two&third=three".as_bytes()
+            )
+            .unwrap(),
+            "first = one\nsecond = two\nthird = three"
+        )
+    }
+
+    #[test]
+    fn test_missing_header() {
+        State::with_new(|state| {
+            state.put(HeaderMap::new());
+            match content_type_decoder(&state) {
+                ContentTypeDecoder::Raw => (),
+                _ => panic!("Incorrect decoder"),
+            };
+        });
+    }
+
+    #[test]
+    fn test_form_encoded_header() {
+        State::with_new(|state| {
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                header::CONTENT_TYPE,
+                header::HeaderValue::from_str(
+                    &mime::APPLICATION_WWW_FORM_URLENCODED.to_string(),
+                )
+                .unwrap(),
+            );
+            state.put(headers);
+
+            match content_type_decoder(&state) {
+                ContentTypeDecoder::UrlEncoded => (),
+                _ => panic!("Incorrect decoder"),
+            };
+        });
+    }
+
+    #[test]
+    fn test_form_encoded_with_charset_header() {
+        State::with_new(|state| {
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                header::CONTENT_TYPE,
+                header::HeaderValue::from_static(
+                    "application/x-www-form-urlencoded; charset=utf-8",
+                ),
+            );
+            state.put(headers);
+
+            match content_type_decoder(&state) {
+                ContentTypeDecoder::UrlEncoded => (),
+                _ => panic!("Incorrect decoder"),
+            };
+        });
+    }
 }
