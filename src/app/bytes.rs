@@ -2,7 +2,7 @@ use crate::app::random::rng;
 use gotham::helpers::http::response::create_response;
 use gotham::state::{FromState, State};
 use gotham_derive::{StateData, StaticResponseExtender};
-use http::header;
+use headers_ext::{ContentLength, HeaderMapExt};
 use hyper::{Body, Response, StatusCode};
 use rand::Rng;
 use serde_derive::Deserialize;
@@ -51,10 +51,7 @@ pub fn stream_bytes(state: State) -> (State, Response<Body>) {
     );
 
     let headers = res.headers_mut();
-    headers.insert(
-        header::CONTENT_LENGTH,
-        header::HeaderValue::from(content_length),
-    );
+    headers.typed_insert(ContentLength(content_length));
     (state, res)
 }
 
