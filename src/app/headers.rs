@@ -1,4 +1,5 @@
 use crate::app::response::{bad_request, empty_response, ok};
+use failure::Fallible;
 use gotham::state::{FromState, State};
 use http::header;
 use hyper::{Body, HeaderMap, Response, StatusCode, Uri};
@@ -6,15 +7,17 @@ use std::str::FromStr;
 use url::form_urlencoded;
 
 pub fn headers(state: State) -> (State, Response<Body>) {
-    let headers = HeaderMap::borrow_from(&state)
+    let request_headers = HeaderMap::borrow_from(&state)
         .iter()
-        .map(|(n, v)| {
-            format!("{}: {}", n, v.to_str().unwrap()).trim().to_owned()
-        })
-        .collect::<Vec<String>>()
-        .join("\n");
+        .map(|(n, v)| Ok((n, v.to_str()?)));
 
-    ok(state, headers.to_string())
+    match request_headers
+        .map(|r| r.map(|(n, v)| format!("{}: {}", n, v).trim().to_owned()))
+        .collect::<Fallible<Vec<_>>>()
+    {
+        Err(_) => bad_request(state),
+        Ok(body) => ok(state, body.join("\n")),
+    }
 }
 
 pub fn response_headers(state: State) -> (State, Response<Body>) {
@@ -26,13 +29,11 @@ pub fn response_headers(state: State) -> (State, Response<Body>) {
             .unwrap_or_else(|| vec![])
     };
 
-    let headers: Result<Vec<_>, String> = response_headers
+    let headers: Fallible<Vec<_>> = response_headers
         .iter()
         .map(|(key, value)| {
-            let name =
-                header::HeaderName::from_str(key).map_err(|e| e.to_string())?;
-            let value = header::HeaderValue::from_str(value)
-                .map_err(|e| e.to_string())?;
+            let name = header::HeaderName::from_str(key)?;
+            let value = header::HeaderValue::from_str(value)?;
 
             Ok((name, value))
         })
