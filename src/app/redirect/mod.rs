@@ -19,14 +19,14 @@ pub struct RedirectUrlParams {
     url: String,
 }
 
-pub fn to(mut state: State) -> (State, Response<Body>) {
-    let query = RedirectUrlParams::take_from(&mut state);
+pub fn to(state: State) -> (State, Response<Body>) {
+    let query = RedirectUrlParams::borrow_from(&state);
     let url = try_or_error_response!(state, Url::parse(&query.url[..]));
     redirect_to(state, &url.to_string())
 }
 
-pub fn relative(mut state: State) -> (State, Response<Body>) {
-    let mut n = RedirectCountParams::take_from(&mut state).n;
+pub fn relative(state: State) -> (State, Response<Body>) {
+    let mut n = RedirectCountParams::borrow_from(&state).n;
     n = min(n - 1, 100);
 
     let url = if n == 0 {
@@ -42,8 +42,8 @@ pub fn redirect(state: State) -> (State, Response<Body>) {
     relative(state)
 }
 
-pub fn absolute(mut state: State) -> (State, Response<Body>) {
-    let mut n = RedirectCountParams::take_from(&mut state).n;
+pub fn absolute(state: State) -> (State, Response<Body>) {
+    let mut n = RedirectCountParams::borrow_from(&state).n;
     n = min(n - 1, 100);
 
     let url = if n == 0 {

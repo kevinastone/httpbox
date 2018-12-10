@@ -21,8 +21,8 @@ fn sleep_duration(seconds: u64) -> u64 {
     0
 }
 
-pub fn delay(mut state: State) -> Box<HandlerFuture> {
-    let params = DelayParams::take_from(&mut state);
+pub fn delay(state: State) -> Box<HandlerFuture> {
+    let params = DelayParams::borrow_from(&state);
     let delay = min(params.n, 10);
 
     let f = Delay::new(Duration::from_secs(sleep_duration(delay))).then(

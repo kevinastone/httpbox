@@ -38,10 +38,7 @@ pub fn set_cookies(state: State) -> (State, Response<Body>) {
 
     let cookies: Fallible<Vec<_>> = response_cookies
         .iter()
-        .map(|cookie| {
-            Ok(header::HeaderValue::from_str(&cookie.to_string())
-                .map_err(Error::from)?)
-        })
+        .map(|cookie| Ok(cookie.to_string().parse().map_err(Error::from)?))
         .collect();
 
     match cookies {

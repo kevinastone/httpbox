@@ -3,9 +3,8 @@ use failure::{Error, Fallible};
 use futures::{future, Future, Stream};
 use gotham::handler::{HandlerFuture, IntoHandlerError};
 use gotham::state::{FromState, State};
-use http::header;
+use headers_ext::{ContentType, HeaderMapExt};
 use hyper::{Body, HeaderMap, StatusCode};
-use hyperx::header::{ContentType, Header, Raw};
 use url::form_urlencoded;
 
 fn parse_url_encoded_body(raw_body: &[u8]) -> Fallible<String> {
@@ -22,10 +21,8 @@ enum ContentTypeDecoder {
 
 fn content_type_decoder(state: &State) -> ContentTypeDecoder {
     let content_type = HeaderMap::borrow_from(&state)
-        .get(header::CONTENT_TYPE)
-        .and_then(|hv| hv.to_str().ok())
-        .and_then(|raw| ContentType::parse_header(&Raw::from(raw)).ok())
-        .map(|content_type| content_type.0)
+        .typed_get::<ContentType>()
+        .map(mime::Mime::from)
         .unwrap_or(mime::TEXT_PLAIN);
 
     match (content_type.type_(), content_type.subtype()) {
@@ -96,10 +93,10 @@ mod test {
             let mut headers = HeaderMap::new();
             headers.insert(
                 header::CONTENT_TYPE,
-                header::HeaderValue::from_str(
-                    &mime::APPLICATION_WWW_FORM_URLENCODED.to_string(),
-                )
-                .unwrap(),
+                mime::APPLICATION_WWW_FORM_URLENCODED
+                    .to_string()
+                    .parse()
+                    .unwrap(),
             );
             state.put(headers);
 
