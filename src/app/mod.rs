@@ -1,5 +1,3 @@
-extern crate gotham;
-
 #[macro_use]
 mod macros;
 

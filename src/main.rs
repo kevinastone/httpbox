@@ -1,34 +1,11 @@
-extern crate byteorder;
-#[macro_use]
-extern crate clap;
-extern crate cookie;
-extern crate futures;
-extern crate futures_timer;
-extern crate gotham;
-#[macro_use]
-extern crate gotham_derive;
-#[macro_use]
-extern crate horrorshow;
-#[allow(unused_imports)]
-#[macro_use]
-extern crate hyper;
-#[macro_use]
-extern crate lazy_static;
-extern crate num_cpus;
-extern crate rand;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate url;
-
-use clap::{App, Arg, Error, ErrorKind, Shell};
+use clap::{value_t, value_t_or_exit, App, Arg, Error, ErrorKind, Shell};
 use std::io;
 use std::net::ToSocketAddrs;
 
 mod app;
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
-const NAME: &'static str = env!("CARGO_PKG_NAME");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+const NAME: &str = env!("CARGO_PKG_NAME");
 
 fn cli() -> App<'static, 'static> {
     App::new(NAME)
@@ -97,5 +74,5 @@ fn main() {
         .and_then(|iter| iter.last())
         .expect(&format!("Invalid listening address: {}:{}", host, port)[..]);
     println!("Listening on {}:{} with {} threads", host, port, threads,);
-    gotham::start_with_num_threads(addr, threads, app::router())
+    gotham::start_with_num_threads(addr, app::router(), threads)
 }

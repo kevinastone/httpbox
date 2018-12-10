@@ -1,54 +1,48 @@
-extern crate gotham;
-extern crate hyper;
-extern crate mime;
-
-use gotham::http::response::create_response;
+use gotham::helpers::http::response::create_response;
 use gotham::state::State;
-use hyper::{header, Response, StatusCode};
+use http::header;
+use hyper::{Body, Response, StatusCode};
 
-pub fn empty_response(state: &State, status: StatusCode) -> Response {
-    create_response(state, status, Some((vec![], mime::TEXT_PLAIN)))
+pub fn empty_response(state: &State, status: StatusCode) -> Response<Body> {
+    create_response(state, status, mime::TEXT_PLAIN, vec![])
 }
 
-pub fn bad_request(state: State) -> (State, Response) {
-    let res = empty_response(&state, StatusCode::BadRequest);
+pub fn bad_request(state: State) -> (State, Response<Body>) {
+    let res = empty_response(&state, StatusCode::BAD_REQUEST);
     (state, res)
 }
 
-pub fn html<B>(state: State, body: B) -> (State, Response)
+pub fn html<B>(state: State, body: B) -> (State, Response<Body>)
 where
-    B: Into<Vec<u8>>,
+    B: Into<Body>,
 {
-    let res = create_response(
-        &state,
-        StatusCode::Ok,
-        Some((body.into(), mime::TEXT_HTML)),
-    );
+    let res =
+        create_response(&state, StatusCode::OK, mime::TEXT_HTML, body.into());
     (state, res)
 }
 
-pub fn internal_server_error(state: State) -> (State, Response) {
-    let res = empty_response(&state, StatusCode::InternalServerError);
+pub fn internal_server_error(state: State) -> (State, Response<Body>) {
+    let res = empty_response(&state, StatusCode::INTERNAL_SERVER_ERROR);
     (state, res)
 }
 
-pub fn ok<B>(state: State, body: B) -> (State, Response)
+pub fn ok<B>(state: State, body: B) -> (State, Response<Body>)
 where
-    B: Into<Vec<u8>>,
+    B: Into<Body>,
 {
-    let res = create_response(
-        &state,
-        StatusCode::Ok,
-        Some((body.into(), mime::TEXT_PLAIN)),
-    );
+    let res =
+        create_response(&state, StatusCode::OK, mime::TEXT_PLAIN, body.into());
     (state, res)
 }
 
-pub fn redirect_to(state: State, url: String) -> (State, Response) {
-    let mut res = empty_response(&state, StatusCode::Found);
+pub fn redirect_to(state: State, url: &str) -> (State, Response<Body>) {
+    let mut res = empty_response(&state, StatusCode::FOUND);
     {
         let headers = res.headers_mut();
-        headers.set(header::Location::new(url));
+        headers.insert(
+            header::LOCATION,
+            header::HeaderValue::from_str(url).unwrap(),
+        );
     }
     (state, res)
 }

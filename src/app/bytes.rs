@@ -1,13 +1,11 @@
-extern crate gotham;
-extern crate hyper;
-extern crate mime;
-extern crate rand;
-
 use crate::app::random::rng;
-use gotham::http::response::{create_response, set_headers};
+use gotham::helpers::http::response::create_response;
 use gotham::state::{FromState, State};
+use gotham_derive::{StateData, StaticResponseExtender};
+use http::header;
 use hyper::{Body, Response, StatusCode};
 use rand::Rng;
+use serde_derive::Deserialize;
 
 #[derive(Deserialize, StateData, StaticResponseExtender)]
 pub struct BytesPathParams {
@@ -21,38 +19,42 @@ pub struct BytesQueryParams {
     chunk_size: Option<usize>,
 }
 
-fn get_bytes(mut state: &State) -> Vec<u8> {
-    let count = BytesPathParams::borrow_from(&mut state).n;
-    let seed = BytesQueryParams::borrow_from(&mut state).seed;
+fn get_bytes(state: &State) -> Vec<u8> {
+    let count = BytesPathParams::borrow_from(&state).n;
+    let seed = BytesQueryParams::borrow_from(&state).seed;
 
     let mut rng = rng(seed);
     (0..count).map(|_| rng.gen::<u8>()).collect::<Vec<u8>>()
 }
 
-pub fn bytes(mut state: State) -> (State, Response) {
-    let data = get_bytes(&mut state);
+pub fn bytes(state: State) -> (State, Response<Body>) {
+    let data = get_bytes(&state);
     let res = create_response(
         &state,
-        StatusCode::Ok,
-        Some((data, mime::APPLICATION_OCTET_STREAM)),
+        StatusCode::OK,
+        mime::APPLICATION_OCTET_STREAM,
+        data,
     );
     (state, res)
 }
 
-pub fn stream_bytes(mut state: State) -> (State, Response) {
-    let data = get_bytes(&mut state);
+pub fn stream_bytes(state: State) -> (State, Response<Body>) {
+    let data = get_bytes(&state);
 
     let content_length = data.len() as u64;
 
-    let mut res = Response::new();
-    res.set_status(StatusCode::Ok);
-    set_headers(
-        &mut state,
-        &mut res,
-        Some(mime::APPLICATION_OCTET_STREAM),
-        Some(content_length),
+    let mut res = create_response(
+        &state,
+        StatusCode::OK,
+        mime::APPLICATION_OCTET_STREAM,
+        Body::from(data),
     );
-    res.set_body(Body::from(data));
+
+    let headers = res.headers_mut();
+    headers.insert(
+        header::CONTENT_LENGTH,
+        header::HeaderValue::from(content_length),
+    );
     (state, res)
 }
 
@@ -72,7 +74,7 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_body().unwrap();
         assert_eq!(result_body, [149, 120, 12, 223])
     }
@@ -86,7 +88,7 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_body().unwrap();
         assert_eq!(result_body, [149, 120, 12, 223])
     }
@@ -100,7 +102,7 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_body().unwrap();
         assert_eq!(result_body, [149, 120, 12, 223])
     }

@@ -1,14 +1,10 @@
-extern crate futures;
-extern crate futures_timer;
-extern crate gotham;
-extern crate hyper;
-extern crate mime;
-
 use crate::app::response::ok;
 use futures::{future, Future};
 use futures_timer::Delay;
 use gotham::handler::{HandlerFuture, IntoHandlerError};
 use gotham::state::{FromState, State};
+use gotham_derive::{StateData, StaticResponseExtender};
+use serde_derive::Deserialize;
 use std::cmp::min;
 use std::time::Duration;
 
@@ -22,7 +18,7 @@ fn sleep_duration(seconds: u64) -> u64 {
     if !(cfg!(test)) {
         return seconds;
     }
-    return 0;
+    0
 }
 
 pub fn delay(mut state: State) -> Box<HandlerFuture> {
@@ -32,7 +28,7 @@ pub fn delay(mut state: State) -> Box<HandlerFuture> {
     let f = Delay::new(Duration::from_secs(sleep_duration(delay))).then(
         move |result| {
             future_try_or_error_response!(state, result);
-            future::ok(ok(state, format!("{}", delay).into_bytes()))
+            future::ok(ok(state, format!("{}", delay)))
         },
     );
 
@@ -54,7 +50,7 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_utf8_body().unwrap();
         assert_eq!(result_body, "3");
     }
@@ -68,7 +64,7 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_utf8_body().unwrap();
         assert_eq!(result_body, "10");
     }

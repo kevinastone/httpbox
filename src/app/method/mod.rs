@@ -1,17 +1,13 @@
-extern crate gotham;
-extern crate hyper;
-extern crate mime;
-
 mod body;
 
 use self::body::parse_body;
 use crate::app::response::ok;
 use gotham::handler::HandlerFuture;
 use gotham::state::{FromState, State};
-use hyper::{Response, Uri};
+use hyper::{Body, Response, Uri};
 use url::form_urlencoded;
 
-pub fn get(state: State) -> (State, Response) {
+pub fn get(state: State) -> (State, Response<Body>) {
     let params: Vec<String> = {
         Uri::borrow_from(&state)
             .query()
@@ -24,7 +20,7 @@ pub fn get(state: State) -> (State, Response) {
             .unwrap_or_else(|| vec![])
     };
 
-    ok(state, params.join("\n").into_bytes())
+    ok(state, params.join("\n"))
 }
 
 pub fn post(state: State) -> Box<HandlerFuture> {
@@ -46,7 +42,6 @@ pub fn delete(state: State) -> Box<HandlerFuture> {
 #[cfg(test)]
 mod test {
     use super::super::router;
-    use super::mime;
 
     use gotham::test::TestServer;
     use hyper::StatusCode;
@@ -62,7 +57,7 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_utf8_body().unwrap();
         assert_eq!(result_body, "key = val");
     }
@@ -78,7 +73,7 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_utf8_body().unwrap();
         let result: HashSet<&str> = HashSet::from_iter(result_body.split("\n"));
         let expected = HashSet::from_iter(vec![
@@ -102,7 +97,7 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_utf8_body().unwrap();
         assert_eq!(result_body, "key = val")
     }
@@ -120,7 +115,7 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_utf8_body().unwrap();
         let result: HashSet<&str> = HashSet::from_iter(result_body.split("\n"));
         let expected = HashSet::from_iter(vec![
@@ -144,7 +139,7 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_utf8_body().unwrap();
 
         assert_eq!(result_body, "key = val")
@@ -163,7 +158,7 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_utf8_body().unwrap();
 
         let result: HashSet<&str> = HashSet::from_iter(result_body.split("\n"));
@@ -188,7 +183,7 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_utf8_body().unwrap();
         assert_eq!(result_body, "key = val")
     }
@@ -206,7 +201,7 @@ mod test {
             .perform()
             .unwrap();
 
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_utf8_body().unwrap();
 
         let result: HashSet<&str> = HashSet::from_iter(result_body.split("\n"));
@@ -226,6 +221,6 @@ mod test {
             .delete("http://localhost:3000/delete")
             .perform()
             .unwrap();
-        assert_eq!(response.status(), StatusCode::Ok);
+        assert_eq!(response.status(), StatusCode::OK);
     }
 }
