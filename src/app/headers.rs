@@ -1,9 +1,8 @@
 use crate::app::response::{bad_request, empty_response, ok};
 use failure::Fallible;
 use gotham::state::{FromState, State};
-use http::header;
+use http::header::HeaderName;
 use hyper::{Body, HeaderMap, Response, StatusCode, Uri};
-use std::str::FromStr;
 use url::form_urlencoded;
 
 pub fn headers(state: State) -> (State, Response<Body>) {
@@ -21,7 +20,7 @@ pub fn headers(state: State) -> (State, Response<Body>) {
 }
 
 pub fn response_headers(state: State) -> (State, Response<Body>) {
-    let response_headers: Vec<(String, String)> = {
+    let response_headers: Vec<_> = {
         Uri::borrow_from(&state)
             .query()
             .map(|query| form_urlencoded::parse(query.as_bytes()))
@@ -31,12 +30,7 @@ pub fn response_headers(state: State) -> (State, Response<Body>) {
 
     let headers: Fallible<Vec<_>> = response_headers
         .iter()
-        .map(|(key, value)| {
-            let name = header::HeaderName::from_str(key)?;
-            let value = header::HeaderValue::from_str(value)?;
-
-            Ok((name, value))
-        })
+        .map(|(name, value)| Ok((name.parse::<HeaderName>()?, value.parse()?)))
         .collect();
 
     match headers {
