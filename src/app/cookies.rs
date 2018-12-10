@@ -3,13 +3,7 @@ use cookie::Cookie;
 use gotham::state::{FromState, State};
 use http::header;
 use hyper::{Body, HeaderMap, Response, StatusCode, Uri};
-use hyperx::header::Cookie as CookieHeader;
-use lazy_static::lazy_static;
 use url::form_urlencoded;
-
-lazy_static! {
-    static ref EMPTY_COOKIES: CookieHeader = CookieHeader::new();
-}
 
 fn parse_cookie(header: &header::HeaderValue) -> Result<Cookie, String> {
     let header_str = header.to_str().map_err(|e| e.to_string())?;
