@@ -37,9 +37,7 @@ where
 
 pub fn redirect_to(state: State, url: &str) -> (State, Response<Body>) {
     let mut res = empty_response(&state, StatusCode::FOUND);
-    {
-        let headers = res.headers_mut();
-        headers.insert(header::LOCATION, url.parse().unwrap());
-    }
+    res.headers_mut()
+        .insert(header::LOCATION, try_or_error_response!(state, url.parse()));
     (state, res)
 }

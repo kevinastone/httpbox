@@ -21,7 +21,7 @@ pub struct RedirectUrlParams {
 
 pub fn to(state: State) -> (State, Response<Body>) {
     let query = RedirectUrlParams::borrow_from(&state);
-    let url = try_or_error_response!(state, Url::parse(&query.url[..]));
+    let url = try_or_error_response!(state, Url::parse(&query.url));
     redirect_to(state, &url.to_string())
 }
 
@@ -29,10 +29,10 @@ pub fn relative(state: State) -> (State, Response<Body>) {
     let mut n = RedirectCountParams::borrow_from(&state).n;
     n = min(n - 1, 100);
 
-    let url = if n == 0 {
-        String::from("/")
-    } else {
+    let url = if n > 0 {
         format!("/relative-redirect/{}", n)
+    } else {
+        String::from("/")
     };
 
     redirect_to(state, &url)
@@ -42,23 +42,23 @@ pub fn redirect(state: State) -> (State, Response<Body>) {
     relative(state)
 }
 
-pub fn absolute(state: State) -> (State, Response<Body>) {
+pub fn absolute(mut state: State) -> (State, Response<Body>) {
     let mut n = RedirectCountParams::borrow_from(&state).n;
     n = min(n - 1, 100);
 
-    let url = if n == 0 {
-        String::from("/")
-    } else {
+    let url = if n > 0 {
         format!("/absolute-redirect/{}", n)
+    } else {
+        String::from("/")
     };
 
-    let uri = Uri::borrow_from(&state).clone();
-    let base = absolute_url(&state, uri);
-    let url = expect_or_error_response!(
+    let request_uri = Uri::take_from(&mut state);
+    let response_url = expect_or_error_response!(
         state,
-        base.and_then(|base| join_url(&url[..], &base))
+        absolute_url(&state, request_uri)
+            .and_then(|base| join_url(&url, &base))
     );
-    redirect_to(state, &url.to_string())
+    redirect_to(state, &response_url.to_string())
 }
 
 #[cfg(test)]
@@ -83,6 +83,18 @@ mod test {
             response.headers().get(header::LOCATION).unwrap(),
             header::HeaderValue::from_static("http://example.com/")
         )
+    }
+
+    #[test]
+    fn test_invalid_redirect_to() {
+        let test_server = TestServer::new(router()).unwrap();
+        let response = test_server
+            .client()
+            .get("http://localhost:3000/redirect-to?url=abc")
+            .perform()
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 
     #[test]

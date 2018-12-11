@@ -50,8 +50,8 @@ pub fn stream_bytes(state: State) -> (State, Response<Body>) {
         Body::from(data),
     );
 
-    let headers = res.headers_mut();
-    headers.typed_insert(ContentLength(content_length));
+    res.headers_mut()
+        .typed_insert(ContentLength(content_length));
     (state, res)
 }
 

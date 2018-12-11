@@ -35,10 +35,8 @@ pub fn basic(state: State) -> (State, Response<Body>) {
         Some(_) => ok(state, String::from("Authenticated")),
         None => {
             let mut res = empty_response(&state, StatusCode::UNAUTHORIZED);
-            {
-                let headers = res.headers_mut();
-                headers.typed_insert(WWWAuthenticate::basic_realm(REALM))
-            }
+            res.headers_mut()
+                .typed_insert(WWWAuthenticate::basic_realm(REALM));
             (state, res)
         }
     }

@@ -15,10 +15,10 @@ pub struct DelayParams {
 
 fn sleep_duration(seconds: u64) -> u64 {
     // Only delay when not testing
-    if !(cfg!(test)) {
-        return seconds;
+    if cfg!(test) {
+        return 0;
     }
-    0
+    seconds
 }
 
 pub fn delay(state: State) -> Box<HandlerFuture> {

@@ -29,8 +29,7 @@ pub fn set_cache(state: State) -> (State, Response<Body>) {
 
     let mut res = empty_response(&state, StatusCode::OK);
     {
-        let headers = res.headers_mut();
-        headers.typed_insert(
+        res.headers_mut().typed_insert(
             CacheControl::new().with_max_age(Duration::from_secs(n)),
         );
     }

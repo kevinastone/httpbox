@@ -1,29 +1,29 @@
 use crate::app::response::{bad_request, empty_response, ok};
 use cookie::Cookie;
-use failure::{Error, Fallible};
+use failure::Fallible;
 use gotham::state::{FromState, State};
 use http::header;
 use hyper::{Body, HeaderMap, Response, StatusCode, Uri};
 use url::form_urlencoded;
 
 fn parse_cookie(header: &header::HeaderValue) -> Fallible<Cookie> {
-    let header_str = header.to_str()?;
-    Cookie::parse(header_str).map_err(Error::from)
+    Ok(Cookie::parse(header.to_str()?)?)
 }
 
 pub fn cookies(state: State) -> (State, Response<Body>) {
     let cookies = HeaderMap::borrow_from(&state)
         .get_all(header::COOKIE)
         .iter()
-        .map(|h| parse_cookie(h));
+        .map(parse_cookie);
 
-    match cookies
-        .map(|r| r.map(|c| format!("{} = {}", c.name(), c.value())))
-        .collect::<Fallible<Vec<_>>>()
-    {
-        Ok(body) => ok(state, body.join("\n")),
-        Err(_) => bad_request(state),
-    }
+    let body = try_or_error_response!(
+        state,
+        cookies
+            .map(|r| r.map(|c| format!("{} = {}", c.name(), c.value())))
+            .collect::<Fallible<Vec<_>>>()
+    );
+
+    ok(state, body.join("\n"))
 }
 
 pub fn set_cookies(state: State) -> (State, Response<Body>) {
@@ -33,12 +33,12 @@ pub fn set_cookies(state: State) -> (State, Response<Body>) {
         .map(|pairs| pairs.into_owned().collect())
         .unwrap_or_else(|| vec![])
         .iter()
-        .map(|&(ref k, ref v)| Cookie::new(k.to_owned(), v.to_owned()))
+        .map(|(ref k, ref v)| Cookie::new(k.to_owned(), v.to_owned()))
         .collect();
 
     let cookies: Fallible<Vec<_>> = response_cookies
         .iter()
-        .map(|cookie| Ok(cookie.to_string().parse().map_err(Error::from)?))
+        .map(|cookie| Ok(cookie.to_string().parse()?))
         .collect();
 
     match cookies {
