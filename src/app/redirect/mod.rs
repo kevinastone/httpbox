@@ -1,6 +1,6 @@
 mod uri;
 
-use self::uri::{absolute_url, join_url};
+use self::uri::absolute_url;
 use crate::app::response::redirect_to;
 use gotham::state::{FromState, State};
 use gotham_derive::{StateData, StaticResponseExtender};
@@ -53,10 +53,9 @@ pub fn absolute(mut state: State) -> (State, Response<Body>) {
     };
 
     let request_uri = Uri::take_from(&mut state);
-    let response_url = expect_or_error_response!(
+    let response_url = try_or_error_response!(
         state,
-        absolute_url(&state, request_uri)
-            .and_then(|base| join_url(&url, &base))
+        absolute_url(&state, request_uri).and_then(|base| Ok(base.join(&url)?))
     );
     redirect_to(state, &response_url.to_string())
 }
