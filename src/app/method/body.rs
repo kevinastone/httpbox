@@ -1,19 +1,20 @@
 use crate::app::response::ok;
-use failure::{Error, Fallible};
+use failure::Fallible;
 use futures::{future, Future, Stream};
 use gotham::handler::{HandlerFuture, IntoHandlerError};
 use gotham::state::{FromState, State};
 use headers_ext::{ContentType, HeaderMapExt};
-use hyper::{Body, HeaderMap, StatusCode};
+use hyper::{Body, Chunk, HeaderMap, StatusCode};
 use url::form_urlencoded;
 
 fn parse_url_encoded_body(raw_body: &[u8]) -> Fallible<String> {
     Ok(form_urlencoded::parse(&raw_body[..])
         .map(|(key, value)| format!("{} = {}", key, value))
-        .collect::<Vec<String>>()
+        .collect::<Vec<_>>()
         .join("\n"))
 }
 
+#[derive(Copy, Clone)]
 enum ContentTypeDecoder {
     UrlEncoded,
     Raw,
@@ -33,21 +34,20 @@ fn content_type_decoder(state: &State) -> ContentTypeDecoder {
     }
 }
 
-pub fn parse_body(mut state: State) -> Box<HandlerFuture> {
+fn parse_body(state: &State, chunk: &Chunk) -> Fallible<String> {
+    match content_type_decoder(&state) {
+        ContentTypeDecoder::UrlEncoded => Ok(parse_url_encoded_body(&chunk)?),
+        ContentTypeDecoder::Raw => Ok(String::from_utf8(chunk.to_vec())?),
+    }
+}
+
+pub fn body(mut state: State) -> Box<HandlerFuture> {
     let f = Body::take_from(&mut state).concat2().then(|raw_body| {
         let valid_body = future_try_or_error_response!(state, raw_body);
         let content = future_try_or_error_response!(
             StatusCode::BAD_REQUEST,
             state,
-            match content_type_decoder(&state) {
-                ContentTypeDecoder::UrlEncoded => {
-                    parse_url_encoded_body(&valid_body).map_err(|e| e.compat())
-                }
-                ContentTypeDecoder::Raw => {
-                    String::from_utf8(valid_body.to_vec())
-                        .map_err(|e| Error::from(e).compat())
-                }
-            }
+            parse_body(&state, &valid_body).map_err(|e| e.compat())
         );
         future::ok(ok(state, content))
     });

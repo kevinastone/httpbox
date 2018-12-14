@@ -1,6 +1,6 @@
 mod body;
 
-use self::body::parse_body;
+use self::body::body;
 use crate::app::response::ok;
 use gotham::handler::HandlerFuture;
 use gotham::state::{FromState, State};
@@ -24,19 +24,19 @@ pub fn get(state: State) -> (State, Response<Body>) {
 }
 
 pub fn post(state: State) -> Box<HandlerFuture> {
-    parse_body(state)
+    body(state)
 }
 
 pub fn put(state: State) -> Box<HandlerFuture> {
-    parse_body(state)
+    body(state)
 }
 
 pub fn patch(state: State) -> Box<HandlerFuture> {
-    parse_body(state)
+    body(state)
 }
 
 pub fn delete(state: State) -> Box<HandlerFuture> {
-    parse_body(state)
+    body(state)
 }
 
 #[cfg(test)]
