@@ -1,27 +1,19 @@
-use crate::app::response::{bad_request, empty_response, ok};
-use cookie::Cookie;
+use crate::app::response::{empty_response, ok};
+use crate::headers::{Cookie, HeaderMapExt};
+use cookie::Cookie as HTTPCookie;
 use failure::Fallible;
 use gotham::state::{FromState, State};
 use http::header;
 use hyper::{Body, HeaderMap, Response, StatusCode, Uri};
 use url::form_urlencoded;
 
-fn parse_cookie(header: &header::HeaderValue) -> Fallible<Cookie> {
-    Ok(Cookie::parse(header.to_str()?)?)
-}
-
 pub fn cookies(state: State) -> (State, Response<Body>) {
-    let cookies = HeaderMap::borrow_from(&state)
-        .get_all(header::COOKIE)
-        .iter()
-        .map(parse_cookie);
+    let cookies = HeaderMap::borrow_from(&state).typed_get::<Cookie>();
 
-    let body = try_or_error_response!(
-        state,
-        cookies
-            .map(|r| r.map(|c| format!("{} = {}", c.name(), c.value())))
-            .collect::<Fallible<Vec<_>>>()
-    );
+    let body = cookies
+        .iter()
+        .flat_map(|cookie| cookie.iter().map(|(n, v)| format!("{} = {}", n, v)))
+        .collect::<Vec<_>>();
 
     ok(state, body.join("\n"))
 }
@@ -33,7 +25,7 @@ pub fn set_cookies(state: State) -> (State, Response<Body>) {
         .map(|pairs| pairs.into_owned().collect())
         .unwrap_or_else(|| vec![])
         .iter()
-        .map(|(ref k, ref v)| Cookie::new(k.to_owned(), v.to_owned()))
+        .map(|(ref k, ref v)| HTTPCookie::new(k.to_owned(), v.to_owned()))
         .collect();
 
     let cookies: Fallible<Vec<_>> = response_cookies
@@ -41,18 +33,13 @@ pub fn set_cookies(state: State) -> (State, Response<Body>) {
         .map(|cookie| Ok(cookie.to_string().parse()?))
         .collect();
 
-    match cookies {
-        Err(_) => bad_request(state),
-        Ok(encoded_cookies) => {
-            let mut res = empty_response(&state, StatusCode::OK);
-            let headers = res.headers_mut();
-            for cookie in encoded_cookies {
-                headers.insert(header::SET_COOKIE, cookie);
-            }
-
-            (state, res)
-        }
+    let mut res = empty_response(&state, StatusCode::OK);
+    let headers = res.headers_mut();
+    for cookie in try_or_error_response!(state, cookies) {
+        headers.insert(header::SET_COOKIE, cookie);
     }
+
+    (state, res)
 }
 
 #[cfg(test)]
@@ -92,6 +79,24 @@ mod test {
         assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_utf8_body().unwrap();
         assert_eq!(result_body, "test = value")
+    }
+
+    #[test]
+    fn test_multiple_cookies() {
+        let test_server = TestServer::new(router()).unwrap();
+        let response = test_server
+            .client()
+            .get("http://localhost:3000/cookies")
+            .with_header(
+                header::COOKIE,
+                header::HeaderValue::from_static("first=value; second=another"),
+            )
+            .perform()
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+        let result_body = response.read_utf8_body().unwrap();
+        assert_eq!(result_body, "first = value\nsecond = another")
     }
 
     #[test]

@@ -1,10 +1,9 @@
-mod header;
-
-use self::header::WWWAuthenticate;
 use crate::app::response::{empty_response, ok};
+use crate::headers::authorization::{Basic, Bearer};
+use crate::headers::WWWAuthenticate;
+use crate::headers::{Authorization, HeaderMapExt};
 use gotham::state::{FromState, State};
 use gotham_derive::{StateData, StaticResponseExtender};
-use headers_ext::{Authorization, Basic, Bearer, HeaderMapExt};
 use hyper::{Body, HeaderMap, Response, StatusCode};
 use serde_derive::Deserialize;
 
@@ -62,11 +61,10 @@ pub fn bearer(state: State) -> (State, Response<Body>) {
 #[cfg(test)]
 mod test {
     use super::super::router;
-    use super::header::WWWAuthenticate;
     use super::REALM;
-
+    use crate::headers::WWWAuthenticate;
+    use crate::headers::{Authorization, HeaderMapExt};
     use gotham::test::TestServer;
-    use headers_ext::{Authorization, HeaderMapExt};
     use http::header;
     use hyper::StatusCode;
 

@@ -3,6 +3,7 @@ use std::io;
 use std::net::ToSocketAddrs;
 
 mod app;
+mod headers;
 
 #[cfg(test)]
 mod test;

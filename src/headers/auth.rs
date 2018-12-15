@@ -1,7 +1,7 @@
-use failure::{Error, Fail, Fallible};
-use headers_ext::{Header, HeaderName, HeaderValue, ToValues, Values};
+use headers_ext::{Error, Header, HeaderName, HeaderValue};
 use http::header;
 use std::fmt;
+use std::iter;
 use std::str::FromStr;
 
 const BASIC_REALM_PREAMBLE: &str = "Basic realm=";
@@ -18,18 +18,20 @@ impl WWWAuthenticate {
 impl Header for WWWAuthenticate {
     const NAME: &'static HeaderName = &header::WWW_AUTHENTICATE;
 
-    fn decode(values: &mut Values) -> Option<Self> {
+    fn decode<'i, I>(values: &mut I) -> Result<Self, Error>
+    where
+        Self: Sized,
+        I: Iterator<Item = &'i HeaderValue>,
+    {
         values
-            .next()?
-            .to_str()
-            .ok()?
-            .parse()
-            .ok()
+            .next()
+            .and_then(|v| v.to_str().ok()?.parse().ok())
             .map(WWWAuthenticate)
+            .ok_or_else(Error::invalid)
     }
 
-    fn encode(&self, values: &mut ToValues) {
-        values.append((&self.0).into())
+    fn encode<E: Extend<HeaderValue>>(&self, values: &mut E) {
+        values.extend(iter::once((&self.0).into()))
     }
 }
 
@@ -52,22 +54,16 @@ impl fmt::Display for BasicRealm {
     }
 }
 
-#[derive(Debug, Fail)]
-enum BasicRealmError {
-    #[fail(display = "invalid premable")]
-    InvalidPreamble,
-}
-
 impl FromStr for BasicRealm {
     type Err = Error;
 
-    fn from_str(s: &str) -> Fallible<BasicRealm> {
+    fn from_str(s: &str) -> Result<BasicRealm, Error> {
         if s.starts_with(BASIC_REALM_PREAMBLE) {
             Ok(BasicRealm(
                 s[BASIC_REALM_PREAMBLE.len() + 1..s.len() - 1].to_owned(),
             ))
         } else {
-            Err(BasicRealmError::InvalidPreamble)?
+            Err(Error::invalid())
         }
     }
 }

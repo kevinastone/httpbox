@@ -1,8 +1,8 @@
 use crate::app::random::rng;
+use crate::headers::{ContentLength, HeaderMapExt};
 use gotham::helpers::http::response::create_response;
 use gotham::state::{FromState, State};
 use gotham_derive::{StateData, StaticResponseExtender};
-use headers_ext::{ContentLength, HeaderMapExt};
 use hyper::{Body, Response, StatusCode};
 use rand::Rng;
 use serde_derive::Deserialize;

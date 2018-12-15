@@ -1,8 +1,9 @@
 use crate::app::response::{empty_response, ok};
+use crate::headers::{
+    CacheControl, HeaderMapExt, IfModifiedSince, IfNoneMatch,
+};
 use gotham::state::{FromState, State};
 use gotham_derive::{StateData, StaticResponseExtender};
-use headers_ext::{CacheControl, HeaderMapExt};
-use http::header;
 use hyper::{Body, HeaderMap, Response, StatusCode};
 use serde_derive::Deserialize;
 use std::time::Duration;
@@ -14,8 +15,8 @@ pub struct CacheTimeParams {
 
 pub fn cache(state: State) -> (State, Response<Body>) {
     let headers = HeaderMap::borrow_from(&state);
-    if headers.get(header::IF_MODIFIED_SINCE).is_some()
-        || headers.get(header::IF_NONE_MATCH).is_some()
+    if headers.typed_get::<IfModifiedSince>().is_some()
+        || headers.typed_get::<IfNoneMatch>().is_some()
     {
         let res = empty_response(&state, StatusCode::NOT_MODIFIED);
         (state, res)

@@ -1,6 +1,6 @@
 use crate::app::response::ok;
+use crate::headers::{HeaderMapExt, UserAgent};
 use gotham::state::{FromState, State};
-use headers_ext::{HeaderMapExt, UserAgent};
 use hyper::{Body, HeaderMap, Response};
 
 pub fn user_agent(state: State) -> (State, Response<Body>) {

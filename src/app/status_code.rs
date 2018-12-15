@@ -1,8 +1,6 @@
 use crate::app::response::empty_response;
 use gotham::state::{FromState, State};
 use gotham_derive::{StateData, StaticResponseExtender};
-
-use http::HttpTryFrom;
 use hyper::{Body, Response, StatusCode};
 use serde_derive::Deserialize;
 
@@ -14,9 +12,10 @@ pub struct StatusCodeParams {
 pub fn status_code(state: State) -> (State, Response<Body>) {
     let params = StatusCodeParams::borrow_from(&state);
 
-    let status_code =
-        try_or_error_response!(state, StatusCode::try_from(params.code));
-    let res = empty_response(&state, status_code);
+    let res = empty_response(
+        &state,
+        try_or_error_response!(state, StatusCode::from_u16(params.code)),
+    );
     (state, res)
 }
 

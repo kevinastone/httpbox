@@ -1,9 +1,9 @@
 use crate::app::response::ok;
+use crate::headers::{ContentType, HeaderMapExt};
 use failure::Fallible;
 use futures::{future, Future, Stream};
 use gotham::handler::{HandlerFuture, IntoHandlerError};
 use gotham::state::{FromState, State};
-use headers_ext::{ContentType, HeaderMapExt};
 use hyper::{Body, Chunk, HeaderMap, StatusCode};
 use url::form_urlencoded;
 

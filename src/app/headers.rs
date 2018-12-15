@@ -1,4 +1,4 @@
-use crate::app::response::{bad_request, empty_response, ok};
+use crate::app::response::{empty_response, ok};
 use failure::Fallible;
 use gotham::state::{FromState, State};
 use http::header::HeaderName;
@@ -10,13 +10,13 @@ pub fn headers(state: State) -> (State, Response<Body>) {
         .iter()
         .map(|(n, v)| Ok((n, v.to_str()?)));
 
-    match request_headers
-        .map(|r| r.map(|(n, v)| format!("{}: {}", n, v).trim().to_owned()))
-        .collect::<Fallible<Vec<_>>>()
-    {
-        Err(_) => bad_request(state),
-        Ok(body) => ok(state, body.join("\n")),
-    }
+    let body = try_or_error_response!(
+        state,
+        request_headers
+            .map(|r| r.map(|(n, v)| format!("{}: {}", n, v.trim())))
+            .collect::<Fallible<Vec<_>>>()
+    );
+    ok(state, body.join("\n"))
 }
 
 pub fn response_headers(state: State) -> (State, Response<Body>) {
@@ -28,23 +28,24 @@ pub fn response_headers(state: State) -> (State, Response<Body>) {
             .unwrap_or_else(|| vec![])
     };
 
-    let headers: Fallible<Vec<_>> = response_headers
-        .iter()
-        .map(|(name, value)| Ok((name.parse::<HeaderName>()?, value.parse()?)))
-        .collect();
+    let output_headers = try_or_error_response!(
+        state,
+        response_headers
+            .iter()
+            .map(|(name, value)| Ok((
+                name.parse::<HeaderName>()?,
+                value.parse()?
+            )))
+            .collect::<Fallible<Vec<_>>>()
+    );
 
-    match headers {
-        Err(_) => bad_request(state),
-        Ok(hdrs) => {
-            let mut res = empty_response(&state, StatusCode::OK);
-            let headers = res.headers_mut();
-            for (key, value) in hdrs {
-                headers.insert(key, value);
-            }
-
-            (state, res)
-        }
+    let mut res = empty_response(&state, StatusCode::OK);
+    let headers = res.headers_mut();
+    for (key, value) in output_headers {
+        headers.insert(key, value);
     }
+
+    (state, res)
 }
 
 #[cfg(test)]

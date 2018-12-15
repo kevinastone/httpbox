@@ -49,9 +49,8 @@ pub fn absolute_url(state: &State, uri: Uri) -> Fallible<Url> {
 #[cfg(test)]
 mod test {
     use super::{absolute_uri, host_from_headers, host_to_url};
-
+    use crate::headers::{HeaderMapExt, Host};
     use gotham::state::State;
-    use headers_ext::{HeaderMapExt, Host};
     use http::uri::Authority;
     use hyper::{HeaderMap, Uri};
 
