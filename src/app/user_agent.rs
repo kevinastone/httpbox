@@ -15,7 +15,7 @@ pub fn user_agent(state: State) -> (State, Response<Body>) {
 
 #[cfg(test)]
 mod test {
-    use super::super::router;
+    use crate::app::app;
 
     use gotham::test::TestServer;
     use http::header;
@@ -23,7 +23,7 @@ mod test {
 
     #[test]
     fn test_user_agent() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/user-agent")
@@ -35,7 +35,7 @@ mod test {
 
     #[test]
     fn test_user_agent_custom() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/user-agent")

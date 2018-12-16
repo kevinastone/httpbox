@@ -41,7 +41,7 @@ pub fn delete(state: State) -> Box<HandlerFuture> {
 
 #[cfg(test)]
 mod test {
-    use super::super::router;
+    use crate::app::app;
 
     use gotham::test::TestServer;
     use hyper::StatusCode;
@@ -50,7 +50,7 @@ mod test {
 
     #[test]
     fn test_get() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/get?key=val")
@@ -64,7 +64,7 @@ mod test {
 
     #[test]
     fn test_multi_get() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get(
@@ -86,7 +86,7 @@ mod test {
 
     #[test]
     fn test_post() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .post(
@@ -104,7 +104,7 @@ mod test {
 
     #[test]
     fn test_multi_post() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .post(
@@ -128,7 +128,7 @@ mod test {
 
     #[test]
     fn test_put() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .put(
@@ -147,7 +147,7 @@ mod test {
 
     #[test]
     fn test_multi_put() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .put(
@@ -172,7 +172,7 @@ mod test {
 
     #[test]
     fn test_patch() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .patch(
@@ -190,7 +190,7 @@ mod test {
 
     #[test]
     fn test_multi_patch() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .patch(
@@ -215,7 +215,7 @@ mod test {
 
     #[test]
     fn test_delete() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .delete("http://localhost:3000/delete")

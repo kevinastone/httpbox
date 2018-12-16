@@ -44,15 +44,15 @@ pub fn set_cookies(state: State) -> (State, Response<Body>) {
 
 #[cfg(test)]
 mod test {
-    use super::super::router;
     use super::header;
+    use crate::app::app;
 
     use gotham::test::TestServer;
     use hyper::StatusCode;
 
     #[test]
     fn test_no_cookies() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/cookies")
@@ -65,7 +65,7 @@ mod test {
 
     #[test]
     fn test_cookies() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/cookies")
@@ -83,7 +83,7 @@ mod test {
 
     #[test]
     fn test_multiple_cookies() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/cookies")
@@ -101,7 +101,7 @@ mod test {
 
     #[test]
     fn test_set_cookies() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/cookies/set?test=value")

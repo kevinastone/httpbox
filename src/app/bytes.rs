@@ -57,14 +57,14 @@ pub fn stream_bytes(state: State) -> (State, Response<Body>) {
 
 #[cfg(test)]
 mod test {
-    use super::super::router;
+    use crate::app::app;
 
     use gotham::test::TestServer;
     use hyper::StatusCode;
 
     #[test]
     fn test_bytes() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/bytes/4?seed=1234")
@@ -78,7 +78,7 @@ mod test {
 
     #[test]
     fn test_stream_bytes() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/stream-bytes/4?seed=1234")
@@ -92,7 +92,7 @@ mod test {
 
     #[test]
     fn test_stream_bytes_with_chunk_size() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/stream-bytes/4?seed=1234&chunk_size=2")

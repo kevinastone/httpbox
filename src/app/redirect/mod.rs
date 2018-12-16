@@ -62,7 +62,7 @@ pub fn absolute(mut state: State) -> (State, Response<Body>) {
 
 #[cfg(test)]
 mod test {
-    use super::super::router;
+    use crate::app::app;
 
     use gotham::test::TestServer;
     use http::header;
@@ -70,7 +70,7 @@ mod test {
 
     #[test]
     fn test_redirect_to() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/redirect-to?url=http://example.com")
@@ -86,7 +86,7 @@ mod test {
 
     #[test]
     fn test_invalid_redirect_to() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/redirect-to?url=abc")
@@ -98,7 +98,7 @@ mod test {
 
     #[test]
     fn test_redirect() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/redirect/5")
@@ -114,7 +114,7 @@ mod test {
 
     #[test]
     fn test_redirect_last() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/redirect/1")
@@ -130,7 +130,7 @@ mod test {
 
     #[test]
     fn test_relative_redirect() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/relative-redirect/5")
@@ -146,7 +146,7 @@ mod test {
 
     #[test]
     fn test_relative_redirect_last() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/relative-redirect/1")
@@ -162,7 +162,7 @@ mod test {
 
     #[test]
     fn test_absolute_redirect() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/absolute-redirect/5")
@@ -180,7 +180,7 @@ mod test {
 
     #[test]
     fn test_absolute_redirect_last() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/absolute-redirect/1")

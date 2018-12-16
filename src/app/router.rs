@@ -9,7 +9,7 @@ use crate::app::*;
 use crate::router::*;
 use hyper::Method;
 
-pub fn router() -> Router {
+pub fn app() -> Router {
     build_simple_router(|root: &mut RouterBuilder<(), ()>| {
         let mut installer = RouteInstaller::new(root);
         installer.install(

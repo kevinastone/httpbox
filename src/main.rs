@@ -79,5 +79,5 @@ fn main() {
         .and_then(|iter| iter.last())
         .expect(&format!("Invalid listening address: {}:{}", host, port)[..]);
     println!("Listening on {}:{} with {} threads", host, port, threads,);
-    gotham::start_with_num_threads(addr, app::router(), threads)
+    gotham::start_with_num_threads(addr, app::app(), threads)
 }

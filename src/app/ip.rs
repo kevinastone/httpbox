@@ -26,7 +26,7 @@ pub fn ip(state: State) -> (State, Response<Body>) {
 
 #[cfg(test)]
 mod test {
-    use super::super::router;
+    use crate::app::app;
     use crate::headers::X_FORWARDED_FOR;
 
     use gotham::test::TestServer;
@@ -35,7 +35,7 @@ mod test {
 
     #[test]
     fn test_ip() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/ip")
@@ -49,7 +49,7 @@ mod test {
 
     #[test]
     fn test_ip_from_header() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/ip")
@@ -67,7 +67,7 @@ mod test {
 
     #[test]
     fn test_ip_ignore_bad_header() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/ip")

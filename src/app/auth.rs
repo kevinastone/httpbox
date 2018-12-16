@@ -60,8 +60,8 @@ pub fn bearer(state: State) -> (State, Response<Body>) {
 
 #[cfg(test)]
 mod test {
-    use super::super::router;
     use super::REALM;
+    use crate::app::app;
     use crate::headers::WWWAuthenticate;
     use crate::headers::{Authorization, HeaderMapExt};
     use gotham::test::TestServer;
@@ -70,7 +70,7 @@ mod test {
 
     #[test]
     fn test_basic_no_authorization() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/basic-auth/my-username/my-password")
@@ -86,7 +86,7 @@ mod test {
 
     #[test]
     fn test_basic_authorized() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
 
         let auth = Authorization::basic("my-username", "my-password");
 
@@ -105,7 +105,7 @@ mod test {
 
     #[test]
     fn test_basic_unauthorized() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
 
         let auth = Authorization::basic("my-username", "not-my-password");
 
@@ -128,7 +128,7 @@ mod test {
 
     #[test]
     fn test_bearer_no_authorization() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/bearer-auth/my-token")
@@ -140,7 +140,7 @@ mod test {
 
     #[test]
     fn test_bearer_authorized() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
 
         let auth = Authorization::bearer("my-token").unwrap();
 
@@ -159,7 +159,7 @@ mod test {
 
     #[test]
     fn test_bearer_unauthorized() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
 
         let auth = Authorization::bearer("not-my-token").unwrap();
 

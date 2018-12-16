@@ -39,7 +39,7 @@ pub fn set_cache(state: State) -> (State, Response<Body>) {
 
 #[cfg(test)]
 mod test {
-    use super::super::router;
+    use crate::app::app;
 
     use gotham::test::TestServer;
     use headers_ext::{CacheControl, HeaderMapExt, IfModifiedSince};
@@ -50,7 +50,7 @@ mod test {
 
     #[test]
     fn test_cache_no_headers() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/cache")
@@ -62,7 +62,7 @@ mod test {
 
     #[test]
     fn test_cache_if_modified_since() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let header: IfModifiedSince = SystemTime::now().into();
 
         let response = test_server
@@ -80,7 +80,7 @@ mod test {
 
     #[test]
     fn test_cache_if_none_match() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/cache")
@@ -96,7 +96,7 @@ mod test {
 
     #[test]
     fn test_set_cache() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/cache/30")

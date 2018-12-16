@@ -37,13 +37,13 @@ pub fn delay(state: State) -> Box<HandlerFuture> {
 
 #[cfg(test)]
 mod test {
-    use super::super::router;
+    use crate::app::app;
     use gotham::test::TestServer;
     use hyper::StatusCode;
 
     #[test]
     fn test_sleep() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/delay/3")
@@ -57,7 +57,7 @@ mod test {
 
     #[test]
     fn test_sleep_too_long() {
-        let test_server = TestServer::new(router()).unwrap();
+        let test_server = TestServer::new(app()).unwrap();
         let response = test_server
             .client()
             .get("http://localhost:3000/delay/33")
