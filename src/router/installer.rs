@@ -1,5 +1,4 @@
 use super::routes::FrozenRoute;
-
 use gotham::extractor::{PathExtractor, QueryStringExtractor};
 use gotham::handler::Handler;
 use gotham::pipeline::chain::PipelineHandleChain;
@@ -34,7 +33,7 @@ where
         H: Handler + RefUnwindSafe + Send + Sync + Copy + 'static,
         R: Into<FrozenRoute<'a>>,
     {
-        let route: FrozenRoute = route.into();
+        let route = route.into();
         self.routes.push(route.clone());
         let method = route.method();
         self.builder.associate(route.path(), move |assoc| {
@@ -57,7 +56,7 @@ where
         R: Into<FrozenRoute<'a>>,
         PE: PathExtractor<Body> + Send + Sync + 'static,
     {
-        let route: FrozenRoute = route.into();
+        let route = route.into();
         self.routes.push(route.clone());
         let method = route.method();
         self.builder.associate(route.path(), move |assoc| {
@@ -79,7 +78,7 @@ where
         R: Into<FrozenRoute<'a>>,
         QSE: QueryStringExtractor<Body> + Send + Sync + 'static,
     {
-        let route: FrozenRoute = route.into();
+        let route = route.into();
         self.routes.push(route.clone());
         let method = route.method();
         self.builder.associate(route.path(), move |assoc| {
@@ -102,7 +101,7 @@ where
         PE: PathExtractor<Body> + Send + Sync + 'static,
         QSE: QueryStringExtractor<Body> + Send + Sync + 'static,
     {
-        let route: FrozenRoute = route.into();
+        let route = route.into();
         self.routes.push(route.clone());
         let method = route.method();
         self.builder.associate(route.path(), move |assoc| {
@@ -120,7 +119,7 @@ where
         F: FnOnce(&FrozenRoute<'a>, &mut RouterBuilder<C, P>),
         R: Into<FrozenRoute<'a>>,
     {
-        let route: FrozenRoute = route.into();
+        let route = route.into();
         self.routes.push(route.clone());
         closure(&route, self.builder);
         route

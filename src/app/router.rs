@@ -10,8 +10,8 @@ use crate::router::*;
 use hyper::Method;
 
 pub fn app() -> Router {
-    build_simple_router(|root: &mut RouterBuilder<(), ()>| {
-        let mut installer = RouteInstaller::new(root);
+    build_simple_router(|builder| {
+        let mut installer = RouteInstaller::new(builder);
         installer.install(
             ip::ip,
             Route::new("/ip").set_description("Returns Origin IP"),
