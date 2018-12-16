@@ -7,7 +7,7 @@ use crate::app::redirect::{RedirectCountParams, RedirectUrlParams};
 use crate::app::status_code::StatusCodeParams;
 use crate::app::*;
 use crate::router::*;
-use hyper::Method;
+use http::Method;
 
 pub fn app() -> Router {
     build_simple_router(|builder| {

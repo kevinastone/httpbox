@@ -1,7 +1,6 @@
 use failure::{format_err, Fallible};
 use gotham::state::{FromState, State};
-use http::header;
-use hyper::{HeaderMap, Uri};
+use http::{header, HeaderMap, Uri};
 use lazy_static::lazy_static;
 use std::env;
 use url::Url;
@@ -51,8 +50,7 @@ mod test {
     use super::{absolute_uri, host_from_headers, host_to_url};
     use crate::headers::{HeaderMapExt, Host};
     use gotham::state::State;
-    use http::uri::Authority;
-    use hyper::{HeaderMap, Uri};
+    use http::{uri::Authority, HeaderMap, Uri};
 
     #[test]
     fn test_host_to_url() {

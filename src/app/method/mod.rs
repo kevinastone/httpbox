@@ -44,7 +44,7 @@ mod test {
     use crate::app::app;
 
     use gotham::test::TestServer;
-    use hyper::StatusCode;
+    use http::StatusCode;
     use std::collections::HashSet;
     use std::iter::FromIterator;
 

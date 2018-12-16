@@ -39,7 +39,7 @@ pub fn delay(state: State) -> Box<HandlerFuture> {
 mod test {
     use crate::app::app;
     use gotham::test::TestServer;
-    use hyper::StatusCode;
+    use http::StatusCode;
 
     #[test]
     fn test_sleep() {

@@ -31,7 +31,7 @@ mod test {
 
     use gotham::test::TestServer;
     use http::header;
-    use hyper::StatusCode;
+    use http::StatusCode;
 
     #[test]
     fn test_ip() {

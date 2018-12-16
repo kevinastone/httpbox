@@ -66,7 +66,7 @@ mod test {
     use crate::headers::{Authorization, HeaderMapExt};
     use gotham::test::TestServer;
     use http::header;
-    use hyper::StatusCode;
+    use http::StatusCode;
 
     #[test]
     fn test_basic_no_authorization() {

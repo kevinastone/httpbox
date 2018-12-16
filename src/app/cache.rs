@@ -44,7 +44,7 @@ mod test {
     use gotham::test::TestServer;
     use headers_ext::{CacheControl, HeaderMapExt, IfModifiedSince};
     use http::header;
-    use hyper::StatusCode;
+    use http::StatusCode;
     use std::time::Duration;
     use std::time::SystemTime;
 

@@ -48,7 +48,7 @@ mod test {
     use crate::app::app;
 
     use gotham::test::TestServer;
-    use hyper::StatusCode;
+    use http::StatusCode;
 
     #[test]
     fn test_no_cookies() {

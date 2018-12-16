@@ -60,10 +60,8 @@ mod test {
     use super::{
         content_type_decoder, parse_url_encoded_body, ContentTypeDecoder,
     };
-
     use gotham::state::State;
-    use http::header;
-    use hyper::HeaderMap;
+    use http::{header, HeaderMap};
 
     #[test]
     fn test_parse_url_encoded_body() {
