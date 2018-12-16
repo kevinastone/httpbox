@@ -1,10 +1,3 @@
-mod installer;
-mod routes;
-
-use self::installer::RouteInstaller;
-pub use self::routes::FrozenRoute;
-use self::routes::Route;
-
 use crate::app::auth::{BasicAuthParams, BearerParams};
 use crate::app::bytes::{BytesPathParams, BytesQueryParams};
 use crate::app::cache::CacheTimeParams;
@@ -13,8 +6,7 @@ use crate::app::index::IndexNewHandler;
 use crate::app::redirect::{RedirectCountParams, RedirectUrlParams};
 use crate::app::status_code::StatusCodeParams;
 use crate::app::*;
-use gotham::router::builder::*;
-use gotham::router::Router;
+use crate::router::*;
 use hyper::Method;
 
 pub fn router() -> Router {

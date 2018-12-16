@@ -1,5 +1,5 @@
 use crate::app::response::html;
-use crate::app::router::FrozenRoute;
+use crate::router::FrozenRoute;
 use gotham::error::*;
 use gotham::handler::{Handler, HandlerFuture, IntoHandlerFuture, NewHandler};
 use gotham::state::State;

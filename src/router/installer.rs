@@ -1,4 +1,4 @@
-use super::FrozenRoute;
+use super::routes::FrozenRoute;
 
 use gotham::extractor::{PathExtractor, QueryStringExtractor};
 use gotham::handler::Handler;
