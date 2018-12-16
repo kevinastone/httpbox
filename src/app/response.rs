@@ -1,7 +1,7 @@
+use crate::headers::{HeaderMapExt, Location};
 use gotham::helpers::http::response::create_response;
 use gotham::state::State;
-use http::header;
-use hyper::{Body, Response, StatusCode};
+use hyper::{Body, Response, StatusCode, Uri};
 
 pub fn empty_response(state: &State, status: StatusCode) -> Response<Body> {
     create_response(state, status, mime::TEXT_PLAIN, vec![])
@@ -35,9 +35,8 @@ where
     (state, res)
 }
 
-pub fn redirect_to(state: State, url: &str) -> (State, Response<Body>) {
+pub fn redirect_to(state: State, uri: Uri) -> (State, Response<Body>) {
     let mut res = empty_response(&state, StatusCode::FOUND);
-    res.headers_mut()
-        .insert(header::LOCATION, try_or_error_response!(state, url.parse()));
+    res.headers_mut().typed_insert(Location::from(uri));
     (state, res)
 }

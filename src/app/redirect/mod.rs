@@ -7,7 +7,6 @@ use gotham_derive::{StateData, StaticResponseExtender};
 use hyper::{Body, Response, Uri};
 use serde_derive::Deserialize;
 use std::cmp::min;
-use url::Url;
 
 #[derive(Deserialize, StateData, StaticResponseExtender)]
 pub struct RedirectCountParams {
@@ -21,8 +20,9 @@ pub struct RedirectUrlParams {
 
 pub fn to(state: State) -> (State, Response<Body>) {
     let query = RedirectUrlParams::borrow_from(&state);
-    let url = try_or_error_response!(state, Url::parse(&query.url));
-    redirect_to(state, &url.to_string())
+    let uri = try_or_error_response!(state, query.url.parse::<Uri>());
+    println!("{}", uri);
+    redirect_to(state, uri)
 }
 
 pub fn relative(state: State) -> (State, Response<Body>) {
@@ -35,7 +35,8 @@ pub fn relative(state: State) -> (State, Response<Body>) {
         String::from("/")
     };
 
-    redirect_to(state, &url)
+    let uri = try_or_error_response!(state, url.parse::<Uri>());
+    redirect_to(state, uri)
 }
 
 pub fn redirect(state: State) -> (State, Response<Body>) {
@@ -53,11 +54,13 @@ pub fn absolute(mut state: State) -> (State, Response<Body>) {
     };
 
     let request_uri = Uri::take_from(&mut state);
-    let response_url = try_or_error_response!(
+    let response_uri = try_or_error_response!(
         state,
-        absolute_url(&state, request_uri).and_then(|base| Ok(base.join(&url)?))
+        absolute_url(&state, request_uri)
+            .and_then(|base| Ok(base.join(&url)?))
+            .and_then(|url| Ok(url.to_string().parse::<Uri>()?))
     );
-    redirect_to(state, &response_url.to_string())
+    redirect_to(state, response_uri)
 }
 
 #[cfg(test)]
@@ -82,18 +85,6 @@ mod test {
             response.headers().get(header::LOCATION).unwrap(),
             header::HeaderValue::from_static("http://example.com/")
         )
-    }
-
-    #[test]
-    fn test_invalid_redirect_to() {
-        let test_server = TestServer::new(app()).unwrap();
-        let response = test_server
-            .client()
-            .get("http://localhost:3000/redirect-to?url=abc")
-            .perform()
-            .unwrap();
-
-        assert_eq!(response.status(), StatusCode::BAD_REQUEST);
     }
 
     #[test]
