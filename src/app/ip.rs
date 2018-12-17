@@ -28,7 +28,6 @@ pub fn ip(state: State) -> (State, Response<Body>) {
 mod test {
     use crate::app::app;
     use crate::headers::X_FORWARDED_FOR;
-
     use gotham::test::TestServer;
     use http::header;
     use http::StatusCode;

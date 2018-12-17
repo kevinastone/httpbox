@@ -66,10 +66,9 @@ pub fn absolute(mut state: State) -> (State, Response<Body>) {
 #[cfg(test)]
 mod test {
     use crate::app::app;
-
+    use crate::headers::{HeaderMapExt, Location};
     use gotham::test::TestServer;
-    use http::header;
-    use http::StatusCode;
+    use http::{StatusCode, Uri};
 
     #[test]
     fn test_redirect_to() {
@@ -82,8 +81,8 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::FOUND);
         assert_eq!(
-            response.headers().get(header::LOCATION).unwrap(),
-            header::HeaderValue::from_static("http://example.com/")
+            response.headers().typed_get::<Location>().unwrap().uri(),
+            &Uri::from_static("http://example.com/")
         )
     }
 
@@ -98,8 +97,8 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::FOUND);
         assert_eq!(
-            response.headers().get(header::LOCATION).unwrap(),
-            header::HeaderValue::from_static("/relative-redirect/4")
+            response.headers().typed_get::<Location>().unwrap().uri(),
+            &Uri::from_static("/relative-redirect/4")
         )
     }
 
@@ -114,8 +113,8 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::FOUND);
         assert_eq!(
-            response.headers().get(header::LOCATION).unwrap(),
-            header::HeaderValue::from_static("/")
+            response.headers().typed_get::<Location>().unwrap().uri(),
+            &Uri::from_static("/")
         )
     }
 
@@ -130,8 +129,8 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::FOUND);
         assert_eq!(
-            response.headers().get(header::LOCATION).unwrap(),
-            header::HeaderValue::from_static("/relative-redirect/4")
+            response.headers().typed_get::<Location>().unwrap().uri(),
+            &Uri::from_static("/relative-redirect/4")
         )
     }
 
@@ -146,8 +145,8 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::FOUND);
         assert_eq!(
-            response.headers().get(header::LOCATION).unwrap(),
-            header::HeaderValue::from_static("/")
+            response.headers().typed_get::<Location>().unwrap().uri(),
+            &Uri::from_static("/")
         )
     }
 
@@ -162,10 +161,8 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::FOUND);
         assert_eq!(
-            response.headers().get(header::LOCATION).unwrap(),
-            header::HeaderValue::from_static(
-                "http://localhost:3000/absolute-redirect/4"
-            )
+            response.headers().typed_get::<Location>().unwrap().uri(),
+            &Uri::from_static("http://localhost:3000/absolute-redirect/4")
         )
     }
 
@@ -180,8 +177,8 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::FOUND);
         assert_eq!(
-            response.headers().get(header::LOCATION).unwrap(),
-            header::HeaderValue::from_static("http://localhost:3000/")
+            response.headers().typed_get::<Location>().unwrap().uri(),
+            &Uri::from_static("http://localhost:3000/")
         )
     }
 }

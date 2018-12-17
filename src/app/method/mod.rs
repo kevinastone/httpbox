@@ -42,7 +42,6 @@ pub fn delete(state: State) -> Box<HandlerFuture> {
 #[cfg(test)]
 mod test {
     use crate::app::app;
-
     use gotham::test::TestServer;
     use http::StatusCode;
     use std::collections::HashSet;

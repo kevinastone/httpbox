@@ -16,9 +16,9 @@ pub fn user_agent(state: State) -> (State, Response<Body>) {
 #[cfg(test)]
 mod test {
     use crate::app::app;
-
+    use crate::headers::UserAgent;
+    use crate::test::request::TestRequestTypedHeader;
     use gotham::test::TestServer;
-    use http::header;
     use http::StatusCode;
 
     #[test]
@@ -39,10 +39,7 @@ mod test {
         let response = test_server
             .client()
             .get("http://localhost:3000/user-agent")
-            .with_header(
-                header::USER_AGENT,
-                header::HeaderValue::from_static("HTTPBoxBot/1.0"),
-            )
+            .with_typed_header(UserAgent::from_static("HTTPBoxBot/1.0"))
             .perform()
             .unwrap();
 

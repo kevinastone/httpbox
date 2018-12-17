@@ -7,7 +7,7 @@ use gotham_derive::{StateData, StaticResponseExtender};
 use hyper::{Body, HeaderMap, Response, StatusCode};
 use serde_derive::Deserialize;
 
-pub const REALM: &str = "User Visible Realm";
+pub(crate) const REALM: &str = "User Visible Realm";
 
 #[derive(Deserialize, StateData, StaticResponseExtender)]
 pub struct BasicAuthParams {
@@ -62,10 +62,9 @@ pub fn bearer(state: State) -> (State, Response<Body>) {
 mod test {
     use super::REALM;
     use crate::app::app;
-    use crate::headers::WWWAuthenticate;
-    use crate::headers::{Authorization, HeaderMapExt};
+    use crate::headers::{Authorization, HeaderMapExt, WWWAuthenticate};
+    use crate::test::request::TestRequestTypedHeader;
     use gotham::test::TestServer;
-    use http::header;
     use http::StatusCode;
 
     #[test]
@@ -93,10 +92,7 @@ mod test {
         let response = test_server
             .client()
             .get("http://localhost:3000/basic-auth/my-username/my-password")
-            .with_header(
-                header::AUTHORIZATION,
-                crate::test::headers::encode(auth),
-            )
+            .with_typed_header(auth)
             .perform()
             .unwrap();
 
@@ -112,10 +108,7 @@ mod test {
         let response = test_server
             .client()
             .get("http://localhost:3000/basic-auth/my-username/my-password")
-            .with_header(
-                header::AUTHORIZATION,
-                crate::test::headers::encode(auth),
-            )
+            .with_typed_header(auth)
             .perform()
             .unwrap();
 
@@ -147,10 +140,7 @@ mod test {
         let response = test_server
             .client()
             .get("http://localhost:3000/bearer-auth/my-token")
-            .with_header(
-                header::AUTHORIZATION,
-                crate::test::headers::encode(auth),
-            )
+            .with_typed_header(auth)
             .perform()
             .unwrap();
 
@@ -166,10 +156,7 @@ mod test {
         let response = test_server
             .client()
             .get("http://localhost:3000/bearer-auth/my-token")
-            .with_header(
-                header::AUTHORIZATION,
-                crate::test::headers::encode(auth),
-            )
+            .with_typed_header(auth)
             .perform()
             .unwrap();
 

@@ -22,7 +22,6 @@ pub fn status_code(state: State) -> (State, Response<Body>) {
 #[cfg(test)]
 mod test {
     use crate::app::app;
-
     use gotham::test::TestServer;
     use http::StatusCode;
 

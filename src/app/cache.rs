@@ -40,10 +40,11 @@ pub fn set_cache(state: State) -> (State, Response<Body>) {
 #[cfg(test)]
 mod test {
     use crate::app::app;
-
+    use crate::headers::{
+        CacheControl, HeaderMapExt, IfModifiedSince, IfNoneMatch,
+    };
+    use crate::test::request::TestRequestTypedHeader;
     use gotham::test::TestServer;
-    use headers_ext::{CacheControl, HeaderMapExt, IfModifiedSince};
-    use http::header;
     use http::StatusCode;
     use std::time::Duration;
     use std::time::SystemTime;
@@ -68,10 +69,7 @@ mod test {
         let response = test_server
             .client()
             .get("http://localhost:3000/cache")
-            .with_header(
-                header::IF_MODIFIED_SINCE,
-                crate::test::headers::encode(header),
-            )
+            .with_typed_header(header)
             .perform()
             .unwrap();
 
@@ -84,10 +82,7 @@ mod test {
         let response = test_server
             .client()
             .get("http://localhost:3000/cache")
-            .with_header(
-                header::IF_NONE_MATCH,
-                header::HeaderValue::from_static("*"),
-            )
+            .with_typed_header(IfNoneMatch::any())
             .perform()
             .unwrap();
 

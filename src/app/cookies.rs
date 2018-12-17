@@ -46,7 +46,6 @@ pub fn set_cookies(state: State) -> (State, Response<Body>) {
 mod test {
     use super::header;
     use crate::app::app;
-
     use gotham::test::TestServer;
     use http::StatusCode;
 
