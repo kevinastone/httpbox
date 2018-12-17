@@ -1,4 +1,4 @@
-use super::routes::FrozenRoute;
+use super::routes::Route;
 use gotham::extractor::{PathExtractor, QueryStringExtractor};
 use gotham::handler::Handler;
 use gotham::pipeline::chain::PipelineHandleChain;
@@ -13,7 +13,7 @@ where
     P: Send + Sync + RefUnwindSafe + 'static,
 {
     builder: &'a mut RouterBuilder<'b, C, P>,
-    routes: Vec<FrozenRoute<'a>>,
+    routes: Vec<Route<'a>>,
 }
 
 impl<'a, 'b, C, P> RouteInstaller<'a, 'b, C, P>
@@ -28,10 +28,10 @@ where
         }
     }
 
-    pub fn install<H, R>(&mut self, handler: H, route: R) -> FrozenRoute<'a>
+    pub fn install<H, R>(&mut self, handler: H, route: R) -> Route<'a>
     where
         H: Handler + RefUnwindSafe + Send + Sync + Copy + 'static,
-        R: Into<FrozenRoute<'a>>,
+        R: Into<Route<'a>>,
     {
         let route = route.into();
         self.routes.push(route.clone());
@@ -42,7 +42,7 @@ where
         route
     }
 
-    pub fn routes(&self) -> Vec<FrozenRoute<'a>> {
+    pub fn routes(&self) -> Vec<Route<'a>> {
         self.routes.clone()
     }
 
@@ -50,10 +50,10 @@ where
         &mut self,
         handler: H,
         route: R,
-    ) -> FrozenRoute<'a>
+    ) -> Route<'a>
     where
         H: Handler + RefUnwindSafe + Send + Sync + Copy + 'static,
-        R: Into<FrozenRoute<'a>>,
+        R: Into<Route<'a>>,
         PE: PathExtractor<Body> + Send + Sync + 'static,
     {
         let route = route.into();
@@ -72,10 +72,10 @@ where
         &mut self,
         handler: H,
         route: R,
-    ) -> FrozenRoute<'a>
+    ) -> Route<'a>
     where
         H: Handler + RefUnwindSafe + Send + Sync + Copy + 'static,
-        R: Into<FrozenRoute<'a>>,
+        R: Into<Route<'a>>,
         QSE: QueryStringExtractor<Body> + Send + Sync + 'static,
     {
         let route = route.into();
@@ -94,10 +94,10 @@ where
         &mut self,
         handler: H,
         route: R,
-    ) -> FrozenRoute<'a>
+    ) -> Route<'a>
     where
         H: Handler + RefUnwindSafe + Send + Sync + Copy + 'static,
-        R: Into<FrozenRoute<'a>>,
+        R: Into<Route<'a>>,
         PE: PathExtractor<Body> + Send + Sync + 'static,
         QSE: QueryStringExtractor<Body> + Send + Sync + 'static,
     {
@@ -114,10 +114,10 @@ where
         route
     }
 
-    pub fn closure<R, F>(&mut self, route: R, closure: F) -> FrozenRoute<'a>
+    pub fn closure<R, F>(&mut self, route: R, closure: F) -> Route<'a>
     where
-        F: FnOnce(&FrozenRoute<'a>, &mut RouterBuilder<C, P>),
-        R: Into<FrozenRoute<'a>>,
+        F: FnOnce(&Route<'a>, &mut RouterBuilder<C, P>),
+        R: Into<Route<'a>>,
     {
         let route = route.into();
         self.routes.push(route.clone());

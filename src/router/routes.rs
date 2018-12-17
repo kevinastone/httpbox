@@ -2,16 +2,16 @@ use hyper::Method;
 use std::collections::HashMap;
 
 #[derive(Debug)]
-pub struct Route<'a> {
-    pub path: &'a str,
-    pub method: Method,
-    pub description: Option<&'a str>,
-    pub example_params: HashMap<&'a str, &'a str>,
+pub struct RouteBuiler<'a> {
+    path: &'a str,
+    method: Method,
+    description: Option<&'a str>,
+    example_params: HashMap<&'a str, &'a str>,
 }
 
-impl<'a> Route<'a> {
+impl<'a> RouteBuiler<'a> {
     pub fn new(path: &'a str) -> Self {
-        Route {
+        RouteBuiler {
             path,
             method: Method::GET,
             description: None,
@@ -59,14 +59,14 @@ impl<'a> Route<'a> {
 }
 
 #[derive(Debug, Clone)]
-pub struct FrozenRoute<'a> {
+pub struct Route<'a> {
     path: &'a str,
     method: Method,
     description: Option<&'a str>,
     example_path: Option<String>,
 }
 
-impl<'a> FrozenRoute<'a> {
+impl<'a> Route<'a> {
     pub fn path(&self) -> &'a str {
         self.path
     }
@@ -84,10 +84,10 @@ impl<'a> FrozenRoute<'a> {
     }
 }
 
-impl<'a> From<Route<'a>> for FrozenRoute<'a> {
-    fn from(route: Route<'a>) -> Self {
+impl<'a> From<RouteBuiler<'a>> for Route<'a> {
+    fn from(route: RouteBuiler<'a>) -> Self {
         let example_path = route.example_path();
-        FrozenRoute {
+        Route {
             path: route.path,
             method: route.method,
             description: route.description,

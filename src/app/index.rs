@@ -1,5 +1,5 @@
 use crate::app::response::html;
-use crate::router::FrozenRoute;
+use crate::router::Route;
 use gotham::error::*;
 use gotham::handler::{Handler, HandlerFuture, IntoHandlerFuture, NewHandler};
 use gotham::state::State;
@@ -26,7 +26,7 @@ impl NewHandler for IndexNewHandler {
     }
 }
 
-pub fn render_index(routes: &[FrozenRoute]) -> String {
+pub fn render_index(routes: &[Route]) -> String {
     (html! {
         : doctype::HTML;
         html {
@@ -71,8 +71,8 @@ pub fn render_index(routes: &[FrozenRoute]) -> String {
     .unwrap()
 }
 
-impl<'a> From<&'a [FrozenRoute<'a>]> for IndexNewHandler {
-    fn from(routes: &'a [FrozenRoute<'a>]) -> Self {
+impl<'a> From<&'a [Route<'a>]> for IndexNewHandler {
+    fn from(routes: &'a [Route<'a>]) -> Self {
         IndexNewHandler(render_index(routes))
     }
 }
