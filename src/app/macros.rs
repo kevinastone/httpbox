@@ -35,7 +35,7 @@ macro_rules! future_try_or_error_response {
         match $result {
             ::std::result::Result::Ok(val) => val,
             ::std::result::Result::Err(e) => {
-                return ::futures::future::err(($state, e.into_handler_error()))
+                return ::futures::future::err(($state, e.into_handler_error()));
             }
         }
     };
@@ -46,7 +46,7 @@ macro_rules! future_try_or_error_response {
                 return ::futures::future::err((
                     $state,
                     e.into_handler_error().with_status($status),
-                ))
+                ));
             }
         }
     };

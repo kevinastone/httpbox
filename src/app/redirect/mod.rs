@@ -21,7 +21,6 @@ pub struct RedirectUrlParams {
 pub fn to(state: State) -> (State, Response<Body>) {
     let query = RedirectUrlParams::borrow_from(&state);
     let uri = try_or_error_response!(state, query.url.parse::<Uri>());
-    println!("{}", uri);
     redirect_to(state, uri)
 }
 
