@@ -1,4 +1,5 @@
 use cookie::Cookie as HTTPCookie;
+use either::Either;
 use headers::{Error, Header, HeaderName, HeaderValue};
 use http::header;
 use std::iter;
@@ -25,18 +26,21 @@ impl<'a> Header for Cookie<'a> {
         Self: Sized,
         I: Iterator<Item = &'i HeaderValue>,
     {
-        let headers = values
-            .map(|h| h.to_str())
+        values
+            .map(|h| h.to_str().map_err(|_| Error::invalid()))
+            .flat_map(|h| match h {
+                Ok(v) => Either::Left(v.split(';').map(|s| Ok(s.trim()))),
+                Err(e) => Either::Right(iter::once(Err(e))),
+            })
+            .map(|item| {
+                item.and_then(|s| {
+                    HTTPCookie::parse(s)
+                        .map_err(|_| Error::invalid())
+                        .map(|c| c.into_owned())
+                })
+            })
             .collect::<Result<Vec<_>, _>>()
-            .map_err(|_| Error::invalid())?;
-
-        let cookies = headers
-            .iter()
-            .flat_map(|v| v.split(';').map(|s| s.trim()))
-            .map(|c| HTTPCookie::parse(c).map(|c| c.into_owned()))
-            .collect::<Result<Vec<_>, _>>();
-
-        cookies.ok().map(Cookie).ok_or_else(Error::invalid)
+            .map(Cookie)
     }
 
     fn encode<E: Extend<HeaderValue>>(&self, values: &mut E) {
@@ -75,7 +79,7 @@ impl Header for SetCookie {
 mod test {
     use super::{Cookie, HTTPCookie, SetCookie};
     use crate::test::headers::encode;
-    use headers::{Header, HeaderMapExt};
+    use headers::{Header, HeaderMapExt, HeaderValue};
     use http::HeaderMap;
 
     #[test]
@@ -128,6 +132,16 @@ mod test {
     fn test_decode_cookie_invalid() {
         let mut headers = HeaderMap::new();
         headers.insert(Cookie::name(), "abc".parse().unwrap());
+
+        let header = headers.typed_try_get::<Cookie>();
+        assert!(header.is_err())
+    }
+
+    #[test]
+    fn test_decode_cookie_invalid_not_str() {
+        let mut headers = HeaderMap::new();
+        headers
+            .insert(Cookie::name(), HeaderValue::from_bytes(b"\xfa").unwrap());
 
         let header = headers.typed_try_get::<Cookie>();
         assert!(header.is_err())
