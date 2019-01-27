@@ -72,7 +72,7 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_body().unwrap();
-        assert_eq!(result_body, [149, 120, 12, 223])
+        assert_eq!(result_body, [236, 97, 38, 144])
     }
 
     #[test]
@@ -86,7 +86,7 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_body().unwrap();
-        assert_eq!(result_body, [149, 120, 12, 223])
+        assert_eq!(result_body, [236, 97, 38, 144])
     }
 
     #[test]
@@ -100,6 +100,6 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::OK);
         let result_body = response.read_body().unwrap();
-        assert_eq!(result_body, [149, 120, 12, 223])
+        assert_eq!(result_body, [236, 97, 38, 144])
     }
 }

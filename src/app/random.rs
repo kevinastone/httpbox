@@ -1,10 +1,10 @@
 use byteorder::{LittleEndian, WriteBytesExt};
 use rand::prelude::*;
-use rand::prng::chacha::ChaChaRng;
+use rand::rngs::SmallRng as Rng;
 
-const SEED_WORDS: usize = 8;
+const SEED_WORDS: usize = 4;
 
-fn to_bytes(val: u32) -> [u8; SEED_WORDS * 4] {
+fn to_bytes(val: u32) -> <Rng as SeedableRng>::Seed {
     let mut slice = vec![];
     slice.write_u32::<LittleEndian>(val).unwrap();
     let slice = &slice[..];
@@ -16,10 +16,10 @@ fn to_bytes(val: u32) -> [u8; SEED_WORDS * 4] {
     array
 }
 
-pub fn rng(seed: Option<u32>) -> ChaChaRng {
+pub fn rng(seed: Option<u32>) -> Rng {
     match seed {
-        Some(seed) => ChaChaRng::from_seed(to_bytes(seed)),
-        None => ChaChaRng::from_rng(thread_rng()).unwrap(),
+        Some(seed) => Rng::from_seed(to_bytes(seed)),
+        None => Rng::from_rng(thread_rng()).unwrap(),
     }
 }
 
@@ -35,9 +35,9 @@ mod tests {
     #[test]
     fn rng_seed_consistent() {
         let mut rng = rng(Some(1234));
-        assert_eq!(rng.next_u32(), 2202577813u32);
-        assert_eq!(rng.next_u32(), 260684152u32);
-        assert_eq!(rng.next_u32(), 3056137228u32);
-        assert_eq!(rng.next_u32(), 1845999327u32);
+        assert_eq!(rng.next_u32(), 2468986604u32);
+        assert_eq!(rng.next_u32(), 1283941473u32);
+        assert_eq!(rng.next_u32(), 3396522534u32);
+        assert_eq!(rng.next_u32(), 1785331600u32);
     }
 }
