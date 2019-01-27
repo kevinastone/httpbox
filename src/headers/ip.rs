@@ -8,6 +8,7 @@ lazy_static! {
         HeaderName::from_static("x-forwarded-for");
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct XForwardedFor(pub IpAddr);
 
 impl XForwardedFor {
@@ -74,7 +75,7 @@ mod test {
         headers.insert(XForwardedFor::name(), "127.0.0.1".parse().unwrap());
 
         let location = headers.typed_get::<XForwardedFor>().unwrap();
-        assert_eq!(location.ip_addr(), ip_addr)
+        assert_eq!(location, XForwardedFor(ip_addr))
     }
 
     #[test]
@@ -84,6 +85,6 @@ mod test {
         headers.insert(XForwardedFor::name(), "::1".parse().unwrap());
 
         let location = headers.typed_get::<XForwardedFor>().unwrap();
-        assert_eq!(location.ip_addr(), ip_addr)
+        assert_eq!(location, XForwardedFor(ip_addr))
     }
 }

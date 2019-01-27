@@ -73,7 +73,10 @@ impl FromStr for BasicRealm {
 
 #[cfg(test)]
 mod test {
-    use super::BasicRealm;
+    use super::{BasicRealm, WWWAuthenticate};
+    use crate::test::headers::encode;
+    use headers::{Header, HeaderMapExt};
+    use http::HeaderMap;
 
     #[test]
     fn test_encode_basic_realm() {
@@ -96,5 +99,39 @@ mod test {
         assert!("Missing realm=\"Test Realm\""
             .parse::<BasicRealm>()
             .is_err())
+    }
+
+    #[test]
+    fn test_encode_www_authenticate() {
+        assert_eq!(
+            encode(WWWAuthenticate::basic_realm("Test Realm"))
+                .to_str()
+                .unwrap(),
+            "Basic realm=\"Test Realm\""
+        )
+    }
+
+    #[test]
+    fn test_decode_www_authenticate() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            WWWAuthenticate::name(),
+            "Basic realm=\"Test Realm\"".parse().unwrap(),
+        );
+
+        let header = headers.typed_get::<WWWAuthenticate>().unwrap();
+        assert_eq!(header, WWWAuthenticate::basic_realm("Test Realm"))
+    }
+
+    #[test]
+    fn test_decode_www_authenticate_invalid() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            WWWAuthenticate::name(),
+            "Missing realm=\"Test Realm\"".parse().unwrap(),
+        );
+
+        let header = headers.typed_try_get::<WWWAuthenticate>();
+        assert!(header.is_err())
     }
 }
