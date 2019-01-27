@@ -1,9 +1,7 @@
 use crate::app::response::{empty_response, ok};
-use crate::headers::{Cookie, HeaderMapExt};
+use crate::headers::{Cookie, HeaderMapExt, SetCookie};
 use cookie::Cookie as HTTPCookie;
-use failure::Fallible;
 use gotham::state::{FromState, State};
-use http::header;
 use hyper::{Body, HeaderMap, Response, StatusCode, Uri};
 use url::form_urlencoded;
 
@@ -12,7 +10,11 @@ pub fn cookies(state: State) -> (State, Response<Body>) {
 
     let body = cookies
         .iter()
-        .flat_map(|cookie| cookie.iter().map(|(n, v)| format!("{} = {}", n, v)))
+        .flat_map(|cookie| {
+            cookie
+                .iter()
+                .map(|c| format!("{} = {}", c.name(), c.value()))
+        })
         .collect::<Vec<_>>();
 
     ok(state, body.join("\n"))
@@ -25,18 +27,15 @@ pub fn set_cookies(state: State) -> (State, Response<Body>) {
         .map(|pairs| pairs.into_owned().collect())
         .unwrap_or_else(|| vec![])
         .iter()
-        .map(|(ref k, ref v)| HTTPCookie::new(k.to_owned(), v.to_owned()))
-        .collect();
-
-    let cookies: Fallible<Vec<_>> = response_cookies
-        .iter()
-        .map(|cookie| Ok(cookie.to_string().parse()?))
+        .map(|(ref k, ref v)| {
+            SetCookie(HTTPCookie::new(k.to_owned(), v.to_owned()))
+        })
         .collect();
 
     let mut res = empty_response(&state, StatusCode::OK);
     let headers = res.headers_mut();
-    for cookie in try_or_error_response!(state, cookies) {
-        headers.insert(header::SET_COOKIE, cookie);
+    for cookie in response_cookies {
+        headers.typed_insert(cookie);
     }
 
     (state, res)
@@ -44,9 +43,12 @@ pub fn set_cookies(state: State) -> (State, Response<Body>) {
 
 #[cfg(test)]
 mod test {
-    use super::header;
     use crate::app::app;
+    use crate::headers::{Cookie, SetCookie};
+    use crate::test::request::TestRequestTypedHeader;
+    use cookie::Cookie as HTTPCookie;
     use gotham::test::TestServer;
+    use headers::HeaderMapExt;
     use http::StatusCode;
 
     #[test]
@@ -68,10 +70,7 @@ mod test {
         let response = test_server
             .client()
             .get("http://localhost:3000/cookies")
-            .with_header(
-                header::COOKIE,
-                header::HeaderValue::from_static("test=value"),
-            )
+            .with_typed_header(Cookie(vec![HTTPCookie::new("test", "value")]))
             .perform()
             .unwrap();
 
@@ -86,10 +85,10 @@ mod test {
         let response = test_server
             .client()
             .get("http://localhost:3000/cookies")
-            .with_header(
-                header::COOKIE,
-                header::HeaderValue::from_static("first=value; second=another"),
-            )
+            .with_typed_header(Cookie(vec![
+                HTTPCookie::new("first", "value"),
+                HTTPCookie::new("second", "another"),
+            ]))
             .perform()
             .unwrap();
 
@@ -109,8 +108,8 @@ mod test {
 
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(
-            response.headers().get(header::SET_COOKIE).unwrap(),
-            "test=value"
+            response.headers().typed_get::<SetCookie>().unwrap(),
+            SetCookie(HTTPCookie::new("test", "value"))
         )
     }
 }
