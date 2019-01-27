@@ -1,6 +1,8 @@
-use headers_ext::{Error, Header, HeaderName, HeaderValue};
+use headers::{Error, Header, HeaderName, HeaderValue};
 use http::{header, Uri};
 use std::iter;
+
+static LOCATION: &HeaderName = &header::LOCATION;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Location(Uri);
@@ -12,7 +14,9 @@ impl Location {
 }
 
 impl Header for Location {
-    const NAME: &'static HeaderName = &header::LOCATION;
+    fn name() -> &'static HeaderName {
+        LOCATION
+    }
 
     fn decode<'i, I>(values: &mut I) -> Result<Self, Error>
     where
@@ -47,7 +51,7 @@ impl From<&Location> for HeaderValue {
 mod test {
     use super::Location;
     use crate::test::headers::encode;
-    use headers_ext::HeaderMapExt;
+    use headers::HeaderMapExt;
     use http::{header, HeaderMap, Uri};
 
     #[test]
