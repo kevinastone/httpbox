@@ -1,10 +1,11 @@
-use headers_ext::{Error, Header, HeaderName, HeaderValue};
+use headers::{Error, Header, HeaderName, HeaderValue};
 use http::header;
 use std::fmt;
 use std::iter;
 use std::str::FromStr;
 
 const BASIC_REALM_PREAMBLE: &str = "Basic realm=";
+static WWW_AUTHENTICATE: &HeaderName = &header::WWW_AUTHENTICATE;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct WWWAuthenticate(BasicRealm);
@@ -16,7 +17,9 @@ impl WWWAuthenticate {
 }
 
 impl Header for WWWAuthenticate {
-    const NAME: &'static HeaderName = &header::WWW_AUTHENTICATE;
+    fn name() -> &'static HeaderName {
+        WWW_AUTHENTICATE
+    }
 
     fn decode<'i, I>(values: &mut I) -> Result<Self, Error>
     where

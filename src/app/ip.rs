@@ -1,13 +1,12 @@
 use crate::app::response::{internal_server_error, ok};
-use crate::headers::{XForwardedFor, X_FORWARDED_FOR};
+use crate::headers::{HeaderMapExt, XForwardedFor};
 use gotham::state::{client_addr, FromState, State};
 use hyper::{Body, HeaderMap, Response};
 use std::net::IpAddr;
 
 fn x_forward_for(state: &State) -> Option<IpAddr> {
     HeaderMap::borrow_from(&state)
-        .get(X_FORWARDED_FOR)
-        .and_then(|h| XForwardedFor::try_for(h).ok())
+        .typed_get::<XForwardedFor>()
         .map(|h| h.ip_addr())
 }
 
@@ -27,9 +26,9 @@ pub fn ip(state: State) -> (State, Response<Body>) {
 #[cfg(test)]
 mod test {
     use crate::app::app;
-    use crate::headers::X_FORWARDED_FOR;
+    use crate::headers::{Header, XForwardedFor};
+    use crate::test::request::TestRequestTypedHeader;
     use gotham::test::TestServer;
-    use http::header;
     use http::StatusCode;
 
     #[test]
@@ -52,10 +51,7 @@ mod test {
         let response = test_server
             .client()
             .get("http://localhost:3000/ip")
-            .with_header(
-                X_FORWARDED_FOR,
-                header::HeaderValue::from_static("1.2.3.4"),
-            )
+            .with_typed_header(XForwardedFor("1.2.3.4".parse().unwrap()))
             .perform()
             .unwrap();
 
@@ -70,10 +66,7 @@ mod test {
         let response = test_server
             .client()
             .get("http://localhost:3000/ip")
-            .with_header(
-                X_FORWARDED_FOR,
-                header::HeaderValue::from_static("abc"),
-            )
+            .with_header(XForwardedFor::name(), "abc".parse().unwrap())
             .perform()
             .unwrap();
 

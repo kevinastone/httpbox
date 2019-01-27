@@ -1,5 +1,5 @@
 use gotham::test::TestRequest;
-use headers_ext::{Header, HeaderMapExt};
+use headers::{Header, HeaderMapExt};
 
 pub trait TestRequestTypedHeader {
     fn with_typed_header<H: Header>(self, header: H) -> Self;
