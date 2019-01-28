@@ -5,22 +5,25 @@ use crate::app::response::ok;
 use gotham::handler::HandlerFuture;
 use gotham::state::{FromState, State};
 use hyper::{Body, Response, Uri};
+use itertools::{Either, Itertools};
 use url::form_urlencoded;
 
 pub fn get(state: State) -> (State, Response<Body>) {
-    let params: Vec<String> = {
+    let body = {
         Uri::borrow_from(&state)
             .query()
-            .map(|query| form_urlencoded::parse(query.as_bytes()))
-            .map(|pairs| {
-                pairs
-                    .map(|(key, value)| format!("{} = {}", key, value))
-                    .collect()
+            .map_or_else(
+                || Either::Right(vec![]),
+                |query| Either::Left(form_urlencoded::parse(query.as_bytes())),
+            )
+            .into_iter()
+            .format_with("\n", |(key, value), f| {
+                f(&format_args!("{} = {}", key, value))
             })
-            .unwrap_or_else(|| vec![])
+            .to_string()
     };
 
-    ok(state, params.join("\n"))
+    ok(state, body)
 }
 
 pub fn post(state: State) -> Box<HandlerFuture> {

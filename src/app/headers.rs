@@ -3,35 +3,46 @@ use failure::Fallible;
 use gotham::state::{FromState, State};
 use http::header::HeaderName;
 use hyper::{Body, HeaderMap, Response, StatusCode, Uri};
+use itertools::{process_results, Either, Itertools};
 use url::form_urlencoded;
 
 pub fn headers(state: State) -> (State, Response<Body>) {
     let request_headers = HeaderMap::borrow_from(&state)
         .iter()
-        .map(|(n, v)| Ok((n, v.to_str()?)));
+        .map(|(n, v)| v.to_str().map(|v| (n, v)));
 
     let body = try_or_error_response!(
         state,
-        request_headers
-            .map(|r| r.map(|(n, v)| format!("{}: {}", n, v.trim())))
-            .collect::<Fallible<Vec<_>>>()
+        process_results(request_headers, |iter| iter
+            .format_with("\n", |(n, v), f| f(&format_args!(
+                "{}: {}",
+                n,
+                v.trim()
+            )))
+            .to_string())
     );
-    ok(state, body.join("\n"))
+
+    ok(state, body)
 }
 
 pub fn response_headers(state: State) -> (State, Response<Body>) {
-    let response_headers: Vec<_> = {
+    let response_headers = {
         Uri::borrow_from(&state)
             .query()
-            .map(|query| form_urlencoded::parse(query.as_bytes()))
-            .map(|pairs| pairs.into_owned().collect())
-            .unwrap_or_else(|| vec![])
+            .map_or_else(
+                || Either::Right(vec![]),
+                |query| {
+                    Either::Left(
+                        form_urlencoded::parse(query.as_bytes()).into_owned(),
+                    )
+                },
+            )
+            .into_iter()
     };
 
     let output_headers = try_or_error_response!(
         state,
         response_headers
-            .iter()
             .map(|(name, value)| Ok((
                 name.parse::<HeaderName>()?,
                 value.parse()?

@@ -1,9 +1,8 @@
 #![cfg(test)]
 
-pub fn encode<'a, H: ::headers::Header>(
-    header: H,
-) -> ::http::header::HeaderValue {
-    use headers::HeaderMapExt;
+use headers::{Header, HeaderMapExt, HeaderValue};
+
+pub fn encode<'a, H: Header>(header: H) -> HeaderValue {
     let mut map = ::http::HeaderMap::new();
     map.typed_insert(header);
     map.get(H::name()).unwrap().clone()

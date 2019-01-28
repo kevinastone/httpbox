@@ -3,6 +3,7 @@ use crate::headers::{Cookie, HeaderMapExt, SetCookie};
 use cookie::Cookie as HTTPCookie;
 use gotham::state::{FromState, State};
 use hyper::{Body, HeaderMap, Response, StatusCode, Uri};
+use itertools::{Either, Itertools};
 use url::form_urlencoded;
 
 pub fn cookies(state: State) -> (State, Response<Body>) {
@@ -10,27 +11,28 @@ pub fn cookies(state: State) -> (State, Response<Body>) {
 
     let body = cookies
         .iter()
-        .flat_map(|cookie| {
-            cookie
-                .iter()
-                .map(|c| format!("{} = {}", c.name(), c.value()))
+        .flat_map(|cookie| cookie.iter())
+        .format_with("\n", |cookie, f| {
+            f(&format_args!("{} = {}", cookie.name(), cookie.value()))
         })
-        .collect::<Vec<_>>();
+        .to_string();
 
-    ok(state, body.join("\n"))
+    ok(state, body)
 }
 
 pub fn set_cookies(state: State) -> (State, Response<Body>) {
-    let response_cookies: Vec<_> = Uri::borrow_from(&state)
+    let response_cookies = Uri::borrow_from(&state)
         .query()
-        .map(|query| form_urlencoded::parse(query.as_bytes()))
-        .map(|pairs| pairs.into_owned().collect())
-        .unwrap_or_else(|| vec![])
-        .iter()
-        .map(|(ref k, ref v)| {
-            SetCookie(HTTPCookie::new(k.to_owned(), v.to_owned()))
-        })
-        .collect();
+        .map_or_else(
+            || Either::Right(vec![]),
+            |query| {
+                Either::Left(
+                    form_urlencoded::parse(query.as_bytes()).into_owned(),
+                )
+            },
+        )
+        .into_iter()
+        .map(|(k, v)| SetCookie(HTTPCookie::new(k, v)));
 
     let mut res = empty_response(&state, StatusCode::OK);
     let headers = res.headers_mut();

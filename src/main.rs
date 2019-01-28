@@ -77,7 +77,9 @@ fn main() {
         .to_socket_addrs()
         .ok()
         .and_then(|iter| iter.last())
-        .expect(&format!("Invalid listening address: {}:{}", host, port));
+        .unwrap_or_else(|| {
+            panic!("Invalid listening address: {}:{}", host, port)
+        });
     println!("Listening on {}:{} with {} threads", host, port, threads);
     gotham::start_with_num_threads(addr, app::app(), threads)
 }

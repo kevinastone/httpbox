@@ -5,13 +5,15 @@ use futures::{future, Future, Stream};
 use gotham::handler::{HandlerFuture, IntoHandlerError};
 use gotham::state::{FromState, State};
 use hyper::{Body, Chunk, HeaderMap, StatusCode};
+use itertools::Itertools;
 use url::form_urlencoded;
 
 fn parse_url_encoded_body(raw_body: &[u8]) -> Fallible<String> {
     Ok(form_urlencoded::parse(&raw_body[..])
-        .map(|(key, value)| format!("{} = {}", key, value))
-        .collect::<Vec<_>>()
-        .join("\n"))
+        .format_with("\n", |(key, value), f| {
+            f(&format_args!("{} = {}", key, value))
+        })
+        .to_string())
 }
 
 #[derive(Copy, Clone)]

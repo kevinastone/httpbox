@@ -1,6 +1,6 @@
 use crate::app::response::html;
 use crate::router::Route;
-use gotham::error::*;
+use gotham::error::Result;
 use gotham::handler::{Handler, HandlerFuture, IntoHandlerFuture, NewHandler};
 use gotham::state::State;
 use horrorshow::helper::doctype;

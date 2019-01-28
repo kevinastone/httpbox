@@ -1,7 +1,7 @@
 use cookie::Cookie as HTTPCookie;
-use either::Either;
 use headers::{Error, Header, HeaderName, HeaderValue};
 use http::header;
+use itertools::Either;
 use std::iter;
 
 static COOKIE: &HeaderName = &header::COOKIE;
@@ -10,13 +10,13 @@ static SET_COOKIE: &HeaderName = &header::SET_COOKIE;
 #[derive(Clone, Debug, PartialEq)]
 pub struct Cookie<'a>(pub Vec<HTTPCookie<'a>>);
 
-impl<'a> Cookie<'a> {
-    pub fn iter(&self) -> impl Iterator<Item = &HTTPCookie<'a>> {
+impl Cookie<'_> {
+    pub fn iter(&self) -> impl Iterator<Item = &HTTPCookie<'_>> {
         self.0.iter()
     }
 }
 
-impl<'a> Header for Cookie<'a> {
+impl Header for Cookie<'_> {
     fn name() -> &'static HeaderName {
         COOKIE
     }
@@ -51,9 +51,9 @@ impl<'a> Header for Cookie<'a> {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct SetCookie(pub HTTPCookie<'static>);
+pub struct SetCookie<'a>(pub HTTPCookie<'a>);
 
-impl Header for SetCookie {
+impl Header for SetCookie<'_> {
     fn name() -> &'static HeaderName {
         SET_COOKIE
     }
