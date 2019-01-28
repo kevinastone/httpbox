@@ -12,7 +12,7 @@ mod test;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const NAME: &str = env!("CARGO_PKG_NAME");
 
-fn cli() -> App<'static, 'static> {
+fn cli<'a, 'b>() -> App<'a, 'b> {
     App::new(NAME)
         .version(VERSION)
         .arg(
@@ -77,7 +77,7 @@ fn main() {
         .to_socket_addrs()
         .ok()
         .and_then(|iter| iter.last())
-        .expect(&format!("Invalid listening address: {}:{}", host, port)[..]);
-    println!("Listening on {}:{} with {} threads", host, port, threads,);
+        .expect(&format!("Invalid listening address: {}:{}", host, port));
+    println!("Listening on {}:{} with {} threads", host, port, threads);
     gotham::start_with_num_threads(addr, app::app(), threads)
 }
