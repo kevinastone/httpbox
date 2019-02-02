@@ -2,9 +2,9 @@ mod uri;
 
 use self::uri::absolute_url;
 use crate::app::response::redirect_to;
+use crate::http::{Response, Uri};
 use gotham::state::{FromState, State};
 use gotham_derive::{StateData, StaticResponseExtender};
-use hyper::{Body, Response, Uri};
 use serde_derive::Deserialize;
 use std::cmp::min;
 
@@ -18,13 +18,13 @@ pub struct RedirectUrlParams {
     url: String,
 }
 
-pub fn to(state: State) -> (State, Response<Body>) {
+pub fn to(state: State) -> (State, Response) {
     let query = RedirectUrlParams::borrow_from(&state);
     let uri = etry!(state, query.url.parse::<Uri>());
     redirect_to(state, uri)
 }
 
-pub fn relative(state: State) -> (State, Response<Body>) {
+pub fn relative(state: State) -> (State, Response) {
     let mut n = RedirectCountParams::borrow_from(&state).n;
     n = min(n - 1, 100);
 
@@ -38,11 +38,11 @@ pub fn relative(state: State) -> (State, Response<Body>) {
     redirect_to(state, uri)
 }
 
-pub fn redirect(state: State) -> (State, Response<Body>) {
+pub fn redirect(state: State) -> (State, Response) {
     relative(state)
 }
 
-pub fn absolute(mut state: State) -> (State, Response<Body>) {
+pub fn absolute(mut state: State) -> (State, Response) {
     let mut n = RedirectCountParams::borrow_from(&state).n;
     n = min(n - 1, 100);
 

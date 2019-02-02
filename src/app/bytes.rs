@@ -1,9 +1,9 @@
 use crate::app::random::rng;
 use crate::headers::{ContentLength, HeaderMapExt};
+use crate::http::{Response, StatusCode};
 use gotham::helpers::http::response::create_response;
 use gotham::state::{FromState, State};
 use gotham_derive::{StateData, StaticResponseExtender};
-use hyper::{Body, Response, StatusCode};
 use rand::Rng;
 use serde_derive::Deserialize;
 
@@ -27,7 +27,7 @@ fn get_bytes(state: &State) -> Vec<u8> {
     (0..count).map(|_| rng.gen::<u8>()).collect::<Vec<u8>>()
 }
 
-pub fn bytes(state: State) -> (State, Response<Body>) {
+pub fn bytes(state: State) -> (State, Response) {
     let data = get_bytes(&state);
     let res = create_response(
         &state,
@@ -38,7 +38,7 @@ pub fn bytes(state: State) -> (State, Response<Body>) {
     (state, res)
 }
 
-pub fn stream_bytes(state: State) -> (State, Response<Body>) {
+pub fn stream_bytes(state: State) -> (State, Response) {
     let data = get_bytes(&state);
 
     let content_length = data.len() as u64;
@@ -47,7 +47,7 @@ pub fn stream_bytes(state: State) -> (State, Response<Body>) {
         &state,
         StatusCode::OK,
         mime::APPLICATION_OCTET_STREAM,
-        Body::from(data),
+        data,
     );
 
     res.headers_mut()

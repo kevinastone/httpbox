@@ -1,12 +1,12 @@
 use crate::app::response::{empty_response, ok};
+use crate::http::{HeaderMap, Response, StatusCode, Uri};
 use failure::Fallible;
 use gotham::state::{FromState, State};
 use http::header::HeaderName;
-use hyper::{Body, HeaderMap, Response, StatusCode, Uri};
 use itertools::{process_results, Either, Itertools};
 use url::form_urlencoded;
 
-pub fn headers(state: State) -> (State, Response<Body>) {
+pub fn headers(state: State) -> (State, Response) {
     let request_headers = HeaderMap::borrow_from(&state)
         .iter()
         .map(|(n, v)| v.to_str().map(|v| (n, v)));
@@ -25,7 +25,7 @@ pub fn headers(state: State) -> (State, Response<Body>) {
     ok(state, body)
 }
 
-pub fn response_headers(state: State) -> (State, Response<Body>) {
+pub fn response_headers(state: State) -> (State, Response) {
     let response_headers = {
         Uri::borrow_from(&state)
             .query()

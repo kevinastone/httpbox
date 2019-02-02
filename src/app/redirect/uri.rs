@@ -1,6 +1,7 @@
+use crate::headers::{HeaderMapExt, Host};
+use crate::http::{HeaderMap, Uri};
 use failure::{format_err, Fallible};
 use gotham::state::{FromState, State};
-use http::{header, HeaderMap, Uri};
 use lazy_static::lazy_static;
 use std::env;
 use url::Url;
@@ -22,10 +23,10 @@ fn host_to_url(host: &str) -> Fallible<Url> {
 
 fn host_from_headers(state: &State) -> Fallible<Url> {
     Ok(HeaderMap::borrow_from(&state)
-        .get(header::HOST)
+        .typed_get::<Host>()
         .ok_or_else(|| format_err!("No host header found"))
-        .and_then(|host| Ok(host.to_str()?))
-        .and_then(|host| host_to_url(host))?)
+        .map(|host| host.to_string())
+        .and_then(|host| host_to_url(&host))?)
 }
 
 fn absolute_uri(state: &State, uri: Uri) -> Fallible<Uri> {

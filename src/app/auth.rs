@@ -2,9 +2,9 @@ use crate::app::response::{empty_response, ok};
 use crate::headers::authorization::{Basic, Bearer};
 use crate::headers::WWWAuthenticate;
 use crate::headers::{Authorization, HeaderMapExt};
+use crate::http::{HeaderMap, Response, StatusCode};
 use gotham::state::{FromState, State};
 use gotham_derive::{StateData, StaticResponseExtender};
-use hyper::{Body, HeaderMap, Response, StatusCode};
 use serde_derive::Deserialize;
 
 pub(crate) const REALM: &str = "User Visible Realm";
@@ -20,7 +20,7 @@ pub struct BearerParams {
     token: String,
 }
 
-pub fn basic(state: State) -> (State, Response<Body>) {
+pub fn basic(state: State) -> (State, Response) {
     let creds = BasicAuthParams::borrow_from(&state);
 
     let headers = HeaderMap::borrow_from(&state)
@@ -41,7 +41,7 @@ pub fn basic(state: State) -> (State, Response<Body>) {
     }
 }
 
-pub fn bearer(state: State) -> (State, Response<Body>) {
+pub fn bearer(state: State) -> (State, Response) {
     let creds = BearerParams::borrow_from(&state);
 
     let headers = HeaderMap::borrow_from(&state)

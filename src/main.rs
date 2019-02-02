@@ -4,6 +4,7 @@ use std::net::ToSocketAddrs;
 
 mod app;
 mod headers;
+mod http;
 mod router;
 
 #[cfg(test)]

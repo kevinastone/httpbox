@@ -1,9 +1,9 @@
 use crate::app::response::ok;
 use crate::headers::{HeaderMapExt, UserAgent};
+use crate::http::{HeaderMap, Response};
 use gotham::state::{FromState, State};
-use hyper::{Body, HeaderMap, Response};
 
-pub fn user_agent(state: State) -> (State, Response<Body>) {
+pub fn user_agent(state: State) -> (State, Response) {
     let user_agent = eexpect!(
         state,
         HeaderMap::borrow_from(&state)

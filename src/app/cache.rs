@@ -2,9 +2,9 @@ use crate::app::response::{empty_response, ok};
 use crate::headers::{
     CacheControl, HeaderMapExt, IfModifiedSince, IfNoneMatch,
 };
+use crate::http::{HeaderMap, Response, StatusCode};
 use gotham::state::{FromState, State};
 use gotham_derive::{StateData, StaticResponseExtender};
-use hyper::{Body, HeaderMap, Response, StatusCode};
 use serde_derive::Deserialize;
 use std::time::Duration;
 
@@ -13,7 +13,7 @@ pub struct CacheTimeParams {
     n: u64,
 }
 
-pub fn cache(state: State) -> (State, Response<Body>) {
+pub fn cache(state: State) -> (State, Response) {
     let headers = HeaderMap::borrow_from(&state);
     if headers.typed_get::<IfModifiedSince>().is_some()
         || headers.typed_get::<IfNoneMatch>().is_some()
@@ -25,7 +25,7 @@ pub fn cache(state: State) -> (State, Response<Body>) {
     }
 }
 
-pub fn set_cache(state: State) -> (State, Response<Body>) {
+pub fn set_cache(state: State) -> (State, Response) {
     let n = CacheTimeParams::borrow_from(&state).n;
 
     let mut res = empty_response(&state, StatusCode::OK);

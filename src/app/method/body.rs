@@ -1,10 +1,10 @@
 use crate::app::response::ok;
 use crate::headers::{ContentType, HeaderMapExt};
+use crate::http::{Body, Chunk, HeaderMap, StatusCode};
 use failure::Fallible;
 use futures::{future, Future, Stream};
 use gotham::handler::{HandlerFuture, IntoHandlerError};
 use gotham::state::{FromState, State};
-use hyper::{Body, Chunk, HeaderMap, StatusCode};
 use itertools::Itertools;
 use url::form_urlencoded;
 

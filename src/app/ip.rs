@@ -1,7 +1,7 @@
 use crate::app::response::{internal_server_error, ok};
 use crate::headers::{HeaderMapExt, XForwardedFor};
+use crate::http::{HeaderMap, Response};
 use gotham::state::{client_addr, FromState, State};
-use hyper::{Body, HeaderMap, Response};
 use std::net::IpAddr;
 
 fn x_forward_for(state: &State) -> Option<IpAddr> {
@@ -14,7 +14,7 @@ fn client_ip_addr(state: &State) -> Option<IpAddr> {
     client_addr(state).map(|a| a.ip())
 }
 
-pub fn ip(state: State) -> (State, Response<Body>) {
+pub fn ip(state: State) -> (State, Response) {
     let remote_ip = eexpect!(
         internal_server_error,
         state,

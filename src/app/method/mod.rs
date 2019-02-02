@@ -2,13 +2,13 @@ mod body;
 
 use self::body::body;
 use crate::app::response::ok;
+use crate::http::{Response, Uri};
 use gotham::handler::HandlerFuture;
 use gotham::state::{FromState, State};
-use hyper::{Body, Response, Uri};
 use itertools::{Either, Itertools};
 use url::form_urlencoded;
 
-pub fn get(state: State) -> (State, Response<Body>) {
+pub fn get(state: State) -> (State, Response) {
     let body = {
         Uri::borrow_from(&state)
             .query()

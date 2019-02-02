@@ -1,7 +1,7 @@
 use crate::app::response::empty_response;
+use crate::http::{Response, StatusCode};
 use gotham::state::{FromState, State};
 use gotham_derive::{StateData, StaticResponseExtender};
-use hyper::{Body, Response, StatusCode};
 use serde_derive::Deserialize;
 
 #[derive(Deserialize, StateData, StaticResponseExtender)]
@@ -9,7 +9,7 @@ pub struct StatusCodeParams {
     code: u16,
 }
 
-pub fn status_code(state: State) -> (State, Response<Body>) {
+pub fn status_code(state: State) -> (State, Response) {
     let params = StatusCodeParams::borrow_from(&state);
 
     let res =

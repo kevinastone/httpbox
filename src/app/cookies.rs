@@ -1,12 +1,12 @@
 use crate::app::response::{empty_response, ok};
 use crate::headers::{Cookie, HeaderMapExt, SetCookie};
+use crate::http::{HeaderMap, Response, StatusCode, Uri};
 use cookie::Cookie as HTTPCookie;
 use gotham::state::{FromState, State};
-use hyper::{Body, HeaderMap, Response, StatusCode, Uri};
 use itertools::{Either, Itertools};
 use url::form_urlencoded;
 
-pub fn cookies(state: State) -> (State, Response<Body>) {
+pub fn cookies(state: State) -> (State, Response) {
     let cookies = HeaderMap::borrow_from(&state).typed_get::<Cookie>();
 
     let body = cookies
@@ -20,7 +20,7 @@ pub fn cookies(state: State) -> (State, Response<Body>) {
     ok(state, body)
 }
 
-pub fn set_cookies(state: State) -> (State, Response<Body>) {
+pub fn set_cookies(state: State) -> (State, Response) {
     let response_cookies = Uri::borrow_from(&state)
         .query()
         .map_or_else(
