@@ -1,4 +1,8 @@
+use clap::{
+    app_from_crate, crate_authors, crate_description, crate_name, crate_version,
+};
 use clap::{value_t, value_t_or_exit, App, Arg, Error, ErrorKind, Shell};
+use pretty_env_logger;
 use std::io;
 use std::net::ToSocketAddrs;
 
@@ -10,12 +14,8 @@ mod router;
 #[cfg(test)]
 mod test;
 
-const VERSION: &str = env!("CARGO_PKG_VERSION");
-const NAME: &str = env!("CARGO_PKG_NAME");
-
 fn cli<'a, 'b>() -> App<'a, 'b> {
-    App::new(NAME)
-        .version(VERSION)
+    app_from_crate!()
         .arg(
             Arg::with_name("host")
                 .short("h")
@@ -52,11 +52,13 @@ fn cli<'a, 'b>() -> App<'a, 'b> {
 }
 
 fn main() {
+    pretty_env_logger::init();
+
     let matches = cli().get_matches();
 
     if let Some(shell) = matches.value_of("completions") {
         cli().gen_completions_to(
-            NAME,
+            crate_name!(),
             shell.parse::<Shell>().unwrap(),
             &mut io::stdout(),
         );
