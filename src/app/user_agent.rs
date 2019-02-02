@@ -4,7 +4,7 @@ use gotham::state::{FromState, State};
 use hyper::{Body, HeaderMap, Response};
 
 pub fn user_agent(state: State) -> (State, Response<Body>) {
-    let user_agent = expect_or_error_response!(
+    let user_agent = eexpect!(
         state,
         HeaderMap::borrow_from(&state)
             .typed_get::<UserAgent>()

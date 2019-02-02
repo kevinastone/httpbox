@@ -45,8 +45,8 @@ fn parse_body(state: &State, chunk: &Chunk) -> Fallible<String> {
 
 pub fn body(mut state: State) -> Box<HandlerFuture> {
     let f = Body::take_from(&mut state).concat2().then(|raw_body| {
-        let valid_body = future_try_or_error_response!(state, raw_body);
-        let content = future_try_or_error_response!(
+        let valid_body = future_etry!(state, raw_body);
+        let content = future_etry!(
             StatusCode::BAD_REQUEST,
             state,
             parse_body(&state, &valid_body).map_err(|e| e.compat())

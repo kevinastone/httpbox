@@ -15,7 +15,7 @@ fn client_ip_addr(state: &State) -> Option<IpAddr> {
 }
 
 pub fn ip(state: State) -> (State, Response<Body>) {
-    let remote_ip = expect_or_error_response!(
+    let remote_ip = eexpect!(
         internal_server_error,
         state,
         x_forward_for(&state).or_else(|| client_ip_addr(&state))

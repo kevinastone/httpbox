@@ -11,7 +11,7 @@ pub fn headers(state: State) -> (State, Response<Body>) {
         .iter()
         .map(|(n, v)| v.to_str().map(|v| (n, v)));
 
-    let body = try_or_error_response!(
+    let body = etry!(
         state,
         process_results(request_headers, |iter| iter
             .format_with("\n", |(n, v), f| f(&format_args!(
@@ -40,7 +40,7 @@ pub fn response_headers(state: State) -> (State, Response<Body>) {
             .into_iter()
     };
 
-    let output_headers = try_or_error_response!(
+    let output_headers = etry!(
         state,
         response_headers
             .map(|(name, value)| Ok((

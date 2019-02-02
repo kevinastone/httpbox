@@ -12,10 +12,8 @@ pub struct StatusCodeParams {
 pub fn status_code(state: State) -> (State, Response<Body>) {
     let params = StatusCodeParams::borrow_from(&state);
 
-    let res = empty_response(
-        &state,
-        try_or_error_response!(state, StatusCode::from_u16(params.code)),
-    );
+    let res =
+        empty_response(&state, etry!(state, StatusCode::from_u16(params.code)));
     (state, res)
 }
 

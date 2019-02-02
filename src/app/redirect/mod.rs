@@ -20,7 +20,7 @@ pub struct RedirectUrlParams {
 
 pub fn to(state: State) -> (State, Response<Body>) {
     let query = RedirectUrlParams::borrow_from(&state);
-    let uri = try_or_error_response!(state, query.url.parse::<Uri>());
+    let uri = etry!(state, query.url.parse::<Uri>());
     redirect_to(state, uri)
 }
 
@@ -34,7 +34,7 @@ pub fn relative(state: State) -> (State, Response<Body>) {
         String::from("/")
     };
 
-    let uri = try_or_error_response!(state, url.parse::<Uri>());
+    let uri = etry!(state, url.parse::<Uri>());
     redirect_to(state, uri)
 }
 
@@ -53,7 +53,7 @@ pub fn absolute(mut state: State) -> (State, Response<Body>) {
     };
 
     let request_uri = Uri::take_from(&mut state);
-    let response_uri = try_or_error_response!(
+    let response_uri = etry!(
         state,
         absolute_url(&state, request_uri)
             .and_then(|base| Ok(base.join(&url)?))

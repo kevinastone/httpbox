@@ -1,10 +1,6 @@
-macro_rules! try_or_error_response {
+macro_rules! etry {
     ($state:expr, $result:expr) => {
-        try_or_error_response!(
-            $crate::app::response::bad_request,
-            $state,
-            $result
-        )
+        etry!($crate::app::response::bad_request, $state, $result)
     };
     ($response:path, $state:expr, $result:expr) => {
         match $result {
@@ -14,13 +10,9 @@ macro_rules! try_or_error_response {
     };
 }
 
-macro_rules! expect_or_error_response {
+macro_rules! eexpect {
     ($state:expr, $option:expr) => {
-        expect_or_error_response!(
-            $crate::app::response::bad_request,
-            $state,
-            $option
-        )
+        eexpect!($crate::app::response::bad_request, $state, $option)
     };
     ($response:path, $state:expr, $option:expr) => {
         match $option {
@@ -30,7 +22,7 @@ macro_rules! expect_or_error_response {
     };
 }
 
-macro_rules! future_try_or_error_response {
+macro_rules! future_etry {
     ($state:expr, $result:expr) => {
         match $result {
             ::std::result::Result::Ok(val) => val,

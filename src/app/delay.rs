@@ -27,7 +27,7 @@ pub fn delay(state: State) -> Box<HandlerFuture> {
 
     let f = Delay::new(Duration::from_secs(sleep_duration(delay))).then(
         move |result| {
-            future_try_or_error_response!(state, result);
+            future_etry!(state, result);
             future::ok(ok(state, format!("{}", delay)))
         },
     );
