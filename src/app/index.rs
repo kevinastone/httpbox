@@ -1,11 +1,15 @@
 use crate::app::response::html;
 use crate::router::Route;
+use askama::Template;
 use gotham::error::Result;
 use gotham::handler::{Handler, HandlerFuture, IntoHandlerFuture, NewHandler};
 use gotham::state::State;
-use horrorshow::helper::doctype;
-use horrorshow::prelude::*;
-use horrorshow::{append_html, html};
+
+#[derive(Template)]
+#[template(path = "index.html")]
+struct IndexTemplate<'a> {
+    routes: &'a [Route<'a>],
+}
 
 #[derive(Debug, Clone)]
 pub struct Index(String);
@@ -27,48 +31,8 @@ impl NewHandler for IndexNewHandler {
 }
 
 pub fn render_index(routes: &[Route]) -> String {
-    (html! {
-        : doctype::HTML;
-        html {
-            head {
-                style {
-                    : "
-                    ul { list-style-type: none; }
-                    code { font-weight: bold; }
-                    "
-                }
-            }
-            body {
-                h1 {
-                    : "httpbox: HTTP Testing Service"
-                }
-                h2 {
-                    : "Endpoints"
-                }
-                ul {
-                    @ for route in routes {
-                        li {
-                            @ if let Some(example_path) = route.example_path() {
-                                a(href=example_path) {
-                                    code {
-                                        : route.path()
-                                    }
-                                }
-                            } else {
-                                code {
-                                    : route.path()
-                                }
-                            }
-                            span { : " - " }
-                            span { : route.description() }
-                        }
-                    }
-                }
-            }
-        }
-    })
-    .into_string()
-    .unwrap()
+    let template = IndexTemplate { routes };
+    template.render().unwrap()
 }
 
 impl<'a> From<&'a [Route<'a>]> for IndexNewHandler {
