@@ -27,7 +27,10 @@ macro_rules! future_etry {
         match $result {
             ::std::result::Result::Ok(val) => val,
             ::std::result::Result::Err(e) => {
-                return ::futures::future::err(($state, e.into_handler_error()));
+                return ::futures::future::err((
+                    $state,
+                    e.into_handler_error(),
+                ));
             }
         }
     };
