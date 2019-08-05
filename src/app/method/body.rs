@@ -2,7 +2,12 @@ use crate::app::response::ok;
 use crate::headers::{ContentType, HeaderMapExt};
 use crate::http::{Body, Chunk, HeaderMap, StatusCode};
 use failure::Fallible;
-use futures::{future, Future, Stream};
+use futures::{
+    compat::Stream01CompatExt,
+    future,
+    future::{FutureExt, TryFutureExt},
+    stream::TryStreamExt,
+};
 use gotham::handler::{HandlerFuture, IntoHandlerError};
 use gotham::state::{FromState, State};
 use itertools::Itertools;
@@ -44,17 +49,21 @@ fn parse_body(state: &State, chunk: &Chunk) -> Fallible<String> {
 }
 
 pub fn body(mut state: State) -> Box<HandlerFuture> {
-    let f = Body::take_from(&mut state).concat2().then(|raw_body| {
-        let valid_body = future_etry!(state, raw_body);
-        let content = future_etry!(
-            StatusCode::BAD_REQUEST,
-            state,
-            parse_body(&state, &valid_body).map_err(|e| e.compat())
-        );
-        future::ok(ok(state, content))
-    });
+    let f =
+        Body::take_from(&mut state)
+            .compat()
+            .try_concat()
+            .then(|raw_body| {
+                let valid_body = future_etry!(state, raw_body);
+                let content = future_etry!(
+                    StatusCode::BAD_REQUEST,
+                    state,
+                    parse_body(&state, &valid_body).map_err(|e| e.compat())
+                );
+                future::ok(ok(state, content))
+            });
 
-    Box::new(f)
+    Box::new(f.compat())
 }
 
 #[cfg(test)]
