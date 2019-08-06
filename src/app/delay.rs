@@ -1,5 +1,8 @@
 use crate::app::response::ok;
-use futures::{future, Future};
+use futures::{
+    future,
+    future::{FutureExt, TryFutureExt},
+};
 use futures_timer::Delay;
 use gotham::handler::{HandlerFuture, IntoHandlerError};
 use gotham::state::{FromState, State};
@@ -32,7 +35,7 @@ pub fn delay(state: State) -> Box<HandlerFuture> {
         },
     );
 
-    Box::new(f)
+    Box::new(f.compat())
 }
 
 #[cfg(test)]
