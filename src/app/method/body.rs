@@ -2,12 +2,9 @@ use crate::app::response::ok;
 use crate::headers::{ContentType, HeaderMapExt};
 use crate::http::{Body, Chunk, HeaderMap, StatusCode};
 use failure::Fallible;
-use futures::{
-    compat::Stream01CompatExt,
-    future,
-    future::{FutureExt, TryFutureExt},
-    stream::TryStreamExt,
-};
+
+use futures::compat::Stream01CompatExt;
+use futures::prelude::*;
 use gotham::handler::{HandlerFuture, IntoHandlerError};
 use gotham::state::{FromState, State};
 use itertools::Itertools;

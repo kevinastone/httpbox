@@ -1,8 +1,5 @@
 use crate::app::response::ok;
-use futures::{
-    future,
-    future::{FutureExt, TryFutureExt},
-};
+use futures::prelude::*;
 use futures_timer::Delay;
 use gotham::handler::{HandlerFuture, IntoHandlerError};
 use gotham::state::{FromState, State};
