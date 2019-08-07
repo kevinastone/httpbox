@@ -2,12 +2,12 @@ use crate::app::response::ok;
 use crate::headers::{ContentType, HeaderMapExt};
 use crate::http::{Body, Chunk, HeaderMap, StatusCode};
 use failure::Fallible;
-
 use futures::compat::Stream01CompatExt;
 use futures::prelude::*;
 use gotham::handler::{HandlerFuture, IntoHandlerError};
 use gotham::state::{FromState, State};
 use itertools::Itertools;
+use std::str;
 use url::form_urlencoded;
 
 fn parse_url_encoded_body(raw_body: &[u8]) -> Fallible<String> {
@@ -41,7 +41,7 @@ fn content_type_decoder(state: &State) -> ContentTypeDecoder {
 fn parse_body(state: &State, chunk: &Chunk) -> Fallible<String> {
     match content_type_decoder(&state) {
         ContentTypeDecoder::UrlEncoded => Ok(parse_url_encoded_body(&chunk)?),
-        ContentTypeDecoder::Raw => Ok(String::from_utf8(chunk.to_vec())?),
+        ContentTypeDecoder::Raw => Ok(str::from_utf8(&chunk[..])?.to_string()),
     }
 }
 
