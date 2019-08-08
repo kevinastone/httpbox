@@ -1,11 +1,13 @@
 use crate::app::random::rng;
 use crate::headers::{ContentLength, HeaderMapExt};
-use crate::http::{Response, StatusCode};
+use crate::http::{body_from_stream, Response, StatusCode};
+use futures::prelude::*;
 use gotham::helpers::http::response::create_response;
 use gotham::state::{FromState, State};
 use gotham_derive::{StateData, StaticResponseExtender};
 use rand::Rng;
 use serde_derive::Deserialize;
+use std::iter::ExactSizeIterator;
 
 #[derive(Deserialize, StateData, StaticResponseExtender)]
 pub struct BytesPathParams {
@@ -15,20 +17,19 @@ pub struct BytesPathParams {
 #[derive(Deserialize, StateData, StaticResponseExtender)]
 pub struct BytesQueryParams {
     seed: Option<u32>,
-    #[allow(dead_code)]
     chunk_size: Option<usize>,
 }
 
-fn get_bytes(state: &State) -> Vec<u8> {
+fn iter_bytes(state: &State) -> impl ExactSizeIterator<Item = u8> {
     let count = BytesPathParams::borrow_from(&state).n;
     let seed = BytesQueryParams::borrow_from(&state).seed;
 
     let mut rng = rng(seed);
-    (0..count).map(|_| rng.gen::<u8>()).collect::<Vec<u8>>()
+    (0..count).map(move |_| rng.gen::<u8>())
 }
 
 pub fn bytes(state: State) -> (State, Response) {
-    let data = get_bytes(&state);
+    let data = iter_bytes(&state).collect::<Vec<u8>>();
     let res = create_response(
         &state,
         StatusCode::OK,
@@ -39,15 +40,15 @@ pub fn bytes(state: State) -> (State, Response) {
 }
 
 pub fn stream_bytes(state: State) -> (State, Response) {
-    let data = get_bytes(&state);
-
+    let chunk_size = BytesQueryParams::borrow_from(&state).chunk_size;
+    let data = iter_bytes(&state);
     let content_length = data.len() as u64;
 
     let mut res = create_response(
         &state,
         StatusCode::OK,
         mime::APPLICATION_OCTET_STREAM,
-        data,
+        body_from_stream(stream::iter(data).chunks(chunk_size.unwrap_or(1))),
     );
 
     res.headers_mut()
