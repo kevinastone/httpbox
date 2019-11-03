@@ -1,7 +1,7 @@
 use crate::app::response::ok;
 use futures::prelude::*;
 use futures_timer::Delay;
-use gotham::handler::{HandlerFuture, IntoHandlerError};
+use gotham::handler::HandlerFuture;
 use gotham::state::{FromState, State};
 use gotham_derive::{StateData, StaticResponseExtender};
 use serde_derive::Deserialize;
@@ -28,13 +28,19 @@ pub fn delay(state: State) -> Box<HandlerFuture> {
     let params = DelayParams::borrow_from(&state);
     let delay = min(params.n, 10);
 
-    let duration = Duration::from_secs(sleep_duration(delay));
-    let f = Delay::new(duration).then(move |result| {
-        future_etry!(state, result);
-        future::ok(ok(state, delay.to_string()))
-    });
+    let f = async move {
+        let duration = Duration::from_secs(sleep_duration(delay));
+        let _ = Delay::new(duration).await;
+        Ok(ok(state, delay.to_string()))
+    };
+    // let f = Delay::new(Duration::from_secs(sleep_duration(delay))).then(
+    //     move |result| {
+    //         future_etry!(state, result);
+    //         future::ok(ok(state, delay.to_string()))
+    //     },
+    // );
 
-    Box::new(f.compat())
+    Box::new(f.boxed().compat())
 }
 
 #[cfg(test)]
