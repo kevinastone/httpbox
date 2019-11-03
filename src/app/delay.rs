@@ -28,12 +28,11 @@ pub fn delay(state: State) -> Box<HandlerFuture> {
     let params = DelayParams::borrow_from(&state);
     let delay = min(params.n, 10);
 
-    let f = Delay::new(Duration::from_secs(sleep_duration(delay))).then(
-        move |result| {
-            future_etry!(state, result);
-            future::ok(ok(state, delay.to_string()))
-        },
-    );
+    let duration = Duration::from_secs(sleep_duration(delay));
+    let f = Delay::new(duration).then(move |result| {
+        future_etry!(state, result);
+        future::ok(ok(state, delay.to_string()))
+    });
 
     Box::new(f.compat())
 }
