@@ -1,4 +1,5 @@
 use crate::app::response::ok;
+use crate::http::Response;
 use futures::prelude::*;
 use futures_timer::Delay;
 use gotham::handler::HandlerFuture;
@@ -24,23 +25,17 @@ fn sleep_duration(seconds: u64) -> u64 {
     seconds
 }
 
-pub fn delay(state: State) -> Box<HandlerFuture> {
+async fn _delay(state: State) -> (State, Response) {
     let params = DelayParams::borrow_from(&state);
     let delay = min(params.n, 10);
 
-    let f = async move {
-        let duration = Duration::from_secs(sleep_duration(delay));
-        let _ = Delay::new(duration).await;
-        Ok(ok(state, delay.to_string()))
-    };
-    // let f = Delay::new(Duration::from_secs(sleep_duration(delay))).then(
-    //     move |result| {
-    //         future_etry!(state, result);
-    //         future::ok(ok(state, delay.to_string()))
-    //     },
-    // );
+    let duration = Duration::from_secs(sleep_duration(delay));
+    let _ = Delay::new(duration).await;
+    ok(state, delay.to_string())
+}
 
-    Box::new(f.boxed().compat())
+pub fn delay(state: State) -> Box<HandlerFuture> {
+    async_response!(_delay(state))
 }
 
 #[cfg(test)]
