@@ -13,11 +13,14 @@ pub struct DelayParams {
     n: u64,
 }
 
+#[cfg(test)]
+fn sleep_duration(_: u64) -> u64 {
+    0
+}
+
+#[cfg(not(test))]
+#[inline]
 fn sleep_duration(seconds: u64) -> u64 {
-    // Only delay when not testing
-    if cfg!(test) {
-        return 0;
-    }
     seconds
 }
 
