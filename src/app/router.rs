@@ -2,7 +2,7 @@ use crate::app::auth::{BasicAuthParams, BearerParams};
 use crate::app::bytes::{BytesPathParams, BytesQueryParams};
 use crate::app::cache::CacheTimeParams;
 use crate::app::delay::DelayParams;
-use crate::app::index::IndexNewHandler;
+use crate::app::index::Index;
 use crate::app::redirect::{RedirectCountParams, RedirectUrlParams};
 use crate::app::status_code::StatusCodeParams;
 use crate::app::*;
@@ -165,7 +165,7 @@ pub fn app() -> Router {
             RouteBuiler::new("/").set_description("This page"),
             move |route, builder| {
                 routes.insert(0, route.clone());
-                let index_handler = IndexNewHandler::from(&routes[..]);
+                let index_handler = Index::from(&routes[..]);
                 builder.get(route.path()).to_new_handler(index_handler);
             },
         );

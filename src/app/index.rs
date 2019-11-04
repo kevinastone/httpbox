@@ -20,13 +20,11 @@ impl Handler for Index {
     }
 }
 
-pub struct IndexNewHandler(String);
-
-impl NewHandler for IndexNewHandler {
-    type Instance = Index;
+impl NewHandler for Index {
+    type Instance = Self;
 
     fn new_handler(&self) -> Result<Self::Instance> {
-        Ok(Index(self.0.clone()))
+        Ok(self.clone())
     }
 }
 
@@ -35,8 +33,8 @@ pub fn render_index(routes: &[Route]) -> String {
     template.render().unwrap()
 }
 
-impl<'a> From<&'a [Route<'a>]> for IndexNewHandler {
+impl<'a> From<&'a [Route<'a>]> for Index {
     fn from(routes: &'a [Route<'a>]) -> Self {
-        IndexNewHandler(render_index(routes))
+        Index(render_index(routes))
     }
 }
