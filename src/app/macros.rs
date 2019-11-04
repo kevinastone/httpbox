@@ -21,19 +21,3 @@ macro_rules! eexpect {
         }
     };
 }
-
-macro_rules! async_response {
-    ($future:expr) => {
-        Box::new(
-            $future
-                .then(|(state, resp)| {
-                    let r = ::gotham::handler::IntoResponse::into_response(
-                        resp, &state,
-                    );
-                    future::ok((state, r))
-                })
-                .boxed()
-                .compat(),
-        )
-    };
-}

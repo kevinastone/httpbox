@@ -1,9 +1,7 @@
 use crate::app::response::ok;
-use crate::http::Response;
-use futures::prelude::*;
 use futures_timer::Delay;
-use gotham::handler::HandlerFuture;
 use gotham::state::{FromState, State};
+use gotham_async::async_handler;
 use gotham_derive::{StateData, StaticResponseExtender};
 use serde_derive::Deserialize;
 use std::cmp::min;
@@ -25,17 +23,14 @@ fn sleep_duration(seconds: u64) -> u64 {
     seconds
 }
 
-async fn _delay(state: State) -> (State, Response) {
+#[async_handler]
+pub async fn delay(state: State) -> (State, Response) {
     let params = DelayParams::borrow_from(&state);
     let delay = min(params.n, 10);
 
     let duration = Duration::from_secs(sleep_duration(delay));
     let _ = Delay::new(duration).await;
     ok(state, delay.to_string())
-}
-
-pub fn delay(state: State) -> Box<HandlerFuture> {
-    async_response!(_delay(state))
 }
 
 #[cfg(test)]
