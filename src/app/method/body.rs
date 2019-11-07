@@ -1,11 +1,11 @@
 use crate::app::response::ok;
 use crate::headers::{ContentType, HeaderMapExt};
-use crate::http::{Body, Chunk, HeaderMap, StatusCode};
+use crate::http::{Body, Chunk, HeaderMap};
 use failure::Fallible;
 use futures::compat::Stream01CompatExt;
 use futures::prelude::*;
-use gotham::handler::{HandlerFuture, IntoHandlerError};
 use gotham::state::{FromState, State};
+use gotham_async::async_handler;
 use itertools::Itertools;
 use std::str;
 use url::form_urlencoded;
@@ -45,22 +45,15 @@ fn parse_body(state: &State, chunk: &Chunk) -> Fallible<String> {
     }
 }
 
-pub fn body(mut state: State) -> Box<HandlerFuture> {
-    let f =
-        Body::take_from(&mut state)
-            .compat()
-            .try_concat()
-            .then(|raw_body| {
-                let valid_body = future_etry!(state, raw_body);
-                let content = future_etry!(
-                    StatusCode::BAD_REQUEST,
-                    state,
-                    parse_body(&state, &valid_body).map_err(|e| e.compat())
-                );
-                future::ok(ok(state, content))
-            });
-
-    Box::new(f.compat())
+#[async_handler]
+pub async fn body(mut state: State) -> (State, Response) {
+    let body = etry!(
+        state,
+        Body::take_from(&mut state).compat().try_concat().await
+    );
+    let content =
+        etry!(state, parse_body(&state, &body).map_err(|e| e.compat()));
+    ok(state, content)
 }
 
 #[cfg(test)]

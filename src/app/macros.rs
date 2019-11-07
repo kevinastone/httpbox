@@ -21,28 +21,3 @@ macro_rules! eexpect {
         }
     };
 }
-
-macro_rules! future_etry {
-    ($state:expr, $result:expr) => {
-        match $result {
-            ::std::result::Result::Ok(val) => val,
-            ::std::result::Result::Err(e) => {
-                return ::futures::future::err((
-                    $state,
-                    e.into_handler_error(),
-                ));
-            }
-        }
-    };
-    ($status:path, $state:expr, $result:expr) => {
-        match $result {
-            ::std::result::Result::Ok(val) => val,
-            ::std::result::Result::Err(e) => {
-                return ::futures::future::err((
-                    $state,
-                    e.into_handler_error().with_status($status),
-                ));
-            }
-        }
-    };
-}
