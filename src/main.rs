@@ -22,7 +22,8 @@ fn cli<'a, 'b>() -> App<'a, 'b> {
                 .long("host")
                 .value_name("HOST")
                 .takes_value(true)
-                .default_value("localhost")
+                .default_value("0.0.0.0")
+                .env("HOSTNAME")
                 .help("Host address to listen on"),
         )
         .arg(
@@ -32,6 +33,7 @@ fn cli<'a, 'b>() -> App<'a, 'b> {
                 .value_name("PORT")
                 .takes_value(true)
                 .default_value("3000")
+                .env("PORT")
                 .help("Port to listen on"),
         )
         .arg(

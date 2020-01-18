@@ -28,3 +28,7 @@ serde = "^1.0.98"
 serde_derive = "^1.0.98"
 tokio = "^0.1.22"
 url = "^2.1.0"
+
+[[bin]]
+name = "httpbox"
+path = "src/main.rs"
