@@ -1,3 +1,5 @@
+# syntax = denzp/cargo-wharf-frontend:v0.1.0-alpha.0
+
 [package]
 name = "httpbox"
 version = "0.2.0"
@@ -32,3 +34,14 @@ url = "^2.1.0"
 [[bin]]
 name = "httpbox"
 path = "src/main.rs"
+
+[package.metadata.wharf.builder]
+image = "rust"
+
+[[package.metadata.wharf.binary]]
+name = "httpbox"
+destination = "/usr/local/bin/httpbox"
+
+[package.metadata.wharf.output]
+image = "debian:stable-slim"
+entrypoint = ["/usr/local/bin/httpbox"]

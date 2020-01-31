@@ -12,6 +12,6 @@ COPY src ./src
 COPY templates ./templates
 RUN cargo build --release
 
-FROM debian:buster-slim
+FROM debian:stable-slim
 COPY --from=builder /app/target/release/httpbox /usr/local/bin/
 ENTRYPOINT ["/usr/local/bin/httpbox"]
