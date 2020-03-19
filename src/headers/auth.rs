@@ -1,5 +1,5 @@
-use headers::{Error, Header, HeaderName, HeaderValue};
-use http::header;
+use crate::headers::{Error, Header, HeaderName, HeaderValue};
+use hyper::http::header;
 use std::fmt;
 use std::iter;
 use std::str::FromStr;
@@ -74,9 +74,9 @@ impl FromStr for BasicRealm {
 #[cfg(test)]
 mod test {
     use super::{BasicRealm, WWWAuthenticate};
+    use crate::headers::{Header, HeaderMapExt};
     use crate::test::headers::encode;
-    use headers::{Header, HeaderMapExt};
-    use http::HeaderMap;
+    use hyper::http::HeaderMap;
 
     #[test]
     fn test_encode_basic_realm() {

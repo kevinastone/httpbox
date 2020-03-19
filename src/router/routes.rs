@@ -1,35 +1,40 @@
-use hyper::Method;
+use crate::path::{MatchedPath, Path};
+use hyper::{Body, Method, Request as HTTPRequest};
 use std::collections::HashMap;
 
 #[derive(Debug)]
-pub struct RouteBuiler<'a> {
-    path: &'a str,
+pub struct RouteBuilder {
+    path: Path,
     method: Method,
-    description: Option<&'a str>,
-    example_params: HashMap<&'a str, &'a str>,
+    description: Option<&'static str>,
+    example_params: HashMap<&'static str, &'static str>,
 }
 
-impl<'a> RouteBuiler<'a> {
-    pub fn new(path: &'a str) -> Self {
-        RouteBuiler {
-            path,
+impl RouteBuilder {
+    pub fn new<P: Into<Path>>(path: P) -> Self {
+        RouteBuilder {
+            path: path.into(),
             method: Method::GET,
             description: None,
             example_params: HashMap::new(),
         }
     }
 
-    pub fn set_description(mut self, description: &'a str) -> Self {
+    pub fn description(mut self, description: &'static str) -> Self {
         self.description = Some(description);
         self
     }
 
-    pub fn set_method(mut self, method: Method) -> Self {
+    pub fn method(mut self, method: Method) -> Self {
         self.method = method;
         self
     }
 
-    pub fn add_example_param(mut self, name: &'a str, value: &'a str) -> Self {
+    pub fn add_example_param(
+        mut self,
+        name: &'static str,
+        value: &'static str,
+    ) -> Self {
         self.example_params.insert(name, value);
         self
     }
@@ -39,7 +44,7 @@ impl<'a> RouteBuiler<'a> {
             return None;
         }
 
-        let mut path = self.path.to_owned();
+        let mut path = self.path.to_string();
         let mut query: Vec<_> = vec![];
 
         for (key, value) in self.example_params.iter() {
@@ -59,33 +64,41 @@ impl<'a> RouteBuiler<'a> {
 }
 
 #[derive(Debug, Clone)]
-pub struct Route<'a> {
-    path: &'a str,
+pub struct Route {
+    path: Path,
     method: Method,
-    description: Option<&'a str>,
+    description: Option<&'static str>,
     example_path: Option<String>,
 }
 
-impl<'a> Route<'a> {
-    pub fn path(&self) -> &'a str {
-        self.path
+impl Route {
+    pub fn path(&self) -> Path {
+        self.path.clone()
     }
 
     pub fn method(&self) -> Method {
         self.method.clone()
     }
 
-    pub fn description(&self) -> Option<&'a str> {
+    pub fn description(&self) -> Option<&'static str> {
         self.description
     }
 
     pub fn example_path(&self) -> Option<&str> {
         self.example_path.as_ref().map(String::as_ref)
     }
+
+    pub fn matches(&self, req: &HTTPRequest<Body>) -> Option<MatchedPath> {
+        if self.method() != req.method() {
+            return None;
+        }
+
+        self.path.matches(req.uri().path())
+    }
 }
 
-impl<'a> From<RouteBuiler<'a>> for Route<'a> {
-    fn from(route: RouteBuiler<'a>) -> Self {
+impl From<RouteBuilder> for Route {
+    fn from(route: RouteBuilder) -> Self {
         let example_path = route.example_path();
         Route {
             path: route.path,
@@ -94,4 +107,8 @@ impl<'a> From<RouteBuiler<'a>> for Route<'a> {
             example_path,
         }
     }
+}
+
+pub fn route<P: Into<Path>>(path: P) -> RouteBuilder {
+    RouteBuilder::new(path)
 }

@@ -3,7 +3,7 @@
   "description": "A http test service",
   "repository": "https://github.com/kevinastone/httpbox",
   "success_url": "/",
-  "keywords": ["rust", "gotham"],
+  "keywords": ["rust", "hyper"],
   "buildpacks": [{
     "url": "https://github.com/Hoverbear/heroku-buildpack-rust"
   }]

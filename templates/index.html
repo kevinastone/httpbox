@@ -18,7 +18,7 @@ code {
     <li>
         {%- match route.example_path() -%}
         {%- when Some with (example_path) -%}
-            <a href="{{ example_path }}"><code>{{ route.path() }}</code></a>
+            <a href="{{ example_path }}"><code>{{ route.path().to_string() }}</code></a>
         {%- when None -%}
             <code>{{ route.path() }}</code>
         {%- endmatch -%}
