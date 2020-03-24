@@ -1,15 +1,27 @@
+#[macro_use]
+mod macros;
+
 use clap::{
     app_from_crate, crate_authors, crate_description, crate_name, crate_version,
 };
 use clap::{value_t, value_t_or_exit, App, Arg, Error, ErrorKind, Shell};
+use futures::prelude::*;
+use hyper::server::conn::AddrStream;
+use hyper::service::make_service_fn;
+use hyper::Server;
 use pretty_env_logger;
+use std::convert::Infallible;
 use std::io;
 use std::net::ToSocketAddrs;
+use tokio::runtime;
 
-mod app;
+mod handler;
 mod headers;
 mod http;
+mod path;
+mod random;
 mod router;
+mod service;
 
 #[cfg(test)]
 mod test;
@@ -53,7 +65,12 @@ fn cli<'a, 'b>() -> App<'a, 'b> {
         )
 }
 
-fn main() {
+async fn shutdown_signal() {
+    // Wait for the CTRL+C signal
+    tokio::signal::ctrl_c().await.unwrap()
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     pretty_env_logger::init();
 
     let matches = cli().get_matches();
@@ -64,7 +81,7 @@ fn main() {
             shell.parse::<Shell>().unwrap(),
             &mut io::stdout(),
         );
-        return;
+        return Ok(());
     }
 
     let host = matches.value_of("host").expect("Invalid host");
@@ -85,6 +102,28 @@ fn main() {
         .unwrap_or_else(|| {
             panic!("Invalid listening address: {}:{}", host, port)
         });
-    println!("Listening on {}:{} with {} threads", host, port, threads);
-    gotham::start_with_num_threads(addr, app::app(), threads)
+
+    let mut runtime = runtime::Builder::new()
+        .threaded_scheduler()
+        .enable_all()
+        .core_threads(threads)
+        .build()?;
+
+    println!("Listening on {} with {} threads", addr, threads);
+    runtime.block_on(async {
+        let router = service::router();
+
+        let server = Server::bind(&addr).serve(make_service_fn(
+            move |conn: &AddrStream| {
+                future::ok::<_, Infallible>(
+                    (&router).service(Some(conn.remote_addr())),
+                )
+            },
+        ));
+
+        let graceful = server.with_graceful_shutdown(shutdown_signal());
+
+        graceful.await?;
+        Ok(())
+    })
 }

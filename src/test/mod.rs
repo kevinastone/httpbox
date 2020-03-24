@@ -1,4 +1,8 @@
 #![cfg(test)]
 
 pub(crate) mod headers;
-pub(crate) mod request;
+mod request;
+mod response;
+
+pub use request::request;
+pub use response::TestResponseExt;

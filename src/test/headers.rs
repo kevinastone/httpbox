@@ -1,9 +1,9 @@
 #![cfg(test)]
 
-use headers::{Header, HeaderMapExt, HeaderValue};
+use crate::headers::{Header, HeaderMapExt, HeaderValue};
 
 pub fn encode<'a, H: Header>(header: H) -> HeaderValue {
-    let mut map = ::http::HeaderMap::new();
+    let mut map = hyper::http::HeaderMap::new();
     map.typed_insert(header);
     map.get(H::name()).unwrap().clone()
 }

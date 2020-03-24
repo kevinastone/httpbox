@@ -1,6 +1,6 @@
+use crate::headers::{Error, Header, HeaderName, HeaderValue};
 use cookie::Cookie as HTTPCookie;
-use headers::{Error, Header, HeaderName, HeaderValue};
-use http::header;
+use hyper::http::header;
 use itertools::Either;
 use std::iter;
 
@@ -13,6 +13,15 @@ pub struct Cookie<'a>(pub Vec<HTTPCookie<'a>>);
 impl Cookie<'_> {
     pub fn iter(&self) -> impl Iterator<Item = &HTTPCookie<'_>> {
         self.0.iter()
+    }
+}
+
+impl<'a> IntoIterator for Cookie<'a> {
+    type Item = HTTPCookie<'a>;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
     }
 }
 
@@ -78,9 +87,9 @@ impl Header for SetCookie<'_> {
 #[cfg(test)]
 mod test {
     use super::{Cookie, HTTPCookie, SetCookie};
+    use crate::headers::{Header, HeaderMapExt, HeaderValue};
     use crate::test::headers::encode;
-    use headers::{Header, HeaderMapExt, HeaderValue};
-    use http::HeaderMap;
+    use hyper::http::HeaderMap;
 
     #[test]
     fn test_encode_single_cookie() {

@@ -1,4 +1,4 @@
-use headers::{Error, Header, HeaderName, HeaderValue};
+use crate::headers::{Error, Header, HeaderName, HeaderValue};
 use lazy_static::lazy_static;
 use std::iter;
 use std::net::IpAddr;
@@ -48,9 +48,9 @@ impl From<&XForwardedFor> for HeaderValue {
 #[cfg(test)]
 mod test {
     use super::XForwardedFor;
+    use crate::headers::{Header, HeaderMapExt};
     use crate::test::headers::encode;
-    use headers::{Header, HeaderMapExt};
-    use http::HeaderMap;
+    use hyper::http::HeaderMap;
     use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
     #[test]
