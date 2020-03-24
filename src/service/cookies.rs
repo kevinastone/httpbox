@@ -1,8 +1,5 @@
 use crate::headers::{Cookie, SetCookie};
-use crate::http::{
-    bad_request, ok, Body, HTTPResponse, Request, ResponseTypedHeaderExt,
-    Result,
-};
+use crate::http::{bad_request, ok, response, Request, Result};
 use cookie::Cookie as HTTPCookie;
 use itertools::Itertools;
 
@@ -27,12 +24,12 @@ pub async fn set_cookies(req: Request) -> Result {
         .into_iter()
         .map(|(k, v)| SetCookie(HTTPCookie::new(k, v)));
 
-    let mut res = HTTPResponse::builder();
+    let mut res = response();
     for cookie in response_cookies {
         res = res.typed_header(cookie);
     }
 
-    res.body(Body::empty()).map_err(Into::into)
+    res.into()
 }
 
 #[cfg(test)]

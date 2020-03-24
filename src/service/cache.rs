@@ -1,15 +1,12 @@
 use crate::headers::{CacheControl, IfModifiedSince, IfNoneMatch};
-use crate::http::{
-    bad_request, empty_response, ok, Body, HTTPResponse, Request,
-    ResponseTypedHeaderExt, Result, StatusCode,
-};
+use crate::http::{bad_request, ok, response, Request, Result, StatusCode};
 use std::time::Duration;
 
 pub async fn cache(req: Request) -> Result {
     if req.typed_header::<IfModifiedSince>().is_some()
         || req.typed_header::<IfNoneMatch>().is_some()
     {
-        empty_response(StatusCode::NOT_MODIFIED)
+        response().status(StatusCode::NOT_MODIFIED).into()
     } else {
         ok("")
     }
@@ -18,10 +15,9 @@ pub async fn cache(req: Request) -> Result {
 pub async fn set_cache(req: Request) -> Result {
     let n = req.param::<u64>("n").ok_or_else(bad_request)?;
 
-    HTTPResponse::builder()
+    response()
         .typed_header(CacheControl::new().with_max_age(Duration::from_secs(n)))
-        .body(Body::empty())
-        .map_err(Into::into)
+        .into()
 }
 
 #[cfg(test)]

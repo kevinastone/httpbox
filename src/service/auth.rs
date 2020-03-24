@@ -1,26 +1,19 @@
 use crate::headers::authorization::{Basic, Bearer};
 use crate::headers::Authorization;
 use crate::headers::WWWAuthenticate;
-use crate::http::{
-    ok, Body, HTTPResponse, HandlerError, Request, ResponseTypedHeaderExt,
-    Result, StatusCode,
-};
+use crate::http::{ok, response, HandlerError, Request, Result, StatusCode};
 
 pub(crate) const REALM: &str = "User Visible Realm";
 
 fn unauthorized_authenticate() -> HandlerError {
-    HTTPResponse::builder()
+    response()
         .status(StatusCode::UNAUTHORIZED)
         .typed_header(WWWAuthenticate::basic_realm(REALM))
-        .body(Body::empty())
         .into()
 }
 
 fn unauthorized() -> HandlerError {
-    HTTPResponse::builder()
-        .status(StatusCode::UNAUTHORIZED)
-        .body(Body::empty())
-        .into()
+    response().status(StatusCode::UNAUTHORIZED).into()
 }
 
 pub async fn basic(req: Request) -> Result {

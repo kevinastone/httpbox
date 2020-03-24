@@ -1,4 +1,4 @@
-use crate::http::{bad_request, ok, Body, HTTPResponse, Request, Result};
+use crate::http::{bad_request, ok, response, Request, Result};
 use hyper::header::{HeaderName, HeaderValue};
 use itertools::{process_results, Itertools};
 
@@ -28,11 +28,11 @@ pub async fn response_headers(req: Request) -> Result {
         .collect::<anyhow::Result<Vec<_>>>()
         .map_err(|_| bad_request())?;
 
-    let mut res = HTTPResponse::builder();
+    let mut res = response();
     for (key, value) in output_headers {
         res = res.header(key, value);
     }
-    res.body(Body::empty()).map_err(Into::into)
+    res.into()
 }
 
 #[cfg(test)]

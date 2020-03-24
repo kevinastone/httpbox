@@ -1,14 +1,11 @@
-use crate::http::{
-    bad_request, Body, HTTPResponse, Request, Result, StatusCode,
-};
+use crate::http::{bad_request, response, Request, Result, StatusCode};
 
 pub async fn status_code(req: Request) -> Result {
     let code = req.param::<u16>("code").ok_or_else(bad_request)?;
 
-    HTTPResponse::builder()
+    response()
         .status(StatusCode::from_u16(code).map_err(|_| bad_request())?)
-        .body(Body::empty())
-        .map_err(Into::into)
+        .into()
 }
 
 #[cfg(test)]
