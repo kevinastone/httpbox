@@ -1,13 +1,13 @@
 use crate::path::{MatchedPath, Path};
 use hyper::{Body, Method, Request as HTTPRequest};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[derive(Debug)]
 pub struct RouteBuilder {
     path: Path,
     method: Method,
     description: Option<&'static str>,
-    example_params: HashMap<&'static str, &'static str>,
+    example_params: BTreeMap<&'static str, &'static str>,
 }
 
 impl RouteBuilder {
@@ -16,7 +16,7 @@ impl RouteBuilder {
             path: path.into(),
             method: Method::GET,
             description: None,
-            example_params: HashMap::new(),
+            example_params: BTreeMap::new(),
         }
     }
 
@@ -44,22 +44,7 @@ impl RouteBuilder {
             return None;
         }
 
-        let mut path = self.path.to_string();
-        let mut query: Vec<_> = vec![];
-
-        for (key, value) in self.example_params.iter() {
-            let param = format!(":{}", key);
-            if path.contains(&param[..]) {
-                path = path.replace(&param[..], value);
-            } else {
-                query.push(format!("{}={}", key, value))
-            }
-        }
-
-        if !query.is_empty() {
-            path = format!("{}?{}", path, query.join("&"));
-        }
-        Some(path)
+        Some(self.path.to_uri(&self.example_params)?.to_string())
     }
 }
 
