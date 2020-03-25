@@ -15,7 +15,7 @@ pub async fn ip(req: Request) -> Result {
 mod test {
     use super::*;
     use crate::headers::XForwardedFor;
-    use crate::test::{request, TestResponseExt};
+    use crate::test::*;
     use hyper::http::StatusCode;
 
     #[tokio::test]

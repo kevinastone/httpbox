@@ -12,7 +12,7 @@ pub async fn status_code(req: Request) -> Result {
 mod test {
 
     use super::*;
-    use crate::test::request;
+    use crate::test::*;
     use hyper::http::StatusCode;
 
     #[tokio::test]

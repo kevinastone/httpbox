@@ -50,7 +50,7 @@ pub fn absolute_url(req: &Request, uri: &Uri) -> anyhow::Result<Url> {
 mod test {
     use super::{absolute_uri, host_from_headers, host_to_url};
     use crate::headers::Host;
-    use crate::test::request;
+    use crate::test::*;
     use hyper::http::{uri::Authority, Uri};
 
     #[test]

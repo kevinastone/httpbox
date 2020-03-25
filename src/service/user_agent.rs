@@ -12,7 +12,7 @@ pub async fn user_agent(req: Request) -> Result {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test::{request, TestResponseExt};
+    use crate::test::*;
     use hyper::http::StatusCode;
 
     #[tokio::test]

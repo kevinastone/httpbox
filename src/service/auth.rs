@@ -49,7 +49,7 @@ pub async fn bearer(req: Request) -> Result {
 mod test {
     use super::*;
     use crate::headers::HeaderMapExt;
-    use crate::test::request;
+    use crate::test::*;
     use hyper::http::StatusCode;
 
     #[tokio::test]

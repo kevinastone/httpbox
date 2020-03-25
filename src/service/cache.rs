@@ -24,7 +24,7 @@ pub async fn set_cache(req: Request) -> Result {
 mod test {
     use super::*;
     use crate::headers::HeaderMapExt;
-    use crate::test::request;
+    use crate::test::*;
     use hyper::http::StatusCode;
     use std::time::SystemTime;
 

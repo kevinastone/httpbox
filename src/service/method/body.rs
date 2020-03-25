@@ -55,7 +55,7 @@ mod test {
         content_type_decoder, parse_url_encoded_body, ContentTypeDecoder,
     };
     use crate::headers::ContentType;
-    use crate::test::request;
+    use crate::test::*;
 
     #[test]
     fn test_parse_url_encoded_body() {

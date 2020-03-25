@@ -37,7 +37,7 @@ pub async fn delete(req: Request) -> Result {
 mod test {
     use super::*;
     use crate::headers::ContentType;
-    use crate::test::{request, TestResponseExt};
+    use crate::test::*;
     use hyper::{Method, StatusCode};
     use std::collections::HashSet;
     use std::iter::FromIterator;
@@ -47,7 +47,7 @@ mod test {
         let res = request().path("/?key=val").handle(get).await.unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = hyper::body::to_bytes(res.into_body()).await.unwrap();
+        let body = res.read_utf8_body().await.unwrap();
         assert_eq!(body, "key = val");
     }
 
@@ -81,7 +81,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = hyper::body::to_bytes(res.into_body()).await.unwrap();
+        let body = res.read_utf8_body().await.unwrap();
         assert_eq!(body, "key = val");
     }
 
@@ -117,7 +117,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = hyper::body::to_bytes(res.into_body()).await.unwrap();
+        let body = res.read_utf8_body().await.unwrap();
         assert_eq!(body, "key = val");
     }
 
@@ -153,7 +153,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = hyper::body::to_bytes(res.into_body()).await.unwrap();
+        let body = res.read_utf8_body().await.unwrap();
         assert_eq!(body, "key = val");
     }
 

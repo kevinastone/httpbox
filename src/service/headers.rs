@@ -38,7 +38,7 @@ pub async fn response_headers(req: Request) -> Result {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::test::request;
+    use crate::test::*;
     use hyper::http::StatusCode;
 
     #[tokio::test]
@@ -51,7 +51,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = hyper::body::to_bytes(res.into_body()).await.unwrap();
+        let body = res.read_utf8_body().await.unwrap();
         assert_eq!(body, "x-request-id: 1234\nuser-agent: ExampleBot")
     }
 

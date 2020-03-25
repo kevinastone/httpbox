@@ -64,7 +64,7 @@ mod test {
     use crate::headers::HeaderMapExt;
     use crate::headers::Host;
     use crate::headers::Location;
-    use crate::test::request;
+    use crate::test::*;
     use hyper::http::StatusCode;
     use hyper::http::{uri::Authority, Uri};
 
