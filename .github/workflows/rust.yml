@@ -28,3 +28,17 @@ jobs:
       with:
         command: test
         args: --verbose
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Deploy to Heroku
+      env:
+        HEROKU_API_TOKEN: ${{ secrets.HEROKU_API_TOKEN }}
+        HEROKU_APP_NAME: "whispering-shelf-71295"
+        GITHUB_COMMIT: ${{ github.sha }}
+      run: git push --force https://heroku:$HEROKU_API_TOKEN@git.heroku.com/$HEROKU_APP_NAME.git $GITHUB_COMMIT:master
