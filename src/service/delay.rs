@@ -15,7 +15,7 @@ fn sleep_duration(seconds: u64) -> u64 {
 }
 
 pub async fn delay(req: Request) -> Result {
-    let n = min(req.param::<u64>("n").ok_or_else(bad_request)?, 10);
+    let n = req.param::<u64>("n").ok_or_else(bad_request)?;
     let delay = min(n, 10);
 
     let duration = Duration::from_secs(sleep_duration(delay));

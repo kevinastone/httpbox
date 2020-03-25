@@ -3,36 +3,18 @@ use cookie::Cookie as HTTPCookie;
 use hyper::http::header;
 use itertools::Either;
 use std::iter;
-
-static COOKIE: &HeaderName = &header::COOKIE;
-static SET_COOKIE: &HeaderName = &header::SET_COOKIE;
+use std::ops::Deref;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Cookie<'a>(pub Vec<HTTPCookie<'a>>);
 
-impl Cookie<'_> {
-    pub fn iter(&self) -> impl Iterator<Item = &HTTPCookie<'_>> {
-        self.0.iter()
-    }
-}
-
-impl<'a> IntoIterator for Cookie<'a> {
-    type Item = HTTPCookie<'a>;
-    type IntoIter = std::vec::IntoIter<Self::Item>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
-    }
-}
-
 impl Header for Cookie<'_> {
     fn name() -> &'static HeaderName {
-        COOKIE
+        &header::COOKIE
     }
 
     fn decode<'i, I>(values: &mut I) -> Result<Self, Error>
     where
-        Self: Sized,
         I: Iterator<Item = &'i HeaderValue>,
     {
         values
@@ -53,9 +35,17 @@ impl Header for Cookie<'_> {
     }
 
     fn encode<E: Extend<HeaderValue>>(&self, values: &mut E) {
-        let cookies = self.0.iter().map(|c| c.to_string()).collect::<Vec<_>>();
+        let cookies = self.iter().map(|c| c.to_string()).collect::<Vec<_>>();
 
         values.extend(iter::once(cookies.join("; ").parse().unwrap()))
+    }
+}
+
+impl<'a> Deref for Cookie<'a> {
+    type Target = Vec<HTTPCookie<'a>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
@@ -64,7 +54,7 @@ pub struct SetCookie<'a>(pub HTTPCookie<'a>);
 
 impl Header for SetCookie<'_> {
     fn name() -> &'static HeaderName {
-        SET_COOKIE
+        &header::SET_COOKIE
     }
 
     fn decode<'i, I>(values: &mut I) -> Result<Self, Error>

@@ -47,3 +47,58 @@ pub async fn stream_bytes(req: Request) -> Result {
             stream::iter(data).chunks(chunk_size.unwrap_or(1)),
         ))
 }
+
+#[cfg(test)]
+mod test {
+
+    use super::*;
+    use crate::http::Response;
+    use crate::test::*;
+    use hyper::http::StatusCode;
+
+    async fn read_body(res: Response) -> Vec<u8> {
+        hyper::body::to_bytes(res.into_body())
+            .await
+            .unwrap()
+            .to_vec()
+    }
+
+    #[tokio::test]
+    async fn test_bytes() {
+        let res = request()
+            .param("n", "4")
+            .path("/?seed=1234")
+            .handle(bytes)
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::OK);
+        assert_eq!(read_body(res).await, [236, 97, 38, 144])
+    }
+
+    #[tokio::test]
+    async fn test_stream_bytes() {
+        let res = request()
+            .param("n", "4")
+            .path("/?seed=1234")
+            .handle(stream_bytes)
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::OK);
+        assert_eq!(read_body(res).await, [236, 97, 38, 144])
+    }
+
+    #[tokio::test]
+    async fn test_stream_bytes_with_chunk_size() {
+        let res = request()
+            .param("n", "4")
+            .path("/?seed=1234&chunk_size=2")
+            .handle(stream_bytes)
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::OK);
+        assert_eq!(read_body(res).await, [236, 97, 38, 144])
+    }
+}

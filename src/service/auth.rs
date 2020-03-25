@@ -2,6 +2,7 @@ use crate::headers::authorization::{Basic, Bearer};
 use crate::headers::Authorization;
 use crate::headers::WWWAuthenticate;
 use crate::http::{ok, response, HandlerError, Request, Result, StatusCode};
+use crate::option;
 
 pub(crate) const REALM: &str = "User Visible Realm";
 
@@ -17,12 +18,11 @@ fn unauthorized() -> HandlerError {
 }
 
 pub async fn basic(req: Request) -> Result {
-    let user = req
-        .param::<String>("user")
-        .ok_or_else(unauthorized_authenticate)?;
-    let passwd = req
-        .param::<String>("passwd")
-        .ok_or_else(unauthorized_authenticate)?;
+    let (user, passwd) = option::both(
+        req.param::<String>("user"),
+        req.param::<String>("passwd"),
+    )
+    .ok_or_else(unauthorized_authenticate)?;
 
     let headers = req
         .typed_header::<Authorization<Basic>>()

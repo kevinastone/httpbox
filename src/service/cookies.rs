@@ -18,15 +18,12 @@ pub async fn cookies(req: Request) -> Result {
 }
 
 pub async fn set_cookies(req: Request) -> Result {
-    let response_cookies = req
+    let mut res = response();
+    for (k, v) in req
         .query::<Vec<(String, String)>>()
         .map_err(|_| bad_request())?
-        .into_iter()
-        .map(|(k, v)| SetCookie(HTTPCookie::new(k, v)));
-
-    let mut res = response();
-    for cookie in response_cookies {
-        res = res.typed_header(cookie);
+    {
+        res = res.typed_header(SetCookie(HTTPCookie::new(k, v)));
     }
 
     res.into()

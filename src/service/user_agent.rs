@@ -2,11 +2,9 @@ use crate::headers::UserAgent;
 use crate::http::{bad_request, ok, Request, Result};
 
 pub async fn user_agent(req: Request) -> Result {
-    let agent = req
-        .typed_header::<UserAgent>()
-        .ok_or_else(bad_request)
-        .map(|ua| ua.to_string())?;
-    ok(agent)
+    let agent = req.typed_header::<UserAgent>().ok_or_else(bad_request)?;
+
+    ok(agent.to_string())
 }
 
 #[cfg(test)]

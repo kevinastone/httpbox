@@ -1,15 +1,15 @@
 use crate::headers::{CacheControl, IfModifiedSince, IfNoneMatch};
-use crate::http::{bad_request, ok, response, Request, Result, StatusCode};
+use crate::http::{bad_request, response, Request, Result, StatusCode};
 use std::time::Duration;
 
 pub async fn cache(req: Request) -> Result {
+    let mut res = response();
     if req.typed_header::<IfModifiedSince>().is_some()
         || req.typed_header::<IfNoneMatch>().is_some()
     {
-        response().status(StatusCode::NOT_MODIFIED).into()
-    } else {
-        ok("")
+        res = res.status(StatusCode::NOT_MODIFIED);
     }
+    res.into()
 }
 
 pub async fn set_cache(req: Request) -> Result {
