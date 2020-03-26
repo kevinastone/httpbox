@@ -7,7 +7,7 @@ pub trait ResponseTypedHeaderExt {
 
 impl ResponseTypedHeaderExt for hyper::http::response::Builder {
     fn typed_header<H: Header>(mut self, header: H) -> Self {
-        self.headers_mut().unwrap().typed_insert(header);
+        self.headers_mut().map(|res| res.typed_insert(header));
         self
     }
 }

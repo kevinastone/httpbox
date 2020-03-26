@@ -79,7 +79,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(shell) = matches.value_of("completions") {
         cli().gen_completions_to(
             crate_name!(),
-            shell.parse::<Shell>().unwrap(),
+            shell.parse::<Shell>()?,
             &mut io::stdout(),
         );
         return Ok(());
