@@ -11,66 +11,14 @@ lazy_static! {
     static ref EMPTY_HASHMAP: HashMap<&'static str, String> = HashMap::new();
 }
 
-#[derive(Debug, Clone)]
-pub enum Path {
-    Literal(&'static str),
-    Segmented(SegmentedPath),
-}
-
 fn segmented(str: &str) -> impl Iterator<Item = &str> {
     str.split('/').filter(|seg| !seg.is_empty())
 }
 
-impl Path {
-    pub fn matches(&self, path: &str) -> Option<MatchedPath> {
-        match self {
-            Self::Literal(str) => {
-                if str == &path {
-                    Some(MatchedPath::Literal)
-                } else {
-                    None
-                }
-            }
-            Self::Segmented(segmented_path) => segmented_path.matches(path),
-        }
-    }
-
-    pub fn segmented(segments: Vec<PathSegment>) -> Self {
-        Self::Segmented(SegmentedPath(segments))
-    }
-
-    pub fn to_uri(
-        &self,
-        params: &BTreeMap<&'static str, &'static str>,
-    ) -> Option<PathAndQuery> {
-        match self {
-            Self::Literal(str) => {
-                Some(PathAndQuery::from_static(str).with_query(params.clone()))
-            }
-            Self::Segmented(segmented_path) => segmented_path.to_uri(&params),
-        }
-    }
-}
-
-impl From<&'static str> for Path {
-    fn from(str: &'static str) -> Self {
-        Self::Literal(str)
-    }
-}
+#[derive(Debug, Clone)]
+pub struct Path(pub Vec<PathSegment>);
 
 impl fmt::Display for Path {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::Literal(str) => write!(f, "{}", str),
-            Self::Segmented(segmented_path) => write!(f, "{}", segmented_path),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct SegmentedPath(Vec<PathSegment>);
-
-impl fmt::Display for SegmentedPath {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -81,8 +29,8 @@ impl fmt::Display for SegmentedPath {
     }
 }
 
-impl SegmentedPath {
-    fn matches(&self, path: &str) -> Option<MatchedPath> {
+impl Path {
+    pub fn matches(&self, path: &str) -> Option<MatchedPath> {
         let mut params = HashMap::new();
         for el in self.iter().zip_longest(segmented(path)) {
             match el {
@@ -123,11 +71,17 @@ impl SegmentedPath {
     }
 }
 
-impl Deref for SegmentedPath {
+impl Deref for Path {
     type Target = Vec<PathSegment>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl From<&'static str> for Path {
+    fn from(str: &'static str) -> Self {
+        Self(segmented(str).map(PathSegment::Literal).collect())
     }
 }
 
@@ -182,10 +136,6 @@ impl<'a> PathAndQuery<'a> {
             segments,
             query: vec![],
         }
-    }
-
-    pub fn from_static(input: &'static str) -> Self {
-        Self::new(vec![input])
     }
 
     pub fn with_query(

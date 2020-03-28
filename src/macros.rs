@@ -1,9 +1,9 @@
 macro_rules! path {
-    ($first:literal) => {{
-        $crate::path::Path::Literal($first)
+    () => {{
+        $crate::path::Path(vec![])
     }};
     ($first:tt $(/ $tail:tt)*) => {{
-    $crate::path::Path::segmented(vec![
+    $crate::path::Path(vec![
         __path_segment!($first)
         $( , __path_segment!($tail) )*
         ])

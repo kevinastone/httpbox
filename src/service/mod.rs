@@ -18,43 +18,43 @@ pub fn router() -> Router {
     let builder = Router::builder()
         .install(
             crate::service::ip::ip,
-            route("/ip").description("Returns Origin IP"),
+            route(path!("ip")).description("Returns Origin IP"),
         )
         .install(
             crate::service::user_agent::user_agent,
-            route("/user-agent").description("Returns user-agent"),
+            route(path!("user-agent")).description("Returns user-agent"),
         )
         .install(
             crate::service::headers::headers,
-            route("/headers").description("Returns headers"),
+            route(path!("headers")).description("Returns headers"),
         )
         .install(
             crate::service::method::get,
-            route("/get")
+            route(path!("get"))
                 .description("Returns GET data")
                 .add_example_param("key", "val"),
         )
         .install(
             crate::service::method::post,
-            route("/post")
+            route(path!("post"))
                 .method(Method::POST)
                 .description("Returns POST data"),
         )
         .install(
             crate::service::method::patch,
-            route("/patch")
+            route(path!("patch"))
                 .method(Method::PATCH)
                 .description("Returns PUT data"),
         )
         .install(
             crate::service::method::put,
-            route("/put")
+            route(path!("put"))
                 .method(Method::PUT)
                 .description("Returns PUT data"),
         )
         .install(
             crate::service::method::delete,
-            route("/delete")
+            route(path!("delete"))
                 .method(Method::DELETE)
                 .description("Returns DELETE data"),
         )
@@ -79,7 +79,7 @@ pub fn router() -> Router {
         )
         .install(
             crate::service::headers::response_headers,
-            route("/response-headers")
+            route(path!("response-headers"))
                 .description("Returns given response headers")
                 .add_example_param("key", "val"),
         )
@@ -91,7 +91,7 @@ pub fn router() -> Router {
         )
         .install(
             crate::service::redirect::to,
-            route("/redirect-to")
+            route(path!("redirect-to"))
                 .description("302 Redirects to the url= URL")
                 .add_example_param("url", "http://example.com"),
         )
@@ -109,11 +109,11 @@ pub fn router() -> Router {
         )
         .install(
             crate::service::cookies::cookies,
-            route("/cookies").description("Returns cookie data"),
+            route(path!("cookies")).description("Returns cookie data"),
         )
         .install(
             crate::service::cookies::set_cookies,
-            route("/cookies/set")
+            route(path!("cookies/set"))
                 .description("Sets one or more simple cookies")
                 .add_example_param("key", "val"),
         )
@@ -125,7 +125,7 @@ pub fn router() -> Router {
         )
         .install(
             crate::service::cache::cache,
-            route("/cache").description(
+            route(path!("cache")).description(
                 "Returns 200 unless an If-Modified-Since or If-None-Match \
                  header is provided, then it returns a 304",
             ),
@@ -156,7 +156,7 @@ pub fn router() -> Router {
         );
 
     let mut routes = builder.routes();
-    let index_route: Route = route("/").description("This page").into();
+    let index_route: Route = route(path!()).description("This page").into();
     routes.insert(0, &index_route);
 
     let index: crate::service::index::Index = routes.into();
