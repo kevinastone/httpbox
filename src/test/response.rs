@@ -1,20 +1,17 @@
-use futures::prelude::*;
-use std::pin::Pin;
+use async_trait::async_trait;
 
-pub trait TestResponseExt {
-    fn read_utf8_body(
-        self,
-    ) -> Pin<Box<dyn Future<Output = anyhow::Result<String>>>>;
+#[async_trait]
+pub trait TestResponseExt: Sized {
+    async fn read_body(self) -> anyhow::Result<Vec<u8>>;
+    async fn read_body_utf8(self) -> anyhow::Result<String> {
+        Ok(String::from_utf8(self.read_body().await?)?)
+    }
 }
 
+#[async_trait]
 impl TestResponseExt for hyper::Response<hyper::Body> {
-    fn read_utf8_body(
-        self,
-    ) -> Pin<Box<dyn Future<Output = anyhow::Result<String>>>> {
-        async move {
-            let bytes = hyper::body::to_bytes(self.into_body()).await?;
-            Ok(String::from_utf8(bytes.to_vec())?)
-        }
-        .boxed()
+    async fn read_body(self) -> anyhow::Result<Vec<u8>> {
+        let bytes = hyper::body::to_bytes(self.into_body()).await?;
+        Ok(bytes.to_vec())
     }
 }

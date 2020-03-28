@@ -34,7 +34,7 @@ mod test {
         let res = request().param("n", "3").handle(delay).await.unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = res.read_utf8_body().await.unwrap();
+        let body = res.read_body_utf8().await.unwrap();
         assert_eq!(body, "3");
     }
 
@@ -43,7 +43,7 @@ mod test {
         let res = request().param("n", "33").handle(delay).await.unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = res.read_utf8_body().await.unwrap();
+        let body = res.read_body_utf8().await.unwrap();
         assert_eq!(body, "10");
     }
 

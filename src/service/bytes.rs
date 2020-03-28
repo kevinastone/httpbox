@@ -52,16 +52,8 @@ pub async fn stream_bytes(req: Request) -> Result {
 mod test {
 
     use super::*;
-    use crate::http::Response;
     use crate::test::*;
     use hyper::http::StatusCode;
-
-    async fn read_body(res: Response) -> Vec<u8> {
-        hyper::body::to_bytes(res.into_body())
-            .await
-            .unwrap()
-            .to_vec()
-    }
 
     #[tokio::test]
     async fn test_bytes() {
@@ -73,7 +65,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        assert_eq!(read_body(res).await, [236, 97, 38, 144])
+        assert_eq!(res.read_body().await.unwrap(), [236, 97, 38, 144])
     }
 
     #[tokio::test]
@@ -86,7 +78,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        assert_eq!(read_body(res).await, [236, 97, 38, 144])
+        assert_eq!(res.read_body().await.unwrap(), [236, 97, 38, 144])
     }
 
     #[tokio::test]
@@ -99,6 +91,6 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        assert_eq!(read_body(res).await, [236, 97, 38, 144])
+        assert_eq!(res.read_body().await.unwrap(), [236, 97, 38, 144])
     }
 }

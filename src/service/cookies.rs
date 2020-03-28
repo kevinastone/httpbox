@@ -41,7 +41,7 @@ mod test {
         let res = request().handle(cookies).await.unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = res.read_utf8_body().await.unwrap();
+        let body = res.read_body_utf8().await.unwrap();
         assert_eq!(body, "");
     }
 
@@ -54,7 +54,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = res.read_utf8_body().await.unwrap();
+        let body = res.read_body_utf8().await.unwrap();
         assert_eq!(body, "test = value");
     }
 
@@ -70,7 +70,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = res.read_utf8_body().await.unwrap();
+        let body = res.read_body_utf8().await.unwrap();
         assert_eq!(body, "first = value\nsecond = another");
     }
 

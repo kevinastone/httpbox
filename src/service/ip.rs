@@ -27,7 +27,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = res.read_utf8_body().await.unwrap();
+        let body = res.read_body_utf8().await.unwrap();
         assert_eq!(body, "1.2.3.4");
     }
 
@@ -40,7 +40,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = res.read_utf8_body().await.unwrap();
+        let body = res.read_body_utf8().await.unwrap();
         assert_eq!(body, "127.0.0.1");
     }
 
@@ -61,7 +61,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = res.read_utf8_body().await.unwrap();
+        let body = res.read_body_utf8().await.unwrap();
         assert_eq!(body, "127.0.0.1");
     }
 }

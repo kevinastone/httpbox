@@ -47,7 +47,7 @@ mod test {
         let res = request().path("/?key=val").handle(get).await.unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = res.read_utf8_body().await.unwrap();
+        let body = res.read_body_utf8().await.unwrap();
         assert_eq!(body, "key = val");
     }
 
@@ -60,7 +60,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = res.read_utf8_body().await.unwrap();
+        let body = res.read_body_utf8().await.unwrap();
         let result: HashSet<&str> = HashSet::from_iter(body.split("\n"));
         let expected = HashSet::from_iter(vec![
             "key = val",
@@ -81,7 +81,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = res.read_utf8_body().await.unwrap();
+        let body = res.read_body_utf8().await.unwrap();
         assert_eq!(body, "key = val");
     }
 
@@ -96,7 +96,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = res.read_utf8_body().await.unwrap();
+        let body = res.read_body_utf8().await.unwrap();
         let result: HashSet<&str> = HashSet::from_iter(body.split("\n"));
         let expected = HashSet::from_iter(vec![
             "key = val",
@@ -117,7 +117,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = res.read_utf8_body().await.unwrap();
+        let body = res.read_body_utf8().await.unwrap();
         assert_eq!(body, "key = val");
     }
 
@@ -132,7 +132,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = res.read_utf8_body().await.unwrap();
+        let body = res.read_body_utf8().await.unwrap();
         let result: HashSet<&str> = HashSet::from_iter(body.split("\n"));
         let expected = HashSet::from_iter(vec![
             "key = val",
@@ -153,7 +153,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = res.read_utf8_body().await.unwrap();
+        let body = res.read_body_utf8().await.unwrap();
         assert_eq!(body, "key = val");
     }
 
@@ -168,7 +168,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = res.read_utf8_body().await.unwrap();
+        let body = res.read_body_utf8().await.unwrap();
         let result: HashSet<&str> = HashSet::from_iter(body.split("\n"));
         let expected = HashSet::from_iter(vec![
             "key = val",

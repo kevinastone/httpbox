@@ -51,7 +51,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let body = res.read_utf8_body().await.unwrap();
+        let body = res.read_body_utf8().await.unwrap();
         assert_eq!(body, "x-request-id: 1234\nuser-agent: ExampleBot")
     }
 
