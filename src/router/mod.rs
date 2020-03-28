@@ -131,12 +131,7 @@ impl Service<HTTPRequest<Body>> for RouterService {
             let (endpoint, matched_path) =
                 router.route(&req).ok_or_else(not_found)?;
 
-            let client_req = Request::new(
-                req,
-                client_addr,
-                Some(matched_path.params().clone()),
-            );
-
+            let client_req = Request::new(req, client_addr, Some(matched_path));
             Ok(endpoint.handler.handle(client_req).await?)
         }
         .or_else(|e: Error| e.into_result())

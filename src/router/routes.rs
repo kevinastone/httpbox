@@ -44,7 +44,7 @@ impl RouteBuilder {
             return None;
         }
 
-        Some(self.path.to_uri(&self.example_params)?.to_string())
+        Some(self.path.replace(&self.example_params)?.to_string())
     }
 }
 

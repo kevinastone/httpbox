@@ -15,6 +15,8 @@ fn segmented(str: &str) -> impl Iterator<Item = &str> {
     str.split('/').filter(|seg| !seg.is_empty())
 }
 
+pub type MatchedPath = HashMap<&'static str, String>;
+
 #[derive(Debug, Clone)]
 pub struct Path(pub Vec<PathSegment>);
 
@@ -45,10 +47,10 @@ impl Path {
                 _ => return None,
             }
         }
-        Some(MatchedPath::Segmented(params))
+        Some(params)
     }
 
-    pub fn to_uri(
+    pub fn replace(
         &self,
         params: &BTreeMap<&'static str, &'static str>,
     ) -> Option<PathAndQuery> {
@@ -109,21 +111,6 @@ impl fmt::Display for PathSegment {
     }
 }
 
-#[derive(Debug)]
-pub enum MatchedPath {
-    Literal,
-    Segmented(HashMap<&'static str, String>),
-}
-
-impl MatchedPath {
-    pub fn params(&self) -> &HashMap<&'static str, String> {
-        match self {
-            Self::Literal => &EMPTY_HASHMAP,
-            Self::Segmented(params) => params,
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct PathAndQuery<'a> {
     segments: Vec<&'a str>,
@@ -176,58 +163,58 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_to_uri_literal() {
+    fn test_replace_literal() {
         let path: Path = "/test".into();
         let params = BTreeMap::new();
-        assert_eq!(path.to_uri(&params).unwrap().to_string(), "/test");
+        assert_eq!(path.replace(&params).unwrap().to_string(), "/test");
     }
 
     #[test]
-    fn test_to_uri_literal_with_single_param() {
+    fn test_replace_literal_with_single_param() {
         let path: Path = "/test".into();
         let mut params = BTreeMap::new();
         params.insert("first", "value");
         assert_eq!(
-            path.to_uri(&params).unwrap().to_string(),
+            path.replace(&params).unwrap().to_string(),
             "/test?first=value"
         );
     }
     #[test]
-    fn test_to_uri_literal_with_multiple_params() {
+    fn test_replace_literal_with_multiple_params() {
         let path: Path = "/test".into();
         let mut params = BTreeMap::new();
         params.insert("first", "value");
         params.insert("second", "another");
         assert_eq!(
-            path.to_uri(&params).unwrap().to_string(),
+            path.replace(&params).unwrap().to_string(),
             "/test?first=value&second=another"
         );
     }
 
     #[test]
-    fn test_to_uri_segmented_missing_param() {
+    fn test_replace_segmented_missing_param() {
         let path: Path = path!("test" / param);
         let params = BTreeMap::new();
-        assert!(path.to_uri(&params).is_none());
+        assert!(path.replace(&params).is_none());
     }
 
     #[test]
-    fn test_to_uri_segmented_with_path_param() {
+    fn test_replace_segmented_with_path_param() {
         let path: Path = path!("test" / param);
         let mut params = BTreeMap::new();
         params.insert("param", "value");
-        assert_eq!(path.to_uri(&params).unwrap().to_string(), "/test/value");
+        assert_eq!(path.replace(&params).unwrap().to_string(), "/test/value");
     }
 
     #[test]
-    fn test_to_uri_segmented_with_extra_params() {
+    fn test_replace_segmented_with_extra_params() {
         let path: Path = path!("test" / param);
         let mut params = BTreeMap::new();
         params.insert("param", "value");
         params.insert("first", "value");
         params.insert("second", "another");
         assert_eq!(
-            path.to_uri(&params).unwrap().to_string(),
+            path.replace(&params).unwrap().to_string(),
             "/test/value?first=value&second=another"
         );
     }

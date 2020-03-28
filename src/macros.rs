@@ -1,11 +1,7 @@
 macro_rules! path {
-    () => {{
-        $crate::path::Path(vec![])
-    }};
-    ($first:tt $(/ $tail:tt)*) => {{
+    ($($segment:tt) / *) => {{
     $crate::path::Path(vec![
-        __path_segment!($first)
-        $( , __path_segment!($tail) )*
+        $(__path_segment!($segment) ),*
         ])
     }};
 }
