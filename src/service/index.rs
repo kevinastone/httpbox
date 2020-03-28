@@ -1,9 +1,8 @@
-use crate::handler::{Handler, HandlerFuture};
-use crate::http::{html, Request};
+use crate::handler::Handler;
+use crate::http::{html, Request, Result};
 use crate::router::Route;
 use askama::Template;
-use futures::prelude::*;
-use std::pin::Pin;
+use async_trait::async_trait;
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -14,9 +13,10 @@ struct IndexTemplate<'a> {
 #[derive(Debug, Clone)]
 pub struct Index(String);
 
+#[async_trait]
 impl Handler for Index {
-    fn handle(&self, _: Request) -> Pin<Box<HandlerFuture>> {
-        future::ready(html(self.0.clone())).boxed()
+    async fn handle(&self, _: Request) -> Result {
+        html(self.0.clone())
     }
 }
 

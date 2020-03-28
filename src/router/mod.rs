@@ -124,18 +124,22 @@ impl Service<HTTPRequest<Body>> for RouterService {
     }
 
     fn call(&mut self, req: HTTPRequest<Body>) -> Self::Future {
-        let fut = match self.router.route(&req) {
-            Some((endpoint, matched_path)) => {
+        let router = self.router.clone();
+        let client_addr = self.client_addr;
+
+        async move {
+            if let Some((endpoint, matched_path)) = router.route(&req) {
                 let client_req = Request::new(
                     req,
-                    self.client_addr,
+                    client_addr,
                     Some(matched_path.params().clone()),
                 );
-                endpoint.handler.handle(client_req)
+                endpoint.handler.handle(client_req).await
+            } else {
+                Err(not_found())
             }
-            None => future::ready(Err(not_found())).boxed(),
-        };
-
-        fut.or_else(|e| future::ready(e.into_result())).boxed()
+            .or_else(|e| e.into_result())
+        }
+        .boxed()
     }
 }
