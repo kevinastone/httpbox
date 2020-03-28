@@ -6,6 +6,19 @@ use std::collections::HashMap;
 pub use hyper::{body::Bytes, Body};
 use std::net::SocketAddr;
 
+mod de {
+    use serde::de::{value::Error, Deserialize, IntoDeserializer};
+
+    pub fn deserialize<'de, IS, T>(raw: IS) -> Result<T, Error>
+    where
+        IS: IntoDeserializer<'de, Error>,
+        T: Deserialize<'de>,
+    {
+        let deserializer = raw.into_deserializer();
+        T::deserialize(deserializer)
+    }
+}
+
 pub struct Request {
     pub req: HTTPRequest<Body>,
     pub client_addr: Option<SocketAddr>,
@@ -28,6 +41,10 @@ impl Request {
     pub fn param<T: std::str::FromStr>(&self, key: &'static str) -> Option<T> {
         let str = self.params.get(key)?;
         T::from_str(str).ok()
+    }
+
+    pub fn params<'a, T: serde::de::Deserialize<'a>>(&self) -> Option<T> {
+        de::deserialize(self.params.clone()).ok()
     }
 
     pub fn headers(&self) -> &HeaderMap {

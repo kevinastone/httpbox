@@ -5,12 +5,15 @@ use itertools::Either;
 use std::iter;
 use std::ops::Deref;
 
+static COOKIE: &HeaderName = &header::COOKIE;
+static SET_COOKIE: &HeaderName = &header::SET_COOKIE;
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Cookie<'a>(pub Vec<HTTPCookie<'a>>);
 
 impl Header for Cookie<'_> {
     fn name() -> &'static HeaderName {
-        &header::COOKIE
+        COOKIE
     }
 
     fn decode<'i, I>(values: &mut I) -> Result<Self, Error>
@@ -54,7 +57,7 @@ pub struct SetCookie<'a>(pub HTTPCookie<'a>);
 
 impl Header for SetCookie<'_> {
     fn name() -> &'static HeaderName {
-        &header::SET_COOKIE
+        SET_COOKIE
     }
 
     fn decode<'i, I>(values: &mut I) -> Result<Self, Error>

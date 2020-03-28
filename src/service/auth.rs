@@ -2,7 +2,8 @@ use crate::headers::authorization::{Basic, Bearer};
 use crate::headers::Authorization;
 use crate::headers::WWWAuthenticate;
 use crate::http::{ok, response, HandlerError, Request, Result, StatusCode};
-use crate::option;
+
+use serde_derive::Deserialize;
 
 pub(crate) const REALM: &str = "User Visible Realm";
 
@@ -17,12 +18,16 @@ fn unauthorized() -> HandlerError {
     response().status(StatusCode::UNAUTHORIZED).into()
 }
 
+#[derive(Deserialize)]
+pub struct BasicAuthParams {
+    user: String,
+    passwd: String,
+}
+
 pub async fn basic(req: Request) -> Result {
-    let (user, passwd) = option::both(
-        req.param::<String>("user"),
-        req.param::<String>("passwd"),
-    )
-    .ok_or_else(unauthorized_authenticate)?;
+    let BasicAuthParams { user, passwd } = req
+        .params::<BasicAuthParams>()
+        .ok_or_else(unauthorized_authenticate)?;
 
     let headers = req
         .typed_header::<Authorization<Basic>>()
