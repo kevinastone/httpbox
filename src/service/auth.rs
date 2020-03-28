@@ -1,20 +1,20 @@
 use crate::headers::authorization::{Basic, Bearer};
 use crate::headers::Authorization;
 use crate::headers::WWWAuthenticate;
-use crate::http::{ok, response, HandlerError, Request, Result, StatusCode};
+use crate::http::{ok, response, Error, Request, Result, StatusCode};
 
 use serde_derive::Deserialize;
 
 pub(crate) const REALM: &str = "User Visible Realm";
 
-fn unauthorized_authenticate() -> HandlerError {
+fn unauthorized_authenticate() -> Error {
     response()
         .status(StatusCode::UNAUTHORIZED)
         .typed_header(WWWAuthenticate::basic_realm(REALM))
         .into()
 }
 
-fn unauthorized() -> HandlerError {
+fn unauthorized() -> Error {
     response().status(StatusCode::UNAUTHORIZED).into()
 }
 

@@ -1,9 +1,8 @@
 use crate::headers::{Header, HeaderMapExt};
 use hyper::http::Request as HTTPRequest;
-pub use hyper::http::{HeaderMap, StatusCode, Uri};
+use hyper::http::{HeaderMap, Uri};
+use hyper::Body;
 use std::collections::HashMap;
-
-pub use hyper::{body::Bytes, Body};
 use std::net::SocketAddr;
 
 mod de {
@@ -20,8 +19,8 @@ mod de {
 }
 
 pub struct Request {
-    pub req: HTTPRequest<Body>,
-    pub client_addr: Option<SocketAddr>,
+    req: HTTPRequest<Body>,
+    client_addr: Option<SocketAddr>,
     params: HashMap<&'static str, String>,
 }
 
@@ -68,5 +67,9 @@ impl Request {
     ) -> std::result::Result<T, serde_urlencoded::de::Error> {
         let query_string = self.req.uri().query().unwrap_or("");
         serde_urlencoded::from_str(query_string)
+    }
+
+    pub fn client_addr(&self) -> Option<SocketAddr> {
+        self.client_addr
     }
 }

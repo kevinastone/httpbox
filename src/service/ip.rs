@@ -5,7 +5,7 @@ pub async fn ip(req: Request) -> Result {
     let ip = req
         .typed_header::<XForwardedFor>()
         .map(|header| header.ip_addr())
-        .or_else(|| Some(req.client_addr?.ip()))
+        .or_else(|| Some(req.client_addr()?.ip()))
         .ok_or_else(bad_request)?;
 
     ok(format!("{}", ip))

@@ -1,5 +1,5 @@
 use crate::handler::Handler;
-use crate::http::{not_found, Request, Response};
+use crate::http::{not_found, Error, Request, Response};
 use crate::path::MatchedPath;
 use futures::prelude::*;
 use hyper::{service::Service, Body, Request as HTTPRequest};
@@ -128,18 +128,18 @@ impl Service<HTTPRequest<Body>> for RouterService {
         let client_addr = self.client_addr;
 
         async move {
-            if let Some((endpoint, matched_path)) = router.route(&req) {
-                let client_req = Request::new(
-                    req,
-                    client_addr,
-                    Some(matched_path.params().clone()),
-                );
-                endpoint.handler.handle(client_req).await
-            } else {
-                Err(not_found())
-            }
-            .or_else(|e| e.into_result())
+            let (endpoint, matched_path) =
+                router.route(&req).ok_or_else(not_found)?;
+
+            let client_req = Request::new(
+                req,
+                client_addr,
+                Some(matched_path.params().clone()),
+            );
+
+            Ok(endpoint.handler.handle(client_req).await?)
         }
+        .or_else(|e: Error| e.into_result())
         .boxed()
     }
 }

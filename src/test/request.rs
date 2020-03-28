@@ -77,10 +77,7 @@ impl RequestBuilder {
         handler: H,
     ) -> hyper::http::Result<HTTPResponse<Body>> {
         let req = self.build();
-        handler
-            .handle(req)
-            .or_else(|e| future::ready(e.into_result()))
-            .await
+        handler.handle(req).or_else(|e| e.into_result()).await
     }
 }
 

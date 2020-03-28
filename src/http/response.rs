@@ -1,5 +1,8 @@
-use super::{Body, HTTPResponse, HandlerError, Result, StatusCode, Uri};
+use super::{Body, Error, Result, StatusCode, Uri};
 use crate::headers::{ContentType, Header, HeaderMapExt, Location};
+use hyper::http::Response as HTTPResponse;
+
+pub type Response = HTTPResponse<Body>;
 
 pub trait ResponseTypedHeaderExt {
     fn typed_header<H: Header>(self, header: H) -> Self;
@@ -15,7 +18,7 @@ impl ResponseTypedHeaderExt for hyper::http::response::Builder {
 }
 
 mod wrapper {
-    use super::{Body, HandlerError, ResponseTypedHeaderExt, Result};
+    use super::{Body, Error, ResponseTypedHeaderExt, Result};
     use crate::headers::Header;
     use hyper::header::{HeaderName, HeaderValue};
     use hyper::StatusCode;
@@ -56,7 +59,7 @@ mod wrapper {
         }
     }
 
-    impl From<ResponseWrapper> for HandlerError {
+    impl From<ResponseWrapper> for Error {
         fn from(response: ResponseWrapper) -> Self {
             response.0.body(Body::empty()).into()
         }
@@ -78,11 +81,11 @@ where
     response().typed_header(ContentType::text()).body(body)
 }
 
-pub fn not_found() -> HandlerError {
+pub fn not_found() -> Error {
     response().status(StatusCode::NOT_FOUND).into()
 }
 
-pub fn bad_request() -> HandlerError {
+pub fn bad_request() -> Error {
     response().status(StatusCode::BAD_REQUEST).into()
 }
 
