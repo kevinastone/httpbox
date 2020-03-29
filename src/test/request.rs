@@ -69,7 +69,7 @@ impl RequestBuilder {
     }
 
     pub fn build(self) -> Request {
-        Request::new(self.req, self.client_addr, Some(self.params))
+        Request::new(self.req, self.client_addr, self.params)
     }
 
     pub async fn handle<H: Handler>(
