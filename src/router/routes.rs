@@ -48,7 +48,7 @@ impl RouteBuilder {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Route {
     path: Path,
     method: Method,
@@ -57,12 +57,12 @@ pub struct Route {
 }
 
 impl Route {
-    pub fn path(&self) -> Path {
-        self.path.clone()
+    pub fn path(&self) -> &Path {
+        &self.path
     }
 
-    pub fn method(&self) -> Method {
-        self.method.clone()
+    pub fn method(&self) -> &Method {
+        &self.method
     }
 
     pub fn description(&self) -> Option<&'static str> {
