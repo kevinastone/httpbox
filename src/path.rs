@@ -25,8 +25,7 @@ impl fmt::Display for Path {
         write!(
             f,
             "/{}",
-            self.iter()
-                .format_with("/", |segment, f| f(&format_args!("{}", segment)))
+            self.iter().format_with("/", |segment, f| f(segment))
         )
     }
 }
@@ -141,7 +140,7 @@ impl<'a> fmt::Display for PathAndQuery<'a> {
             "{}",
             self.segments
                 .iter()
-                .format_with("/", |segment, f| f(&format_args!("{}", segment)))
+                .format_with("/", |segment, f| f(segment))
         )?;
 
         if !self.query.is_empty() {
