@@ -1,9 +1,9 @@
 use crate::headers::{Header, HeaderMapExt};
-use crate::path::MatchedPath;
 use hyper::http::Request as HTTPRequest;
 use hyper::http::{HeaderMap, Uri};
 use hyper::Body;
 use std::net::SocketAddr;
+use uri_path::MatchedPath;
 
 mod de {
     use serde::de::{value::Error, Deserialize, IntoDeserializer};

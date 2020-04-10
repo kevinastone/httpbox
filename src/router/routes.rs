@@ -1,6 +1,6 @@
-use crate::path::{MatchedPath, Path};
 use hyper::{Body, Method, Request as HTTPRequest};
 use std::collections::BTreeMap;
+use uri_path::{MatchedPath, Path};
 
 #[derive(Debug)]
 pub struct RouteBuilder {

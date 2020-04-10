@@ -1,5 +1,6 @@
 use crate::router::{route, Route, Router};
 use hyper::http::Method;
+use uri_path::path;
 
 pub mod auth;
 pub mod bytes;

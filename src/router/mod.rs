@@ -1,6 +1,5 @@
 use crate::handler::Handler;
 use crate::http::{not_found, Error, Request, Response};
-use crate::path::MatchedPath;
 use futures::prelude::*;
 use hyper::{service::Service, Body, Request as HTTPRequest};
 use std::future::Future;
@@ -8,11 +7,12 @@ use std::net::SocketAddr;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
+use uri_path::MatchedPath;
 
 mod routes;
 
 pub use self::routes::{route, Route};
-pub use crate::path::{Path, PathSegment};
+pub use uri_path::{Path, PathSegment};
 
 pub struct Endpoint {
     route: Route,

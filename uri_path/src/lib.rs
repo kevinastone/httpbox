@@ -1,3 +1,6 @@
+#[macro_use]
+mod macros;
+
 use itertools::EitherOrBoth;
 use itertools::Itertools;
 use std::collections::{BTreeMap, HashMap};

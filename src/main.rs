@@ -1,6 +1,3 @@
-#[macro_use]
-mod macros;
-
 use clap::{
     app_from_crate, crate_authors, crate_description, crate_name, crate_version,
 };
@@ -19,7 +16,6 @@ mod handler;
 mod headers;
 mod http;
 mod option;
-mod path;
 mod random;
 mod router;
 mod service;
