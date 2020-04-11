@@ -4,6 +4,7 @@ mod macros;
 use itertools::EitherOrBoth;
 use itertools::Itertools;
 use lazy_static::lazy_static;
+pub use regex;
 use regex::Regex;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt;
@@ -22,16 +23,6 @@ pub type MatchedPath = HashMap<&'static str, String>;
 
 #[derive(Debug, Clone)]
 pub struct Path(pub Vec<PathSegment>);
-
-impl fmt::Display for Path {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "/{}",
-            self.iter().format_with("/", |segment, f| f(segment))
-        )
-    }
-}
 
 impl Path {
     pub fn matches(&self, path: &str) -> Option<MatchedPath> {
@@ -83,6 +74,16 @@ impl Deref for Path {
     }
 }
 
+impl fmt::Display for Path {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "/{}",
+            self.iter().format_with("/", |segment, f| f(segment))
+        )
+    }
+}
+
 impl From<&'static str> for Path {
     fn from(str: &'static str) -> Self {
         Self(segmented(str).map(PathSegment::Literal).collect())
@@ -104,10 +105,31 @@ impl PathToken {
     }
 }
 
+impl fmt::Display for PathToken {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Any => write!(f, "*"),
+            Self::Regex(re) => write!(f, "{}", re),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct PathParam {
     name: &'static str,
     token: PathToken,
+}
+
+impl PathParam {
+    pub fn new(name: &'static str, token: PathToken) -> Self {
+        Self { name, token }
+    }
+}
+
+impl fmt::Display for PathParam {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, ":{}", self.name)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -133,21 +155,6 @@ impl fmt::Display for PathSegment {
         }
     }
 }
-
-impl fmt::Display for PathParam {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, ":{}", self.name)
-    }
-}
-
-// impl fmt::Display for PathToken {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         match self {
-//             Self::Any => write!(f, "*"),
-//             Self::Regex(re) => write!(f, "{}", re),
-//         }
-//     }
-// }
 
 #[derive(Debug, Clone)]
 pub struct PathAndQuery<'a> {
@@ -193,121 +200,5 @@ impl<'a> fmt::Display for PathAndQuery<'a> {
         }
 
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn test_match_literal() {
-        let path: Path = "/test".into();
-        assert!(path.matches("/test").is_some())
-    }
-
-    #[test]
-    fn test_does_not_match_different_literal() {
-        let path: Path = "/test".into();
-        assert!(path.matches("/other").is_none())
-    }
-
-    #[test]
-    fn test_replace_literal() {
-        let path: Path = "/test".into();
-        let params = BTreeMap::new();
-        assert_eq!(path.replace(&params).unwrap().to_string(), "/test");
-    }
-
-    #[test]
-    fn test_replace_literal_with_single_param() {
-        let path: Path = "/test".into();
-        let mut params = BTreeMap::new();
-        params.insert("first", "value");
-        assert_eq!(
-            path.replace(&params).unwrap().to_string(),
-            "/test?first=value"
-        );
-    }
-    #[test]
-    fn test_replace_literal_with_multiple_params() {
-        let path: Path = "/test".into();
-        let mut params = BTreeMap::new();
-        params.insert("first", "value");
-        params.insert("second", "another");
-        assert_eq!(
-            path.replace(&params).unwrap().to_string(),
-            "/test?first=value&second=another"
-        );
-    }
-
-    #[test]
-    fn test_replace_segmented_missing_param() {
-        let path: Path = path!("test" / param);
-        let params = BTreeMap::new();
-        assert!(path.replace(&params).is_none());
-    }
-
-    #[test]
-    fn test_replace_segmented_with_path_param() {
-        let path: Path = path!("test" / param);
-        let mut params = BTreeMap::new();
-        params.insert("param", "value");
-        assert_eq!(path.replace(&params).unwrap().to_string(), "/test/value");
-    }
-
-    #[test]
-    fn test_replace_segmented_with_extra_params() {
-        let path: Path = path!("test" / param);
-        let mut params = BTreeMap::new();
-        params.insert("param", "value");
-        params.insert("first", "value");
-        params.insert("second", "another");
-        assert_eq!(
-            path.replace(&params).unwrap().to_string(),
-            "/test/value?first=value&second=another"
-        );
-    }
-
-    #[test]
-    fn test_matches_regex() {
-        let path: Path = path!("test" / [param ~= r"\d+"]);
-
-        assert!(path.matches("/test/123").is_some())
-    }
-
-    #[test]
-    fn test_does_not_match_regex() {
-        let path: Path = path!("test" / [param ~= r"\d+"]);
-
-        assert!(path.matches("/test/abc").is_none())
-    }
-
-    #[test]
-    fn test_replace_regex_missing_param() {
-        let path: Path = path!("test" / [param ~= r"\d+"]);
-        let params = BTreeMap::new();
-        assert!(path.replace(&params).is_none());
-    }
-
-    #[test]
-    fn test_replace_regex_with_path_param() {
-        let path: Path = path!("test" / [param ~= r"\d+"]);
-        let mut params = BTreeMap::new();
-        params.insert("param", "123");
-        assert_eq!(path.replace(&params).unwrap().to_string(), "/test/123");
-    }
-
-    #[test]
-    fn test_replace_regex_with_extra_params() {
-        let path: Path = path!("test" / [param ~= r"\d+"]);
-        let mut params = BTreeMap::new();
-        params.insert("param", "123");
-        params.insert("first", "value");
-        params.insert("second", "another");
-        assert_eq!(
-            path.replace(&params).unwrap().to_string(),
-            "/test/123?first=value&second=another"
-        );
     }
 }

@@ -14,15 +14,15 @@ macro_rules! __path_segment {
         $crate::PathSegment::Literal($s)
     }};
     ($i:ident) => {{
-        $crate::PathSegment::Dynamic($crate::PathParam {
-            name: stringify!($i),
-            token: $crate::PathToken::Any,
-        })
+        $crate::PathSegment::Dynamic($crate::PathParam::new(
+            stringify!($i),
+            $crate::PathToken::Any,
+        ))
     }};
     ([$i:ident ~= $re:literal]) => {{
-        $crate::PathSegment::Dynamic($crate::PathParam {
-            name: stringify!($i),
-            token: $crate::PathToken::Regex(regex::Regex::new($re).unwrap()),
-        })
+        $crate::PathSegment::Dynamic($crate::PathParam::new(
+            stringify!($i),
+            $crate::PathToken::Regex($crate::regex::Regex::new($re).unwrap()),
+        ))
     }};
 }
