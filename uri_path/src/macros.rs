@@ -1,28 +1,24 @@
 #[macro_export]
 macro_rules! path {
-    ($($segment:tt) / *) => {{
-    $crate::Path(vec![
-        $($crate::__path_segment!($segment) ),*
-        ])
-    }};
-}
-
-#[doc(hidden)]
-#[macro_export]
-macro_rules! __path_segment {
-    ($s:literal) => {{
+    (@segment $s:literal) => {
         $crate::PathSegment::Literal($s)
-    }};
-    ($i:ident) => {{
+    };
+    (@segment $i:ident) => {
         $crate::PathSegment::Dynamic($crate::PathParam::new(
             stringify!($i),
             $crate::PathToken::Any,
         ))
-    }};
-    ([$i:ident ~= $re:literal]) => {{
+    };
+    (@segment [$i:ident ~ $re:literal]) => {{
         $crate::PathSegment::Dynamic($crate::PathParam::new(
             stringify!($i),
             $crate::PathToken::Regex($crate::regex::Regex::new($re).unwrap()),
         ))
+    }};
+
+    ($($segment:tt) / *) => {{
+    $crate::Path(vec![
+        $($crate::path!(@segment $segment) ),*
+        ])
     }};
 }

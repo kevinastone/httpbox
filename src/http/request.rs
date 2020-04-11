@@ -3,7 +3,7 @@ use hyper::http::Request as HTTPRequest;
 use hyper::http::{HeaderMap, Uri};
 use hyper::Body;
 use std::net::SocketAddr;
-use uri_path::MatchedPath;
+use uri_path::Params;
 
 mod de {
     use serde::de::{value::Error, Deserialize, IntoDeserializer};
@@ -21,29 +21,29 @@ mod de {
 pub struct Request {
     req: HTTPRequest<Body>,
     client_addr: Option<SocketAddr>,
-    matched_path: MatchedPath,
+    params: Params,
 }
 
 impl Request {
     pub fn new(
         req: HTTPRequest<Body>,
         client_addr: Option<SocketAddr>,
-        matched_path: MatchedPath,
+        params: Params,
     ) -> Self {
         Self {
             req,
             client_addr,
-            matched_path,
+            params,
         }
     }
 
     pub fn param<T: std::str::FromStr>(&self, key: &'static str) -> Option<T> {
-        let str = self.matched_path.get(key)?;
+        let str = self.params.get(key)?;
         T::from_str(str).ok()
     }
 
     pub fn params<'a, T: serde::de::Deserialize<'a>>(&self) -> Option<T> {
-        de::deserialize(self.matched_path.clone()).ok()
+        de::deserialize(self.params.clone()).ok()
     }
 
     pub fn headers(&self) -> &HeaderMap {

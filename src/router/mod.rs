@@ -7,7 +7,7 @@ use std::net::SocketAddr;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
-use uri_path::MatchedPath;
+use uri_path::Params;
 
 mod routes;
 
@@ -68,12 +68,9 @@ impl RouterInternal {
     pub fn route(
         &self,
         req: &HTTPRequest<Body>,
-    ) -> Option<(&Endpoint, MatchedPath)> {
+    ) -> Option<(&Endpoint, Params)> {
         self.endpoints.iter().find_map(|endpoint| {
-            endpoint
-                .route
-                .matches(req)
-                .map(|matched_path| (endpoint, matched_path))
+            endpoint.route.matches(req).map(|params| (endpoint, params))
         })
     }
 }

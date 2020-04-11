@@ -3,29 +3,24 @@ mod macros;
 
 use itertools::EitherOrBoth;
 use itertools::Itertools;
-use lazy_static::lazy_static;
+#[cfg(feature = "regex")]
 pub use regex;
-use regex::Regex;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt;
 use std::iter::FromIterator;
 use std::ops::Deref;
 
-lazy_static! {
-    static ref EMPTY_HASHMAP: HashMap<&'static str, String> = HashMap::new();
-}
-
 fn segmented(str: &str) -> impl Iterator<Item = &str> {
     str.split('/').filter(|seg| !seg.is_empty())
 }
 
-pub type MatchedPath = HashMap<&'static str, String>;
+pub type Params = HashMap<&'static str, String>;
 
 #[derive(Debug, Clone)]
 pub struct Path(pub Vec<PathSegment>);
 
 impl Path {
-    pub fn matches(&self, path: &str) -> Option<MatchedPath> {
+    pub fn matches(&self, path: &str) -> Option<Params> {
         let mut params = HashMap::new();
         for el in self.iter().zip_longest(segmented(path)) {
             match el {
@@ -93,13 +88,15 @@ impl From<&'static str> for Path {
 #[derive(Debug, Clone)]
 pub enum PathToken {
     Any,
-    Regex(Regex),
+    #[cfg(feature = "regex")]
+    Regex(regex::Regex),
 }
 
 impl PathToken {
     pub fn matches(&self, path: &str) -> bool {
         match self {
             Self::Any => true,
+            #[cfg(feature = "regex")]
             Self::Regex(re) => re.is_match(path),
         }
     }
@@ -109,6 +106,7 @@ impl fmt::Display for PathToken {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Any => write!(f, "*"),
+            #[cfg(feature = "regex")]
             Self::Regex(re) => write!(f, "{}", re),
         }
     }
@@ -139,7 +137,7 @@ pub enum PathSegment {
 }
 
 impl PathSegment {
-    pub fn matches(&self, path: &str) -> bool {
+    fn matches(&self, path: &str) -> bool {
         match self {
             Self::Literal(str) => str == &path,
             Self::Dynamic(param) => param.token.matches(path),
