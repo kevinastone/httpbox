@@ -2,18 +2,18 @@ use crate::router::{route, Route, Router};
 use hyper::http::Method;
 use uri_path::path;
 
-pub mod auth;
-pub mod bytes;
-pub mod cache;
-pub mod cookies;
-pub mod delay;
-pub mod headers;
-pub mod index;
-pub mod ip;
-pub mod method;
-pub mod redirect;
-pub mod status_code;
-pub mod user_agent;
+mod auth;
+mod bytes;
+mod cache;
+mod cookies;
+mod delay;
+mod headers;
+mod index;
+mod ip;
+mod method;
+mod redirect;
+mod status_code;
+mod user_agent;
 
 pub fn router() -> Router {
     let builder = Router::builder()

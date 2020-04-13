@@ -89,6 +89,10 @@ pub fn bad_request() -> Error {
     response().status(StatusCode::BAD_REQUEST).into()
 }
 
+pub fn internal_server_error() -> Error {
+    response().status(StatusCode::INTERNAL_SERVER_ERROR).into()
+}
+
 pub fn redirect_to(uri: Uri) -> Result {
     response()
         .status(StatusCode::FOUND)

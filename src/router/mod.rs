@@ -1,8 +1,7 @@
 use crate::handler::Handler;
-use crate::http::{not_found, Error, Request, Response};
+use crate::http::{internal_server_error, not_found, Error, Request, Response};
 use futures::prelude::*;
 use hyper::{service::Service, Body, Request as HTTPRequest};
-use std::future::Future;
 use std::net::SocketAddr;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -105,6 +104,13 @@ impl RouterService {
     }
 }
 
+async fn handle_panics(
+    fut: impl Future<Output = crate::http::Result>,
+) -> crate::http::Result {
+    let wrapped = std::panic::AssertUnwindSafe(fut).catch_unwind();
+    wrapped.await.map_err(|_| internal_server_error())?
+}
+
 impl Service<HTTPRequest<Body>> for RouterService {
     type Response = Response;
     type Error = hyper::http::Error;
@@ -129,9 +135,33 @@ impl Service<HTTPRequest<Body>> for RouterService {
                 router.route(&req).ok_or_else(not_found)?;
 
             let client_req = Request::new(req, client_addr, matched_path);
-            Ok(endpoint.handler.handle(client_req).await?)
+            Ok(handle_panics(endpoint.handler.handle(client_req)).await?)
         }
         .or_else(|e: Error| e.into_result())
         .boxed()
+    }
+}
+
+#[cfg(test)]
+mod test {
+
+    use super::*;
+    use crate::http::Request;
+    use hyper::http::Request as HTTPRequest;
+    use hyper::http::StatusCode;
+
+    use uri_path::path;
+
+    #[tokio::test]
+    async fn test_panic() {
+        let handler = |_: Request| async {
+            unimplemented!();
+        };
+
+        let router = Router::builder().install(handler, route(path!())).build();
+        let mut service = router.service(None);
+
+        let res = service.call(HTTPRequest::default()).await.unwrap();
+        assert_eq!(res.status(), StatusCode::INTERNAL_SERVER_ERROR);
     }
 }
