@@ -69,6 +69,18 @@ mod test {
     }
 
     #[tokio::test]
+    async fn test_bytes_with_bad_seed() {
+        let res = request()
+            .param("n", "4")
+            .path("/?seed=abc")
+            .handle(bytes)
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
     async fn test_stream_bytes() {
         let res = request()
             .param("n", "4")
@@ -82,6 +94,18 @@ mod test {
     }
 
     #[tokio::test]
+    async fn test_stream_bytes_with_bad_seed() {
+        let res = request()
+            .param("n", "4")
+            .path("/?seed=abc")
+            .handle(stream_bytes)
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
     async fn test_stream_bytes_with_chunk_size() {
         let res = request()
             .param("n", "4")
@@ -92,5 +116,17 @@ mod test {
 
         assert_eq!(res.status(), StatusCode::OK);
         assert_eq!(res.read_body().await.unwrap(), [236, 97, 38, 144])
+    }
+
+    #[tokio::test]
+    async fn test_stream_bytes_with_bad_chunk_size() {
+        let res = request()
+            .param("n", "4")
+            .path("/?seed=1234&chunk_size=abc")
+            .handle(stream_bytes)
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::BAD_REQUEST);
     }
 }
