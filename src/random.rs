@@ -1,19 +1,14 @@
-use byteorder::{LittleEndian, WriteBytesExt};
 use rand::prelude::*;
 use rand::rngs::SmallRng as Rng;
 
-const SEED_WORDS: usize = 4;
-
 fn to_bytes(val: u32) -> <Rng as SeedableRng>::Seed {
-    let mut slice = vec![];
-    slice.write_u32::<LittleEndian>(val).unwrap();
-    let slice = &slice[..];
+    let slice = val.to_le_bytes();
 
-    let mut array = [0; SEED_WORDS * 4];
-    for (begin, end) in (0..SEED_WORDS).zip(1..=SEED_WORDS) {
-        array[begin * 4..end * 4].copy_from_slice(slice)
+    let mut seed = <Rng as SeedableRng>::Seed::default();
+    for chunk in seed.as_mut().chunks_mut(4) {
+        chunk.copy_from_slice(&slice);
     }
-    array
+    seed
 }
 
 pub fn rng(seed: Option<u32>) -> Rng {
