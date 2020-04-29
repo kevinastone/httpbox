@@ -3,7 +3,7 @@ use hyper::http::Request as HTTPRequest;
 use hyper::http::{HeaderMap, Uri};
 use hyper::Body;
 use std::net::SocketAddr;
-use uri_path::PathMatch;
+use typed_path::Path;
 
 mod de {
     use serde::de::{value::Error, Deserialize, IntoDeserializer};
@@ -18,32 +18,23 @@ mod de {
     }
 }
 
-pub struct Request {
+pub struct Request<T = ()> {
     req: HTTPRequest<Body>,
     client_addr: Option<SocketAddr>,
-    params: PathMatch,
+    path: Path<T>,
 }
 
-impl Request {
+impl<T> Request<T> {
     pub fn new(
         req: HTTPRequest<Body>,
         client_addr: Option<SocketAddr>,
-        params: PathMatch,
+        path: Path<T>,
     ) -> Self {
         Self {
             req,
             client_addr,
-            params,
+            path,
         }
-    }
-
-    pub fn param<T: std::str::FromStr>(&self, key: &'static str) -> Option<T> {
-        let str = self.params.get(key)?;
-        T::from_str(str).ok()
-    }
-
-    pub fn params<'a, T: serde::de::Deserialize<'a>>(&self) -> Option<T> {
-        de::deserialize(self.params.clone()).ok()
     }
 
     pub fn headers(&self) -> &HeaderMap {
@@ -62,14 +53,20 @@ impl Request {
         self.req.headers().typed_get::<H>()
     }
 
-    pub fn query<'a, T: serde::de::Deserialize<'a>>(
+    pub fn query<'a, TQ: serde::de::Deserialize<'a>>(
         &'a self,
-    ) -> std::result::Result<T, serde_urlencoded::de::Error> {
+    ) -> std::result::Result<TQ, serde_urlencoded::de::Error> {
         let query_string = self.req.uri().query().unwrap_or("");
         serde_urlencoded::from_str(query_string)
     }
 
     pub fn client_addr(&self) -> Option<SocketAddr> {
         self.client_addr
+    }
+}
+
+impl<'a, T: serde::de::Deserialize<'a>> Request<T> {
+    pub fn params(&self) -> Option<T> {
+        self.path.parse(self.req.path())
     }
 }
