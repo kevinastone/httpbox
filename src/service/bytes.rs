@@ -21,22 +21,27 @@ pub fn iter_bytes(
     (0..count).map(move |_| rng.gen::<u8>())
 }
 
-pub async fn bytes(req: Request) -> Result {
-    let n = req.param::<u32>("n").ok_or_else(bad_request)?;
+#[derive(Deserialize)]
+struct BytesParam {
+    n: u32,
+}
+
+pub async fn bytes(req: Request<BytesParam>) -> Result {
+    let params = req.params().ok_or_else(bad_request)?;
     let query = req.query::<BytesQueryParams>().map_err(|_| bad_request())?;
 
-    let data = iter_bytes(n, query.seed).collect::<Vec<u8>>();
+    let data = iter_bytes(params.n, query.seed).collect::<Vec<u8>>();
 
     response()
         .typed_header(ContentType::octet_stream())
         .body(data)
 }
 
-pub async fn stream_bytes(req: Request) -> Result {
-    let n = req.param::<u32>("n").ok_or_else(bad_request)?;
+pub async fn stream_bytes(req: Request<BytesParam>) -> Result {
+    let params = req.params().ok_or_else(bad_request)?;
     let query = req.query::<BytesQueryParams>().map_err(|_| bad_request())?;
 
-    let data = iter_bytes(n, query.seed);
+    let data = iter_bytes(params.n, query.seed);
     let chunk_size = query.chunk_size;
     let content_length = data.len() as u64;
 

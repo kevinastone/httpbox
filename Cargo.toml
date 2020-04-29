@@ -28,7 +28,6 @@ serde_urlencoded = "0.6"
 url = "^2.1.0"
 tokio = { version = "0.2.6", features = ["full"] }
 typed-path = { path = "../typed-path" }
-# uri_path = { path = "uri_path" }
 
 [[bin]]
 name = "httpbox"

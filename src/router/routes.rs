@@ -1,22 +1,21 @@
 use hyper::{Body, Method, Request as HTTPRequest};
-use std::collections::BTreeMap;
-use uri_path::{Path, PathMatch};
+use typed_path::Path;
 
 #[derive(Debug)]
-pub struct RouteBuilder {
-    path: Path,
+pub struct RouteBuilder<T> {
+    path: Path<T>,
     method: Method,
     description: Option<&'static str>,
-    example_params: BTreeMap<&'static str, &'static str>,
+    example_params: T,
 }
 
-impl RouteBuilder {
-    pub fn new<P: Into<Path>>(path: P) -> Self {
+impl<T> RouteBuilder<T> {
+    pub fn new<P: Into<Path<T>>>(path: P) -> Self {
         RouteBuilder {
             path: path.into(),
             method: Method::GET,
             description: None,
-            example_params: BTreeMap::new(),
+            example_params: T::default(),
         }
     }
 
@@ -49,15 +48,15 @@ impl RouteBuilder {
 }
 
 #[derive(Debug)]
-pub struct Route {
-    path: Path,
+pub struct Route<T> {
+    path: Path<T>,
     method: Method,
     description: Option<&'static str>,
     example_path: Option<String>,
 }
 
-impl Route {
-    pub fn path(&self) -> &Path {
+impl<T> Route<T> {
+    pub fn path(&self) -> &Path<T> {
         &self.path
     }
 
@@ -73,17 +72,17 @@ impl Route {
         self.example_path.as_ref().map(String::as_ref)
     }
 
-    pub fn matches(&self, req: &HTTPRequest<Body>) -> Option<PathMatch> {
+    pub fn matches(&self, req: &HTTPRequest<Body>) -> Option<T> {
         if self.method() != req.method() {
             return None;
         }
 
-        self.path.matches(req.uri().path())
+        self.path.parse(req.uri().path())
     }
 }
 
-impl From<RouteBuilder> for Route {
-    fn from(route: RouteBuilder) -> Self {
+impl<T> From<RouteBuilder<T>> for Route<T> {
+    fn from(route: RouteBuilder<T>) -> Self {
         let example_path = route.example_path();
         Route {
             path: route.path,
@@ -94,6 +93,6 @@ impl From<RouteBuilder> for Route {
     }
 }
 
-pub fn route<P: Into<Path>>(path: P) -> RouteBuilder {
+pub fn route<T, P: Into<Path<T>>>(path: P) -> RouteBuilder<T> {
     RouteBuilder::new(path)
 }

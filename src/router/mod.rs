@@ -1,5 +1,7 @@
 use crate::handler::Handler;
-use crate::http::{internal_server_error, not_found, Error, Request, Response};
+use crate::http::{
+    internal_server_error, not_found, Error, Request, Response, Result,
+};
 use futures::prelude::*;
 use hyper::server::conn::AddrStream;
 use hyper::{service::Service, Body, Request as HTTPRequest};
@@ -8,12 +10,11 @@ use std::net::SocketAddr;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
-use uri_path::PathMatch;
 
 mod routes;
 
 pub use self::routes::{route, Route};
-pub use uri_path::{Path, PathSegment};
+pub use typed_path::{Path, PathSegment};
 
 async fn handle_panics(
     fut: impl Future<Output = crate::http::Result>,
@@ -22,22 +23,30 @@ async fn handle_panics(
     wrapped.await.map_err(|_| internal_server_error())?
 }
 
-pub struct Endpoint {
-    route: Route,
-    handler: Box<dyn Handler + Sync>,
+// pub struct Endpoint<T> {
+//     route: Route<T>,
+//     handler: Box<dyn Handler + Sync>,
+// }
+
+trait Endpoint<T> {
+    fn route(&self, req: Request) -> Option<T>;
+    fn handle(&self, req: Request, params: T) -> Result;
 }
 
-impl Endpoint {
-    fn new<H: Handler + Sync + 'static>(route: Route, handler: H) -> Self {
-        Self {
-            route,
-            handler: Box::new(handler),
-        }
-    }
-}
+// impl<T> Endpoint<T> {
+//     fn new<H: Handler<T> + Sync + 'static>(
+//         route: Route<T>,
+//         handler: H,
+//     ) -> Self {
+//         Self {
+//             route,
+//             handler: Box::new(handler),
+//         }
+//     }
+// }
 
 pub struct RouterBuilder {
-    endpoints: Vec<Endpoint>,
+    endpoints: Vec<dyn Endpoint>,
 }
 
 impl RouterBuilder {
@@ -166,7 +175,7 @@ mod test {
     use hyper::http::Request as HTTPRequest;
     use hyper::http::StatusCode;
 
-    use uri_path::path;
+    use typed_path::path;
 
     #[tokio::test]
     async fn test_panic() {

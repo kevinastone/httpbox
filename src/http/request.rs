@@ -5,36 +5,18 @@ use hyper::Body;
 use std::net::SocketAddr;
 use typed_path::Path;
 
-mod de {
-    use serde::de::{value::Error, Deserialize, IntoDeserializer};
-
-    pub fn deserialize<'de, IS, T>(raw: IS) -> Result<T, Error>
-    where
-        IS: IntoDeserializer<'de, Error>,
-        T: Deserialize<'de>,
-    {
-        let deserializer = raw.into_deserializer();
-        T::deserialize(deserializer)
-    }
-}
-
-pub struct Request<T = ()> {
+pub struct Request {
     req: HTTPRequest<Body>,
     client_addr: Option<SocketAddr>,
-    path: Path<T>,
 }
 
-impl<T> Request<T> {
+impl Request {
     pub fn new(
         req: HTTPRequest<Body>,
         client_addr: Option<SocketAddr>,
         path: Path<T>,
     ) -> Self {
-        Self {
-            req,
-            client_addr,
-            path,
-        }
+        Self { req, client_addr }
     }
 
     pub fn headers(&self) -> &HeaderMap {
@@ -65,8 +47,8 @@ impl<T> Request<T> {
     }
 }
 
-impl<'a, T: serde::de::Deserialize<'a>> Request<T> {
-    pub fn params(&self) -> Option<T> {
-        self.path.parse(self.req.path())
-    }
-}
+// impl<'a, T: serde::de::Deserialize<'a>> Request<T> {
+//     pub fn params(&self) -> Option<T> {
+//         self.path.parse(self.req.path())
+//     }
+// }
