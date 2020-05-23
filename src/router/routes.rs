@@ -1,6 +1,6 @@
 use hyper::{Body, Method, Request as HTTPRequest};
 use std::collections::BTreeMap;
-use uri_path::{Params, Path};
+use uri_path::{Path, PathMatch};
 
 #[derive(Debug)]
 pub struct RouteBuilder {
@@ -73,7 +73,7 @@ impl Route {
         self.example_path.as_ref().map(String::as_ref)
     }
 
-    pub fn matches(&self, req: &HTTPRequest<Body>) -> Option<Params> {
+    pub fn matches(&self, req: &HTTPRequest<Body>) -> Option<PathMatch> {
         if self.method() != req.method() {
             return None;
         }

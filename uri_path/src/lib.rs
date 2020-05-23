@@ -8,20 +8,40 @@ pub use regex;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt;
 use std::iter::FromIterator;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 fn segmented(str: &str) -> impl Iterator<Item = &str> {
     str.split('/').filter(|seg| !seg.is_empty())
 }
 
-pub type Params = HashMap<&'static str, String>;
+pub struct PathMatch(HashMap<&'static str, String>);
+
+impl PathMatch {
+    pub fn new() -> Self {
+        Self(HashMap::new())
+    }
+}
+
+impl Deref for PathMatch {
+    type Target = HashMap<&'static str, String>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for PathMatch {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct Path(pub Vec<PathSegment>);
 
 impl Path {
-    pub fn matches(&self, path: &str) -> Option<Params> {
-        let mut params = HashMap::new();
+    pub fn matches(&self, path: &str) -> Option<PathMatch> {
+        let mut params = PathMatch::new();
         for el in self.iter().zip_longest(segmented(path)) {
             match el {
                 EitherOrBoth::Both(expected, actual) => {

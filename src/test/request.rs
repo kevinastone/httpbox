@@ -9,14 +9,14 @@ use hyper::header::{HeaderName, HeaderValue};
 use hyper::http::{Request as HTTPRequest, Response as HTTPResponse};
 use hyper::Body;
 use hyper::Method;
-use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::net::SocketAddr;
+use uri_path::PathMatch;
 
 pub struct RequestBuilder {
     req: HTTPRequest<Body>,
     client_addr: Option<SocketAddr>,
-    params: HashMap<&'static str, String>,
+    params: PathMatch,
 }
 
 impl RequestBuilder {
@@ -85,6 +85,6 @@ pub fn request() -> RequestBuilder {
     RequestBuilder {
         req: HTTPRequest::default(),
         client_addr: None,
-        params: HashMap::new(),
+        params: PathMatch::new(),
     }
 }
