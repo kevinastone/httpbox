@@ -86,7 +86,7 @@ impl Router {
     }
 
     pub fn service(&self, addr: Option<SocketAddr>) -> RouterService {
-        RouterService::new(&Arc::clone(&self.0), addr)
+        RouterService::new(&self.0, addr)
     }
 }
 

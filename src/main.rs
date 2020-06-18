@@ -113,7 +113,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let server = Server::bind(&addr).serve(make_service_fn(
             move |conn: &AddrStream| {
                 future::ok::<_, Infallible>(
-                    (&router).service(Some(conn.remote_addr())),
+                    router.service(Some(conn.remote_addr())),
                 )
             },
         ));
