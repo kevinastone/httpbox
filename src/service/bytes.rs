@@ -26,8 +26,8 @@ struct BytesParam {
     n: u32,
 }
 
-pub async fn bytes(req: Request<BytesParam>) -> Result {
-    let params = req.params().ok_or_else(bad_request)?;
+pub async fn bytes(params: BytesParam, req: Request) -> Result {
+    // let params = req.params().ok_or_else(bad_request)?;
     let query = req.query::<BytesQueryParams>().map_err(|_| bad_request())?;
 
     let data = iter_bytes(params.n, query.seed).collect::<Vec<u8>>();
@@ -37,8 +37,8 @@ pub async fn bytes(req: Request<BytesParam>) -> Result {
         .body(data)
 }
 
-pub async fn stream_bytes(req: Request<BytesParam>) -> Result {
-    let params = req.params().ok_or_else(bad_request)?;
+pub async fn stream_bytes(params: BytesParam, req: Request) -> Result {
+    // let params = req.params().ok_or_else(bad_request)?;
     let query = req.query::<BytesQueryParams>().map_err(|_| bad_request())?;
 
     let data = iter_bytes(params.n, query.seed);

@@ -6,7 +6,7 @@ pub struct RouteBuilder<T> {
     path: Path<T>,
     method: Method,
     description: Option<&'static str>,
-    example_params: T,
+    // example_params: T,
 }
 
 impl<T> RouteBuilder<T> {
@@ -15,7 +15,7 @@ impl<T> RouteBuilder<T> {
             path: path.into(),
             method: Method::GET,
             description: None,
-            example_params: T::default(),
+            // example_params: T::default(),
         }
     }
 
@@ -34,7 +34,7 @@ impl<T> RouteBuilder<T> {
         name: &'static str,
         value: &'static str,
     ) -> Self {
-        self.example_params.insert(name, value);
+        // self.example_params.insert(name, value);
         self
     }
 
@@ -43,19 +43,20 @@ impl<T> RouteBuilder<T> {
             return None;
         }
 
-        Some(self.path.replace(&self.example_params)?.to_string())
+        None
+        // Some(self.path.replace(&self.example_params)?.to_string())
     }
 }
 
 #[derive(Debug)]
-pub struct Route<T> {
+pub struct Route<T: for<'a> serde::de::Deserialize<'a>> {
     path: Path<T>,
     method: Method,
     description: Option<&'static str>,
     example_path: Option<String>,
 }
 
-impl<T> Route<T> {
+impl<T: for<'a> serde::de::Deserialize<'a>> Route<T> {
     pub fn path(&self) -> &Path<T> {
         &self.path
     }
@@ -81,7 +82,7 @@ impl<T> Route<T> {
     }
 }
 
-impl<T> From<RouteBuilder<T>> for Route<T> {
+impl<T: for<'a> serde::de::Deserialize<'a>> From<RouteBuilder<T>> for Route<T> {
     fn from(route: RouteBuilder<T>) -> Self {
         let example_path = route.example_path();
         Route {

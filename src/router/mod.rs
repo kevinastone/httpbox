@@ -1,7 +1,5 @@
 use crate::handler::Handler;
-use crate::http::{
-    internal_server_error, not_found, Error, Request, Response, Result,
-};
+use crate::http::{internal_server_error, not_found, Error, Request, Response};
 use futures::prelude::*;
 use hyper::server::conn::AddrStream;
 use hyper::{service::Service, Body, Request as HTTPRequest};
@@ -28,25 +26,46 @@ async fn handle_panics(
 //     handler: Box<dyn Handler + Sync>,
 // }
 
-trait Endpoint<T> {
-    fn route(&self, req: Request) -> Option<T>;
-    fn handle(&self, req: Request, params: T) -> Result;
+// type BoxedResultFuture = Pin<Box<dyn Future<Output = crate::http::Result>>>;
+
+type BoxedChainedResultFuture =
+    Pin<Box<dyn Future<Output = Result<crate::http::Result, Request>> + Send>>;
+
+trait Endpoint {
+    fn route(&self, req: Request) -> BoxedChainedResultFuture;
 }
 
-// impl<T> Endpoint<T> {
-//     fn new<H: Handler<T> + Sync + 'static>(
-//         route: Route<T>,
-//         handler: H,
-//     ) -> Self {
-//         Self {
-//             route,
-//             handler: Box::new(handler),
-//         }
-//     }
-// }
+struct HandlerEndpoint<
+    T: Send + for<'a> serde::de::Deserialize<'a> + std::marker::Sync,
+    H: Handler<T>,
+>(Route<T>, H);
+
+impl<
+        T: Send + for<'a> serde::de::Deserialize<'a> + std::marker::Sync + 'static,
+        H: Handler<T> + std::marker::Sync + 'static,
+    > Endpoint for HandlerEndpoint<T, H>
+{
+    fn route(&self, req: Request) -> BoxedChainedResultFuture {
+        let handle = self.1;
+        future::ready(self.0.matches(req.req()).ok_or(req))
+            .and_then(|params| handle.handle(req, params).map(Ok))
+            .boxed()
+
+        // if let Some(params) = self.0.matches(req.req()) {
+        //     async { Ok(self.1.handle(req, params).await) }.boxed()
+        // } else {
+        //     async { Err(req) }.boxed()
+        // }
+
+        // self.0
+        //     .matches(req.req())
+        //     .map(|params| self.1.handle(req, params).boxed())
+        //     .ok_or::<Request>(req)
+    }
+}
 
 pub struct RouterBuilder {
-    endpoints: Vec<dyn Endpoint>,
+    endpoints: Vec<Box<dyn Endpoint + Send + Sync>>,
 }
 
 impl RouterBuilder {
@@ -54,18 +73,25 @@ impl RouterBuilder {
         Self { endpoints: vec![] }
     }
 
-    pub fn install<H: Handler + Sync + 'static, R: Into<Route>>(
+    pub fn install<
+        T: 'static + Send + Sync + for<'a> serde::de::Deserialize<'a>,
+        H: Handler<T> + Sync + 'static,
+        R: Into<Route<T>>,
+    >(
         mut self,
         handler: H,
         route: R,
     ) -> Self {
-        self.endpoints.push(Endpoint::new(route.into(), handler));
+        let route: Route<T> = route.into();
+
+        self.endpoints
+            .push(Box::new(HandlerEndpoint(route, handler)));
         self
     }
 
-    pub fn routes(&self) -> impl Iterator<Item = &Route> {
-        self.endpoints.iter().map(|endpoint| &endpoint.route)
-    }
+    // pub fn routes(&self) -> impl Iterator<Item = &Route> {
+    //     self.endpoints.iter().map(|endpoint| &endpoint.route)
+    // }
 
     pub fn build(self) -> Router {
         Router::new(RouterInternal {
@@ -75,17 +101,18 @@ impl RouterBuilder {
 }
 
 pub struct RouterInternal {
-    endpoints: Vec<Endpoint>,
+    endpoints: Vec<Box<dyn Endpoint + Send + Sync>>,
 }
 
 impl RouterInternal {
-    pub fn route(
-        &self,
-        req: &HTTPRequest<Body>,
-    ) -> Option<(&Endpoint, PathMatch)> {
-        self.endpoints.iter().find_map(|endpoint| {
-            endpoint.route.matches(req).map(|params| (endpoint, params))
-        })
+    pub async fn route(&self, req: Request) -> Option<crate::http::Result> {
+        let endpoints = stream::iter(&self.endpoints);
+        endpoints
+            .fold(Err(req), |result, endpoint| {
+                future::ready(result).or_else(move |req| endpoint.route(req))
+            })
+            .await
+            .ok()
     }
 }
 
@@ -155,12 +182,19 @@ impl Service<HTTPRequest<Body>> for RouterService {
         let router = self.router.clone();
         let client_addr = self.client_addr;
 
-        async move {
-            let (endpoint, matched_path) =
-                router.route(&req).ok_or_else(not_found)?;
+        let client_req = Request::new(req, client_addr);
 
-            let client_req = Request::new(req, client_addr, matched_path);
-            Ok(handle_panics(endpoint.handler.handle(client_req)).await?)
+        async move {
+            router
+                .route(client_req)
+                .await
+                .unwrap_or_else(|| Err(not_found()))
+
+            // handle_panics(router.route(client_req).unwrap_or_else(|| not_found))
+            //     .await?
+            // let result = router.route(req).await;
+            // let (endpoint, matched_path) =
+            //     router.route(&req).ok_or_else(not_found)?;
         }
         .or_else(|e: Error| e.into_result())
         .boxed()

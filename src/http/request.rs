@@ -3,7 +3,6 @@ use hyper::http::Request as HTTPRequest;
 use hyper::http::{HeaderMap, Uri};
 use hyper::Body;
 use std::net::SocketAddr;
-use typed_path::Path;
 
 pub struct Request {
     req: HTTPRequest<Body>,
@@ -14,9 +13,12 @@ impl Request {
     pub fn new(
         req: HTTPRequest<Body>,
         client_addr: Option<SocketAddr>,
-        path: Path<T>,
     ) -> Self {
         Self { req, client_addr }
+    }
+
+    pub fn req(&self) -> &HTTPRequest<Body> {
+        &self.req
     }
 
     pub fn headers(&self) -> &HeaderMap {

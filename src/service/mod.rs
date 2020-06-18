@@ -8,7 +8,7 @@ mod bytes;
 // mod cookies;
 // mod delay;
 // mod headers;
-mod index;
+// mod index;
 // mod ip;
 // mod method;
 // mod redirect;
@@ -156,10 +156,10 @@ pub fn router() -> Router {
                 .add_example_param("n", "256"),
         );
 
-    let index_route: Route = route(path!()).description("This page").into();
+    // let index_route: Route = route(path!()).description("This page").into();
+    // let routes = std::iter::once(&index_route).chain(builder.routes());
 
-    let routes = std::iter::once(&index_route).chain(builder.routes());
-    let index: crate::service::index::Index = routes.into();
-
-    builder.install(index, index_route).build()
+    // let index: crate::service::index::Index = routes.into();
+    // builder.install(index, index_route).build()
+    builder.build()
 }
