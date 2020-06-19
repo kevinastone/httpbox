@@ -13,6 +13,13 @@ mod routes;
 pub use self::routes::{route, Route};
 pub use uri_path::{Path, PathSegment};
 
+async fn handle_panics(
+    fut: impl Future<Output = crate::http::Result>,
+) -> crate::http::Result {
+    let wrapped = std::panic::AssertUnwindSafe(fut).catch_unwind();
+    wrapped.await.map_err(|_| internal_server_error())?
+}
+
 pub struct Endpoint {
     route: Route,
     handler: Box<dyn Handler + Sync>,
@@ -102,13 +109,6 @@ impl RouterService {
             client_addr: addr,
         }
     }
-}
-
-async fn handle_panics(
-    fut: impl Future<Output = crate::http::Result>,
-) -> crate::http::Result {
-    let wrapped = std::panic::AssertUnwindSafe(fut).catch_unwind();
-    wrapped.await.map_err(|_| internal_server_error())?
 }
 
 impl Service<HTTPRequest<Body>> for RouterService {
