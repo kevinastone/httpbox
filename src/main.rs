@@ -2,12 +2,8 @@ use clap::{
     app_from_crate, crate_authors, crate_description, crate_name, crate_version,
 };
 use clap::{value_t, value_t_or_exit, App, Arg, Error, ErrorKind, Shell};
-use futures::prelude::*;
-use hyper::server::conn::AddrStream;
-use hyper::service::make_service_fn;
 use hyper::Server;
 use pretty_env_logger;
-use std::convert::Infallible;
 use std::io;
 use std::net::ToSocketAddrs;
 use tokio::runtime;
@@ -110,17 +106,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     runtime.block_on(async {
         let router = service::router();
 
-        let server = Server::bind(&addr).serve(make_service_fn(
-            move |conn: &AddrStream| {
-                future::ok::<_, Infallible>(
-                    router.service(Some(conn.remote_addr())),
-                )
-            },
-        ));
+        let server = Server::bind(&addr)
+            .serve(router)
+            .with_graceful_shutdown(shutdown_signal());
 
-        let graceful = server.with_graceful_shutdown(shutdown_signal());
-
-        graceful.await?;
+        server.await?;
         Ok(())
     })
 }

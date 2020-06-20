@@ -1,7 +1,9 @@
 use crate::handler::Handler;
 use crate::http::{internal_server_error, not_found, Error, Request, Response};
 use futures::prelude::*;
+use hyper::server::conn::AddrStream;
 use hyper::{service::Service, Body, Request as HTTPRequest};
+use std::convert::Infallible;
 use std::net::SocketAddr;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -94,6 +96,23 @@ impl Router {
 
     pub fn service(&self, addr: Option<SocketAddr>) -> RouterService {
         RouterService::new(&self.0, addr)
+    }
+}
+
+impl Service<&AddrStream> for Router {
+    type Response = RouterService;
+    type Error = Infallible;
+    type Future = futures::future::Ready<Result<Self::Response, Self::Error>>;
+
+    fn poll_ready(
+        &mut self,
+        _cx: &mut Context<'_>,
+    ) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, conn: &AddrStream) -> Self::Future {
+        future::ok(self.service(Some(conn.remote_addr())))
     }
 }
 
