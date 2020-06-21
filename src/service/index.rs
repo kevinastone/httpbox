@@ -20,13 +20,15 @@ impl Handler for Index {
     }
 }
 
-pub fn render_index(routes: Vec<&'_ Route>) -> String {
-    let template = IndexTemplate { routes };
+pub fn render_index<'a>(routes: impl IntoIterator<Item = &'a Route>) -> String {
+    let template = IndexTemplate {
+        routes: routes.into_iter().collect(),
+    };
     template.render().unwrap()
 }
 
-impl<'a> From<Vec<&'a Route>> for Index {
-    fn from(routes: Vec<&'a Route>) -> Self {
+impl<'a, IT: IntoIterator<Item = &'a Route>> From<IT> for Index {
+    fn from(routes: IT) -> Self {
         Index(render_index(routes))
     }
 }

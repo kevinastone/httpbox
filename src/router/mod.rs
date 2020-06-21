@@ -54,11 +54,8 @@ impl RouterBuilder {
         self
     }
 
-    pub fn routes(&self) -> Vec<&Route> {
-        self.endpoints
-            .iter()
-            .map(|endpoint| &endpoint.route)
-            .collect::<Vec<&Route>>()
+    pub fn routes(&self) -> impl Iterator<Item = &Route> {
+        self.endpoints.iter().map(|endpoint| &endpoint.route)
     }
 
     pub fn build(self) -> Router {

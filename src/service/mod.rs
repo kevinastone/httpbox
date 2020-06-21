@@ -156,10 +156,10 @@ pub fn router() -> Router {
                 .add_example_param("n", "256"),
         );
 
-    let mut routes = builder.routes();
     let index_route: Route = route(path!()).description("This page").into();
-    routes.insert(0, &index_route);
 
+    let routes = std::iter::once(&index_route).chain(builder.routes());
     let index: crate::service::index::Index = routes.into();
+
     builder.install(index, index_route).build()
 }
