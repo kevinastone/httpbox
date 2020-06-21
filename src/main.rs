@@ -3,7 +3,6 @@ use clap::{
 };
 use clap::{value_t, value_t_or_exit, App, Arg, Error, ErrorKind, Shell};
 use hyper::Server;
-use pretty_env_logger;
 use std::io;
 use std::net::ToSocketAddrs;
 use tokio::runtime;

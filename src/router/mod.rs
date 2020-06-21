@@ -130,6 +130,7 @@ impl RouterService {
 impl Service<HTTPRequest<Body>> for RouterService {
     type Response = Response;
     type Error = hyper::http::Error;
+    #[allow(clippy::type_complexity)]
     type Future = Pin<
         Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>,
     >;

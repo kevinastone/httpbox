@@ -16,8 +16,8 @@ fn segmented(str: &str) -> impl Iterator<Item = &str> {
 
 pub struct PathMatch(HashMap<&'static str, String>);
 
-impl PathMatch {
-    pub fn new() -> Self {
+impl Default for PathMatch {
+    fn default() -> Self {
         Self(HashMap::new())
     }
 }
@@ -41,7 +41,7 @@ pub struct Path(pub Vec<PathSegment>);
 
 impl Path {
     pub fn matches(&self, path: &str) -> Option<PathMatch> {
-        let mut params = PathMatch::new();
+        let mut params = PathMatch::default();
         for el in self.iter().zip_longest(segmented(path)) {
             match el {
                 EitherOrBoth::Both(expected, actual) => {

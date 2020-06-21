@@ -85,6 +85,6 @@ pub fn request() -> RequestBuilder {
     RequestBuilder {
         req: HTTPRequest::default(),
         client_addr: None,
-        params: PathMatch::new(),
+        params: PathMatch::default(),
     }
 }
