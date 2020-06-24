@@ -35,13 +35,10 @@ trait Endpoint {
     fn route(&self, req: Request) -> BoxedChainedResultFuture;
 }
 
-struct HandlerEndpoint<
-    T: Send + for<'a> serde::de::Deserialize<'a> + std::marker::Sync,
-    H: Handler<T>,
->(Route<T>, H);
+struct HandlerEndpoint<T: Send + std::marker::Sync, H: Handler<T>>(Route<T>, H);
 
 impl<
-        T: Send + for<'a> serde::de::Deserialize<'a> + std::marker::Sync + 'static,
+        T: Send + serde::de::DeserializeOwned + std::marker::Sync + 'static,
         H: Handler<T> + std::marker::Sync + 'static,
     > Endpoint for HandlerEndpoint<T, H>
 {
@@ -74,7 +71,7 @@ impl RouterBuilder {
     }
 
     pub fn install<
-        T: 'static + Send + Sync + for<'a> serde::de::Deserialize<'a>,
+        T: 'static + Send + Sync + serde::de::DeserializeOwned,
         H: Handler<T> + Sync + 'static,
         R: Into<Route<T>>,
     >(

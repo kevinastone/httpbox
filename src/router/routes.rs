@@ -49,14 +49,14 @@ impl<T> RouteBuilder<T> {
 }
 
 #[derive(Debug)]
-pub struct Route<T: for<'a> serde::de::Deserialize<'a>> {
+pub struct Route<T> {
     path: Path<T>,
     method: Method,
     description: Option<&'static str>,
     example_path: Option<String>,
 }
 
-impl<T: for<'a> serde::de::Deserialize<'a>> Route<T> {
+impl<T> Route<T> {
     pub fn path(&self) -> &Path<T> {
         &self.path
     }
@@ -72,7 +72,9 @@ impl<T: for<'a> serde::de::Deserialize<'a>> Route<T> {
     pub fn example_path(&self) -> Option<&str> {
         self.example_path.as_ref().map(String::as_ref)
     }
+}
 
+impl<T: serde::de::DeserializeOwned> Route<T> {
     pub fn matches(&self, req: &HTTPRequest<Body>) -> Option<T> {
         if self.method() != req.method() {
             return None;
@@ -82,7 +84,7 @@ impl<T: for<'a> serde::de::Deserialize<'a>> Route<T> {
     }
 }
 
-impl<T: for<'a> serde::de::Deserialize<'a>> From<RouteBuilder<T>> for Route<T> {
+impl<T> From<RouteBuilder<T>> for Route<T> {
     fn from(route: RouteBuilder<T>) -> Self {
         let example_path = route.example_path();
         Route {
