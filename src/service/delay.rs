@@ -3,22 +3,21 @@ use futures_timer::Delay;
 use std::cmp::min;
 use std::time::Duration;
 
-#[cfg(test)]
-fn sleep_duration(_: u64) -> u64 {
-    0
-}
-
-#[cfg(not(test))]
-#[inline]
-fn sleep_duration(seconds: u64) -> u64 {
-    seconds
+macro_rules! substitute_in_test {
+    ($value:expr => $substitute:expr) => {{
+        if cfg!(test) {
+            $substitute
+        } else {
+            $value
+        }
+    }};
 }
 
 pub async fn delay(req: Request) -> Result {
     let n = req.param::<u64>("n").ok_or_else(bad_request)?;
     let delay = min(n, 10);
 
-    let duration = Duration::from_secs(sleep_duration(delay));
+    let duration = Duration::from_secs(substitute_in_test!(delay => 0));
     let _ = Delay::new(duration).await;
     ok(delay.to_string())
 }
