@@ -10,7 +10,6 @@ use tokio::runtime;
 mod handler;
 mod headers;
 mod http;
-mod option;
 mod random;
 mod router;
 mod service;
