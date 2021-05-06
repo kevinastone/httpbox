@@ -94,10 +94,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             panic!("Invalid listening address: {}:{}", host, port)
         });
 
-    let mut runtime = runtime::Builder::new()
-        .threaded_scheduler()
-        .enable_all()
-        .core_threads(threads)
+    let runtime = runtime::Builder::new_multi_thread()
+        .worker_threads(threads)
         .build()?;
 
     println!("Listening on {} with {} threads", addr, threads);
