@@ -15,7 +15,7 @@ anyhow = "^1.0.27"
 futures = "0.3.1"
 futures-timer = "^0.3"
 headers = "^0.3.2"
-hyper = "0.13"
+hyper = { version = "0.14", features = ["full"] }
 itertools = "^0.8.0"
 lazy_static = "^1.2.0"
 mime = "^0.3.13"
