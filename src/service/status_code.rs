@@ -28,7 +28,7 @@ mod test {
     #[tokio::test]
     async fn test_bad_status_code() {
         let res = request()
-            .param("code", "999")
+            .param("code", "1000")
             .handle(status_code)
             .await
             .unwrap();
