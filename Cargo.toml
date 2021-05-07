@@ -7,25 +7,25 @@ authors = ["Kevin Stone <kevinastone@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-askama = { version="^0.8" }
+askama = "^0.10"
 async-trait = "^0.1"
 clap = "^2.33.0"
-cookie = "^0.12.0"
+cookie = "^0.15.0"
 anyhow = "^1.0.27"
 futures = "^0.3.1"
-futures-timer = "^0.3"
+futures-timer = "^3.0"
 headers = "^0.3.2"
 hyper = { version = "0.14", features = ["full"] }
-itertools = "^0.8.0"
-lazy_static = "^1.2.0"
+itertools = "^0.10.0"
+lazy_static = "^1.4.0"
 mime = "^0.3.13"
-num_cpus = "^1.10.1"
-pretty_env_logger = "^0.3"
-rand = { version="^0.7", features = ["small_rng"]}
+num_cpus = "^1.13.0"
+pretty_env_logger = "^0.4"
+rand = { version="^0.8", features = ["small_rng"]}
 serde = "^1.0.98"
 serde_derive = "^1.0.98"
-serde_urlencoded = "0.6"
-url = "^2.1.0"
+serde_urlencoded = "^0.7"
+url = "^2.2.1"
 tokio = { version = "1.5.0", features = ["full"] }
 uri_path = { path = "uri_path" }
 

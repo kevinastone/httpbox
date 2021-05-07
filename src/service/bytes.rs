@@ -65,7 +65,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        assert_eq!(res.read_body().await.unwrap(), [236, 97, 38, 144])
+        assert_eq!(res.read_body().await.unwrap(), [214, 212, 32, 32])
     }
 
     #[tokio::test]
@@ -90,7 +90,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        assert_eq!(res.read_body().await.unwrap(), [236, 97, 38, 144])
+        assert_eq!(res.read_body().await.unwrap(), [214, 212, 32, 32])
     }
 
     #[tokio::test]
@@ -115,7 +115,7 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        assert_eq!(res.read_body().await.unwrap(), [236, 97, 38, 144])
+        assert_eq!(res.read_body().await.unwrap(), [214, 212, 32, 32])
     }
 
     #[tokio::test]

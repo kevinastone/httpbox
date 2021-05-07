@@ -30,9 +30,9 @@ mod tests {
     #[test]
     fn rng_seed_consistent() {
         let mut rng = rng(Some(1234));
-        assert_eq!(rng.next_u32(), 2468986604u32);
-        assert_eq!(rng.next_u32(), 1283941473u32);
-        assert_eq!(rng.next_u32(), 3396522534u32);
-        assert_eq!(rng.next_u32(), 1785331600u32);
+        assert_eq!(rng.next_u32(), 3523216598u32);
+        assert_eq!(rng.next_u32(), 1761608916u32);
+        assert_eq!(rng.next_u32(), 19744u32);
+        assert_eq!(rng.next_u32(), 2636570400u32);
     }
 }
