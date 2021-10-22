@@ -96,6 +96,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let runtime = runtime::Builder::new_multi_thread()
         .worker_threads(threads)
+        .enable_io()
         .build()?;
 
     println!("Listening on {} with {} threads", addr, threads);
