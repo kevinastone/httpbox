@@ -3,6 +3,7 @@ use clap_complete::{generate, Generator, Shell};
 use hyper::Server;
 use std::io;
 use std::net::ToSocketAddrs;
+use std::num::NonZeroUsize;
 use tokio::runtime;
 
 mod handler;
@@ -37,7 +38,7 @@ struct Cli {
     port: u16,
 
     #[clap(long, env, help = "Number of threads to process requests")]
-    threads: Option<usize>,
+    threads: Option<NonZeroUsize>,
 
     #[clap(long)]
     completions: Option<Shell>,
@@ -63,7 +64,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
 
-    let threads = args.threads.unwrap_or_else(|| num_cpus::get());
+    let threads = args
+        .threads
+        .map(NonZeroUsize::get)
+        .unwrap_or_else(|| num_cpus::get());
     let addr = (args.host.clone(), args.port)
         .to_socket_addrs()
         .ok()
