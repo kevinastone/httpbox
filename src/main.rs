@@ -9,6 +9,7 @@ use tokio::runtime;
 mod handler;
 mod headers;
 mod http;
+mod num_cpus;
 mod random;
 mod router;
 mod service;
@@ -64,10 +65,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
 
-    let threads = args
-        .threads
-        .map(NonZeroUsize::get)
-        .unwrap_or_else(|| num_cpus::get());
+    let threads = args.threads.unwrap_or_else(num_cpus::num_cpus);
     let addr = (args.host.clone(), args.port)
         .to_socket_addrs()
         .ok()
@@ -81,7 +79,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
 
     let runtime = runtime::Builder::new_multi_thread()
-        .worker_threads(threads)
+        .worker_threads(threads.get())
         .enable_io()
         .build()?;
 
