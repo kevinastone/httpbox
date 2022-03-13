@@ -5,6 +5,7 @@ use std::io;
 use std::net::ToSocketAddrs;
 use std::num::NonZeroUsize;
 use tokio::runtime;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod handler;
 mod headers;
@@ -55,7 +56,13 @@ async fn shutdown_signal() {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    pretty_env_logger::init();
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::new(
+            std::env::var("RUST_LOG")
+                .unwrap_or_else(|_| "httpbox=debug,tower_http=debug".into()),
+        ))
+        .with(tracing_subscriber::fmt::layer())
+        .init();
 
     let args = Cli::parse();
 
@@ -83,7 +90,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .enable_io()
         .build()?;
 
-    println!("Listening on {} with {} threads", addr, threads);
+    tracing::info!("Listening on {} with {} threads", addr, threads);
     runtime.block_on(async {
         let router = service::router();
 

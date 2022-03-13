@@ -8,6 +8,8 @@ use std::net::SocketAddr;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
+use tower::ServiceBuilder;
+use tower_http::trace::TraceLayer;
 use uri_path::PathMatch;
 
 mod routes;
@@ -97,7 +99,12 @@ impl Router {
 }
 
 impl Service<&AddrStream> for Router {
-    type Response = RouterService;
+    type Response = tower_http::trace::Trace<
+        RouterService,
+        tower_http::classify::SharedClassifier<
+            tower_http::classify::ServerErrorsAsFailures,
+        >,
+    >;
     type Error = Infallible;
     type Future = futures::future::Ready<Result<Self::Response, Self::Error>>;
 
@@ -109,7 +116,11 @@ impl Service<&AddrStream> for Router {
     }
 
     fn call(&mut self, conn: &AddrStream) -> Self::Future {
-        future::ok(self.service(Some(conn.remote_addr())))
+        future::ok(
+            ServiceBuilder::new()
+                .layer(TraceLayer::new_for_http())
+                .service(self.service(Some(conn.remote_addr()))),
+        )
     }
 }
 
