@@ -1,6 +1,5 @@
 use crate::headers::{Header, HeaderMapExt};
 use hyper::http::Request as HTTPRequest;
-use hyper::http::{HeaderMap, Uri};
 use hyper::Body;
 use std::net::SocketAddr;
 use uri_path::PathMatch;
@@ -20,21 +19,12 @@ mod de {
 
 pub struct Request {
     req: HTTPRequest<Body>,
-    client_addr: Option<SocketAddr>,
     params: PathMatch,
 }
 
 impl Request {
-    pub fn new(
-        req: HTTPRequest<Body>,
-        client_addr: Option<SocketAddr>,
-        params: PathMatch,
-    ) -> Self {
-        Self {
-            req,
-            client_addr,
-            params,
-        }
+    pub fn new(req: HTTPRequest<Body>, params: PathMatch) -> Self {
+        Self { req, params }
     }
 
     pub fn param<T: std::str::FromStr>(&self, key: &'static str) -> Option<T> {
@@ -44,14 +34,6 @@ impl Request {
 
     pub fn params<'a, T: serde::de::Deserialize<'a>>(&self) -> Option<T> {
         de::deserialize(self.params.clone()).ok()
-    }
-
-    pub fn headers(&self) -> &HeaderMap {
-        self.req.headers()
-    }
-
-    pub fn uri(&self) -> &Uri {
-        self.req.uri()
     }
 
     pub fn body(&mut self) -> Body {
@@ -69,7 +51,15 @@ impl Request {
         serde_urlencoded::from_str(query_string)
     }
 
-    pub fn client_addr(&self) -> Option<SocketAddr> {
-        self.client_addr
+    pub fn client_addr(&self) -> Option<&SocketAddr> {
+        self.req.extensions().get::<SocketAddr>()
+    }
+}
+
+impl core::ops::Deref for Request {
+    type Target = HTTPRequest<Body>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.req
     }
 }

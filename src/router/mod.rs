@@ -2,7 +2,6 @@ use crate::handler::Handler;
 use crate::http::{internal_server_error, not_found, Error, Request, Response};
 use futures::prelude::*;
 use hyper::{service::Service, Body, Request as HTTPRequest};
-use std::net::SocketAddr;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
@@ -106,15 +105,14 @@ impl Service<HTTPRequest<Body>> for Router {
         Poll::Ready(Ok(()))
     }
 
-    fn call(&mut self, mut req: HTTPRequest<Body>) -> Self::Future {
+    fn call(&mut self, req: HTTPRequest<Body>) -> Self::Future {
         let router = self.0.clone();
-        let client_addr = req.extensions_mut().remove::<SocketAddr>();
 
         async move {
             let (endpoint, matched_path) =
                 router.route(&req).ok_or_else(not_found)?;
 
-            let client_req = Request::new(req, client_addr, matched_path);
+            let client_req = Request::new(req, matched_path);
             handle_panics(endpoint.handler.handle(client_req)).await
         }
         .or_else(|e: Error| e.into_result())

@@ -103,7 +103,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .service(service::router());
 
         let factory = tower::service_fn(|conn: &AddrStream| {
-            let addr = conn.remote_addr().clone();
+            let addr = conn.remote_addr();
             future::ok::<_, std::convert::Infallible>(
                 service.clone().map_request(
                     move |mut req: HTTPRequest<Body>| {
