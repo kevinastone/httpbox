@@ -5,7 +5,7 @@ use std::str;
 
 fn parse_url_encoded_body(raw_body: &[u8]) -> anyhow::Result<String> {
     Ok(
-        serde_urlencoded::from_bytes::<Vec<(String, String)>>(&raw_body[..])?
+        serde_urlencoded::from_bytes::<Vec<(String, String)>>(raw_body)?
             .iter()
             .format_with("\n", |(key, value), f| {
                 f(&format_args!("{} = {}", key, value))
@@ -35,8 +35,8 @@ fn content_type_decoder(req: &Request) -> ContentTypeDecoder {
 }
 
 fn parse_body(req: &Request, chunk: &Bytes) -> anyhow::Result<String> {
-    match content_type_decoder(&req) {
-        ContentTypeDecoder::UrlEncoded => Ok(parse_url_encoded_body(&chunk)?),
+    match content_type_decoder(req) {
+        ContentTypeDecoder::UrlEncoded => Ok(parse_url_encoded_body(chunk)?),
         ContentTypeDecoder::Raw => Ok(str::from_utf8(&chunk[..])?.to_string()),
     }
 }

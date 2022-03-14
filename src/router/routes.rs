@@ -39,7 +39,7 @@ impl RouteBuilder {
         self
     }
 
-    fn example_path(self: &Self) -> Option<String> {
+    fn example_path(&self) -> Option<String> {
         if self.method != Method::GET {
             return None;
         }

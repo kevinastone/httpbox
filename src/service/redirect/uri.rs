@@ -26,7 +26,7 @@ fn host_from_headers(req: &Request) -> anyhow::Result<Url> {
         .ok_or_else(|| anyhow::anyhow!("no host header found"))?
         .to_string();
 
-    Ok(host_to_url(&host)?)
+    host_to_url(&host)
 }
 
 fn absolute_uri(req: &Request, uri: &Uri) -> anyhow::Result<Uri> {
@@ -35,7 +35,7 @@ fn absolute_uri(req: &Request, uri: &Uri) -> anyhow::Result<Uri> {
     } else {
         let base = match BASE_URL.clone() {
             Some(url) => url,
-            None => host_from_headers(&req)?,
+            None => host_from_headers(req)?,
         };
 
         Ok(base.join(&uri.to_string())?.to_string().parse()?)
@@ -43,7 +43,7 @@ fn absolute_uri(req: &Request, uri: &Uri) -> anyhow::Result<Uri> {
 }
 
 pub fn absolute_url(req: &Request, uri: &Uri) -> anyhow::Result<Url> {
-    Ok(absolute_uri(&req, uri)?.to_string().parse()?)
+    Ok(absolute_uri(req, uri)?.to_string().parse()?)
 }
 
 #[cfg(test)]

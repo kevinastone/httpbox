@@ -151,7 +151,7 @@ impl Service<HTTPRequest<Body>> for RouterService {
                 router.route(&req).ok_or_else(not_found)?;
 
             let client_req = Request::new(req, client_addr, matched_path);
-            Ok(handle_panics(endpoint.handler.handle(client_req)).await?)
+            handle_panics(endpoint.handler.handle(client_req)).await
         }
         .or_else(|e: Error| e.into_result())
         .boxed()
