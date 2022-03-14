@@ -1,15 +1,11 @@
 use crate::handler::Handler;
 use crate::http::{internal_server_error, not_found, Error, Request, Response};
 use futures::prelude::*;
-use hyper::server::conn::AddrStream;
 use hyper::{service::Service, Body, Request as HTTPRequest};
-use std::convert::Infallible;
 use std::net::SocketAddr;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
-use tower::ServiceBuilder;
-use tower_http::trace::TraceLayer;
 use uri_path::PathMatch;
 
 mod routes;
@@ -82,6 +78,7 @@ impl RouterInternal {
     }
 }
 
+#[derive(Clone)]
 pub struct Router(Arc<RouterInternal>);
 
 impl Router {
@@ -92,53 +89,9 @@ impl Router {
     pub fn builder() -> RouterBuilder {
         RouterBuilder::new()
     }
-
-    pub fn service(&self, addr: Option<SocketAddr>) -> RouterService {
-        RouterService::new(&self.0, addr)
-    }
 }
 
-impl Service<&AddrStream> for Router {
-    type Response = tower_http::trace::Trace<
-        RouterService,
-        tower_http::classify::SharedClassifier<
-            tower_http::classify::ServerErrorsAsFailures,
-        >,
-    >;
-    type Error = Infallible;
-    type Future = futures::future::Ready<Result<Self::Response, Self::Error>>;
-
-    fn poll_ready(
-        &mut self,
-        _cx: &mut Context<'_>,
-    ) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
-    }
-
-    fn call(&mut self, conn: &AddrStream) -> Self::Future {
-        future::ok(
-            ServiceBuilder::new()
-                .layer(TraceLayer::new_for_http())
-                .service(self.service(Some(conn.remote_addr()))),
-        )
-    }
-}
-
-pub struct RouterService {
-    router: Arc<RouterInternal>,
-    client_addr: Option<SocketAddr>,
-}
-
-impl RouterService {
-    fn new(router: &Arc<RouterInternal>, addr: Option<SocketAddr>) -> Self {
-        RouterService {
-            router: Arc::clone(router),
-            client_addr: addr,
-        }
-    }
-}
-
-impl Service<HTTPRequest<Body>> for RouterService {
+impl Service<HTTPRequest<Body>> for Router {
     type Response = Response;
     type Error = hyper::http::Error;
     #[allow(clippy::type_complexity)]
@@ -153,9 +106,9 @@ impl Service<HTTPRequest<Body>> for RouterService {
         Poll::Ready(Ok(()))
     }
 
-    fn call(&mut self, req: HTTPRequest<Body>) -> Self::Future {
-        let router = self.router.clone();
-        let client_addr = self.client_addr;
+    fn call(&mut self, mut req: HTTPRequest<Body>) -> Self::Future {
+        let router = self.0.clone();
+        let client_addr = req.extensions_mut().remove::<SocketAddr>();
 
         async move {
             let (endpoint, matched_path) =
@@ -186,7 +139,7 @@ mod test {
         };
 
         let router = Router::builder().install(handler, route(path!())).build();
-        let mut service = router.service(None);
+        let mut service = router;
 
         let res = service.call(HTTPRequest::default()).await.unwrap();
         assert_eq!(res.status(), StatusCode::INTERNAL_SERVER_ERROR);

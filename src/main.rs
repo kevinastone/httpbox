@@ -1,10 +1,16 @@
 use clap::{App, IntoApp, Parser};
 use clap_complete::{generate, Generator, Shell};
+use futures::prelude::*;
+use hyper::server::conn::AddrStream;
 use hyper::Server;
+use hyper::{Body, Request as HTTPRequest};
 use std::io;
 use std::net::ToSocketAddrs;
 use std::num::NonZeroUsize;
 use tokio::runtime;
+use tower::ServiceBuilder;
+use tower::ServiceExt;
+use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod handler;
@@ -92,10 +98,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     tracing::info!("Listening on {} with {} threads", addr, threads);
     runtime.block_on(async {
-        let router = service::router();
+        let service = ServiceBuilder::new()
+            .layer(TraceLayer::new_for_http())
+            .service(service::router());
+
+        let factory = tower::service_fn(|conn: &AddrStream| {
+            let addr = conn.remote_addr().clone();
+            future::ok::<_, std::convert::Infallible>(
+                service.clone().map_request(
+                    move |mut req: HTTPRequest<Body>| {
+                        req.extensions_mut().insert(addr);
+                        req
+                    },
+                ),
+            )
+        });
 
         let server = Server::bind(&addr)
-            .serve(router)
+            .serve(factory)
             .with_graceful_shutdown(shutdown_signal());
 
         server.await?;
