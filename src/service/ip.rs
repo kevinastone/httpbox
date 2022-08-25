@@ -21,7 +21,7 @@ mod test {
     #[tokio::test]
     async fn test_ip_x_forwarded_for() {
         let res = request()
-            .typed_header(XForwardedFor("1.2.3.4".parse().unwrap()))
+            .typed_header(XForwardedFor::client("1.2.3.4".parse().unwrap()))
             .handle(ip)
             .await
             .unwrap();

@@ -9,11 +9,25 @@ lazy_static! {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct XForwardedFor(pub IpAddr);
+pub struct XForwardedFor {
+    pub client: IpAddr,
+    pub proxies: Vec<IpAddr>,
+}
 
 impl XForwardedFor {
+    pub fn client(client: IpAddr) -> Self {
+        Self {
+            client,
+            proxies: vec![],
+        }
+    }
+
+    pub fn client_with_proxies(client: IpAddr, proxies: Vec<IpAddr>) -> Self {
+        Self { client, proxies }
+    }
+
     pub fn ip_addr(&self) -> IpAddr {
-        self.0
+        self.client
     }
 }
 
@@ -27,11 +41,22 @@ impl Header for XForwardedFor {
         Self: Sized,
         I: Iterator<Item = &'i HeaderValue>,
     {
-        values
-            .next()
-            .and_then(|v| v.to_str().ok()?.parse().ok())
-            .map(XForwardedFor)
-            .ok_or_else(Error::invalid)
+        let mut steps = values.flat_map(|value| {
+            value.to_str().into_iter().flat_map(|string| {
+                string
+                    .split(',')
+                    .filter_map(|x| match x.trim() {
+                        "" => None,
+                        y => Some(y),
+                    })
+                    .map(|x| x.parse().map_err(|_| Error::invalid()))
+            })
+        });
+
+        let client = steps.next().ok_or_else(Error::invalid)??;
+        let proxies = steps.collect::<Result<_, _>>()?;
+
+        Ok(XForwardedFor { client, proxies })
     }
 
     fn encode<E: Extend<HeaderValue>>(&self, values: &mut E) {
@@ -41,7 +66,13 @@ impl Header for XForwardedFor {
 
 impl From<&XForwardedFor> for HeaderValue {
     fn from(x_forwarded_for: &XForwardedFor) -> Self {
-        x_forwarded_for.0.to_string().parse().unwrap()
+        let mut output = x_forwarded_for.client.to_string();
+        for proxy in &x_forwarded_for.proxies {
+            output += ", ";
+            output += &proxy.to_string();
+        }
+
+        output.parse().unwrap()
     }
 }
 
@@ -57,15 +88,42 @@ mod test {
     fn test_encode_ipv4() {
         let ip_addr = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
         assert_eq!(
-            encode(XForwardedFor(ip_addr)).to_str().unwrap(),
+            encode(XForwardedFor::client(ip_addr)).to_str().unwrap(),
             "127.0.0.1"
+        )
+    }
+
+    #[test]
+    fn test_encode_ipv4_with_proxies() {
+        let ip_addr = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
+        let proxy = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 2));
+        assert_eq!(
+            encode(XForwardedFor::client_with_proxies(ip_addr, vec![proxy]))
+                .to_str()
+                .unwrap(),
+            "127.0.0.1, 127.0.0.2"
         )
     }
 
     #[test]
     fn test_encode_ipv6() {
         let ip_addr = IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1));
-        assert_eq!(encode(XForwardedFor(ip_addr)).to_str().unwrap(), "::1")
+        assert_eq!(
+            encode(XForwardedFor::client(ip_addr)).to_str().unwrap(),
+            "::1"
+        )
+    }
+
+    #[test]
+    fn test_encode_ipv6_with_proxies() {
+        let ip_addr = IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1));
+        let proxy = IpAddr::V6(Ipv6Addr::new(10, 0, 0, 0, 0, 0, 0, 1));
+        assert_eq!(
+            encode(XForwardedFor::client_with_proxies(ip_addr, vec![proxy]))
+                .to_str()
+                .unwrap(),
+            "::1, a::1"
+        )
     }
 
     #[test]
@@ -75,7 +133,22 @@ mod test {
         headers.insert(XForwardedFor::name(), "127.0.0.1".parse().unwrap());
 
         let location = headers.typed_get::<XForwardedFor>().unwrap();
-        assert_eq!(location, XForwardedFor(ip_addr))
+        assert_eq!(location, XForwardedFor::client(ip_addr))
+    }
+
+    #[test]
+    fn test_decode_ipv4_with_proxies() {
+        let ip_addr = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
+        let proxy = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 2));
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            XForwardedFor::name(),
+            "127.0.0.1, 127.0.0.2".parse().unwrap(),
+        );
+
+        let location = headers.typed_get::<XForwardedFor>().unwrap();
+        assert_eq!(location.client, ip_addr);
+        assert_eq!(location.proxies.first(), Some(&proxy));
     }
 
     #[test]
@@ -85,6 +158,18 @@ mod test {
         headers.insert(XForwardedFor::name(), "::1".parse().unwrap());
 
         let location = headers.typed_get::<XForwardedFor>().unwrap();
-        assert_eq!(location, XForwardedFor(ip_addr))
+        assert_eq!(location, XForwardedFor::client(ip_addr))
+    }
+
+    #[test]
+    fn test_decode_ipv6_with_proxies() {
+        let ip_addr = IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1));
+        let proxy = IpAddr::V6(Ipv6Addr::new(10, 0, 0, 0, 0, 0, 0, 1));
+        let mut headers = HeaderMap::new();
+        headers.insert(XForwardedFor::name(), "::1, a::1".parse().unwrap());
+
+        let location = headers.typed_get::<XForwardedFor>().unwrap();
+        assert_eq!(location.client, ip_addr);
+        assert_eq!(location.proxies.first(), Some(&proxy));
     }
 }
