@@ -3,10 +3,12 @@ FROM rust as build
 WORKDIR /app
 
 COPY Cargo.lock Cargo.toml ./
+COPY uri_path/Cargo.toml ./uri_path/Cargo.toml
+COPY uri_path/src ./uri_path/src
 RUN mkdir .cargo
 RUN cargo vendor > .cargo/config
 
-COPY Readme.md src ./
+COPY Readme.md ./
 COPY src ./src
 COPY templates ./templates
 RUN cargo build --release
