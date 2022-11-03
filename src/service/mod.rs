@@ -114,7 +114,7 @@ pub fn router() -> Router {
         )
         .install(
             crate::service::cookies::set_cookies,
-            route(path!("cookies/set"))
+            route(path!("cookies" / "set"))
                 .description("Sets one or more simple cookies")
                 .add_example_param("key", "val"),
         )
