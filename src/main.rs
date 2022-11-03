@@ -1,4 +1,4 @@
-use clap::{App, IntoApp, Parser};
+use clap::{Command, CommandFactory, Parser};
 use clap_complete::{generate, Generator, Shell};
 use futures::prelude::*;
 use hyper::server::conn::AddrStream;
@@ -25,9 +25,9 @@ mod service;
 mod test;
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None)]
 struct Cli {
-    #[clap(
+    #[arg(
         short,
         long,
         env,
@@ -36,7 +36,7 @@ struct Cli {
     )]
     host: String,
 
-    #[clap(
+    #[arg(
         short,
         long,
         env,
@@ -45,14 +45,14 @@ struct Cli {
     )]
     port: u16,
 
-    #[clap(long, env, help = "Number of threads to process requests")]
+    #[arg(long, env, help = "Number of threads to process requests")]
     threads: Option<NonZeroUsize>,
 
-    #[clap(long)]
+    #[arg(long)]
     completions: Option<Shell>,
 }
 
-fn print_completions<G: Generator>(gen: G, app: &mut App) {
+fn print_completions<G: Generator>(gen: G, app: &mut Command) {
     generate(gen, app, app.get_name().to_string(), &mut io::stdout());
 }
 
@@ -73,7 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::parse();
 
     if let Some(generator) = args.completions {
-        let mut app = Cli::into_app();
+        let mut app = Cli::command();
         print_completions(generator, &mut app);
         return Ok(());
     }
