@@ -25,7 +25,7 @@ mod service;
 mod test;
 
 #[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None, disable_help_flag = true)]
 struct Cli {
     #[arg(
         short,
@@ -50,6 +50,9 @@ struct Cli {
 
     #[arg(long)]
     completions: Option<Shell>,
+
+    #[arg(long, action = clap::ArgAction::Help, help = "Print help information")]
+    help: (),
 }
 
 fn print_completions<G: Generator>(gen: G, app: &mut Command) {
