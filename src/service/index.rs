@@ -1,5 +1,5 @@
 use crate::handler::Handler;
-use crate::http::{html, Request, Result};
+use crate::http::{html, Bytes, Request, Result};
 use crate::router::Route;
 use askama::Template;
 use async_trait::async_trait;
@@ -11,7 +11,7 @@ struct IndexTemplate<'a> {
 }
 
 #[derive(Debug, Clone)]
-pub struct Index(String);
+pub struct Index(Bytes);
 
 #[async_trait]
 impl Handler for Index {
@@ -29,6 +29,6 @@ pub fn render_index<'a>(routes: impl IntoIterator<Item = &'a Route>) -> String {
 
 impl<'a, IT: IntoIterator<Item = &'a Route>> From<IT> for Index {
     fn from(routes: IT) -> Self {
-        Index(render_index(routes))
+        Index(render_index(routes).into())
     }
 }
