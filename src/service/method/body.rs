@@ -1,5 +1,6 @@
 use crate::headers::ContentType;
 use crate::http::{bad_request, ok, Bytes, Request, Result};
+use http_body_util::BodyExt;
 use itertools::Itertools;
 use std::str;
 
@@ -42,9 +43,12 @@ fn parse_body(req: &Request, chunk: &Bytes) -> anyhow::Result<String> {
 }
 
 pub async fn body(mut req: Request) -> Result {
-    let body = hyper::body::to_bytes(req.body())
+    let body = req
+        .body_mut()
+        .collect()
         .await
-        .map_err(|_| bad_request())?;
+        .map_err(|_| bad_request())?
+        .to_bytes();
     let content = parse_body(&req, &body).map_err(|_| bad_request())?;
     ok(content)
 }

@@ -1,13 +1,16 @@
 use clap::{Command, CommandFactory, Parser};
 use clap_complete::{generate, Generator, Shell};
 use futures::prelude::*;
-use hyper::server::conn::AddrStream;
-use hyper::Server;
-use hyper::{Body, Request as HTTPRequest};
+use hyper::server::conn::http1;
+use hyper::Request as HTTPRequest;
+use hyper_util::rt::TokioIo;
 use std::io;
 use std::net::ToSocketAddrs;
 use std::num::NonZeroUsize;
-use tokio::runtime;
+use tokio::net::TcpListener;
+use tokio::{runtime, signal, sync::watch};
+use tokio_stream::wrappers::TcpListenerStream;
+use tower::Service;
 use tower::ServiceBuilder;
 use tower::ServiceExt;
 use tower_http::trace::TraceLayer;
@@ -61,7 +64,27 @@ fn print_completions<G: Generator>(gen: G, app: &mut Command) {
 
 async fn shutdown_signal() {
     // Wait for the CTRL+C signal
-    tokio::signal::ctrl_c().await.unwrap()
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -105,23 +128,76 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .layer(TraceLayer::new_for_http())
             .service(service::router());
 
-        let factory = tower::service_fn(|conn: &AddrStream| {
-            let addr = conn.remote_addr();
-            future::ok::<_, std::convert::Infallible>(
-                service.clone().map_request(
-                    move |mut req: HTTPRequest<Body>| {
-                        req.extensions_mut().insert(addr);
-                        req
+        let listener = TcpListener::bind(addr).await.unwrap();
+        let (close_tx, close_rx) = watch::channel(());
+
+        let conn_stream =
+            TcpListenerStream::new(listener).take_until(shutdown_signal());
+
+        let conn_stream = conn_stream.and_then(|stream| async {
+            let addr = stream.peer_addr()?;
+            let stream = TokioIo::new(stream);
+
+            // Inject the client addr into the request
+            let tower_service = service.clone().map_request(
+                move |mut req: HTTPRequest<_>| {
+                    req.extensions_mut().insert(addr);
+                    req
+                },
+            );
+
+            let close_rx = close_rx.clone();
+
+            runtime.spawn(async move {
+                let hyper_service = hyper::service::service_fn(
+                    move |request: hyper::Request<_>| {
+                        tower_service.clone().call(request)
                     },
-                ),
-            )
+                );
+
+                let conn = http1::Builder::new()
+                    .serve_connection(stream, hyper_service).with_upgrades();
+
+                let mut conn = std::pin::pin!(conn);
+
+                loop {
+                    tokio::select! {
+                        // Poll the connection. This completes when the client has closed the
+                        // connection, graceful shutdown has completed, or we encounter a TCP error.
+                        result = conn.as_mut() => {
+                            if let Err(err) = result {
+                                tracing::error!("Error serving connection: {err:#}");
+                            }
+                            break;
+                        }
+                        // Start graceful shutdown when we receive a shutdown signal.
+                        //
+                        // We use a loop to continue polling the connection to allow requests to finish
+                        _ = shutdown_signal() => {
+                            tracing::debug!("signal received, starting graceful shutdown");
+                            conn.as_mut().graceful_shutdown();
+                        }
+                    }
+                }
+
+                // Drop the watch receiver to signal to `main` that this task is done.
+                drop(close_rx);
+            });
+
+            Ok(())
         });
 
-        let server = Server::bind(&addr)
-            .serve(factory)
-            .with_graceful_shutdown(shutdown_signal());
+        // Run the listener stream to completion
+        let _ = conn_stream.map(Ok).forward(futures::sink::drain()).await;
 
-        server.await?;
-        Ok(())
-    })
+        drop(close_rx);
+
+        // Wait for all tasks to complete.
+        tracing::debug!(
+            "waiting for {} tasks to finish",
+            close_tx.receiver_count()
+        );
+        close_tx.closed().await;
+    });
+    Ok(())
 }

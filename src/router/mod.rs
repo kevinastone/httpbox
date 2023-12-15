@@ -1,16 +1,18 @@
 use crate::handler::Handler;
-use crate::http::{internal_server_error, not_found, Error, Request, Response};
+use crate::http::{
+    internal_server_error, not_found, Body, Error, Request, Response,
+};
 use futures::prelude::*;
-use hyper::{service::Service, Body, Request as HTTPRequest};
+use hyper::Request as HTTPRequest;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
+use tower::Service;
 use uri_path::PathMatch;
 
 mod routes;
 
 pub use self::routes::{route, Route};
-pub use uri_path::{Path, PathSegment};
 
 async fn handle_panics(
     fut: impl Future<Output = crate::http::Result>,
@@ -67,9 +69,9 @@ pub struct RouterInternal {
 }
 
 impl RouterInternal {
-    pub fn route(
+    pub fn route<B>(
         &self,
-        req: &HTTPRequest<Body>,
+        req: &HTTPRequest<B>,
     ) -> Option<(&Endpoint, PathMatch)> {
         self.endpoints.iter().find_map(|endpoint| {
             endpoint.route.matches(req).map(|params| (endpoint, params))
@@ -90,7 +92,9 @@ impl Router {
     }
 }
 
-impl Service<HTTPRequest<Body>> for Router {
+impl<B: Into<Body> + std::marker::Send + 'static> Service<HTTPRequest<B>>
+    for Router
+{
     type Response = Response;
     type Error = hyper::http::Error;
     #[allow(clippy::type_complexity)]
@@ -105,14 +109,14 @@ impl Service<HTTPRequest<Body>> for Router {
         Poll::Ready(Ok(()))
     }
 
-    fn call(&mut self, req: HTTPRequest<Body>) -> Self::Future {
+    fn call(&mut self, req: HTTPRequest<B>) -> Self::Future {
         let router = self.0.clone();
 
         async move {
             let (endpoint, matched_path) =
                 router.route(&req).ok_or_else(not_found)?;
 
-            let client_req = Request::new(req, matched_path);
+            let client_req = Request::new(req.map(|b| b.into()), matched_path);
             handle_panics(endpoint.handler.handle(client_req)).await
         }
         .or_else(|e: Error| e.into_result())
@@ -139,7 +143,8 @@ mod test {
         let router = Router::builder().install(handler, route(path!())).build();
         let mut service = router;
 
-        let res = service.call(HTTPRequest::default()).await.unwrap();
+        let body = Body::empty();
+        let res = service.call(HTTPRequest::new(body)).await.unwrap();
         assert_eq!(res.status(), StatusCode::INTERNAL_SERVER_ERROR);
     }
 }

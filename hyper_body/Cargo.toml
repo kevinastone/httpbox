@@ -1,0 +1,13 @@
+[package]
+name = "hyper_body"
+version = "0.1.0"
+authors = ["Kevin Stone <kevinastone@gmail.com>"]
+edition = "2021"
+
+[dependencies]
+futures = "^0.3.1"
+http-body = "1.0.0"
+http-body-util = "0.1.0"
+hyper = "1.0"
+pin-project-lite = "0.2.7"
+sync_wrapper = "0.1.1"

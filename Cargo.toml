@@ -15,8 +15,10 @@ cookie = "^0.16.0"
 anyhow = "^1.0.27"
 futures = "^0.3.1"
 futures-timer = "^3.0"
-headers = "^0.3.2"
-hyper = { version = "0.14", features = ["full"] }
+headers = "^0.4"
+hyper = { version = "1.0", features = ["full"] }
+hyper-util = { version = "0.1.1", features = ["tokio", "server", "server-auto"] }
+http-body-util = "0.1.0"
 itertools = "^0.10.0"
 lazy_static = "^1.4.0"
 mime = "^0.3.13"
@@ -26,12 +28,14 @@ serde = "^1.0.98"
 serde_derive = "^1.0.98"
 serde_urlencoded = "^0.7"
 url = "^2.2.1"
-tokio = { version = "1.5.0", features = ["full"] }
+tokio = { version = "1.25.0", features = ["full"] }
+tokio-stream = { version = "0.1.14", features = ["net"] }
 tower = { version = "^0.4.12", features = ["full"] }
-tower-http = { version = "^0.2.5", features=["trace"] }
+tower-http = { version = "^0.5", features=["trace"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uri_path = { path = "uri_path" }
+hyper_body = { path = "hyper_body" }
 
 [[bin]]
 name = "httpbox"
