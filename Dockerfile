@@ -5,6 +5,8 @@ WORKDIR /app
 COPY Cargo.lock Cargo.toml ./
 COPY uri_path/Cargo.toml ./uri_path/Cargo.toml
 COPY uri_path/src ./uri_path/src
+COPY hyper_body/Cargo.toml ./hyper_body/Cargo.toml
+COPY hyper_body/src ./hyper_body/src
 RUN mkdir .cargo
 RUN cargo vendor > .cargo/config
 
