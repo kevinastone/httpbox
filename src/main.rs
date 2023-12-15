@@ -1,14 +1,12 @@
-use clap::{Command, CommandFactory, Parser};
-use clap_complete::{generate, Generator, Shell};
-use std::io;
+use crate::args::*;
 use std::net::ToSocketAddrs;
-use std::num::NonZeroUsize;
 use tokio::net::TcpListener;
 use tokio::{runtime, signal};
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+mod args;
 mod handler;
 mod headers;
 mod http;
@@ -20,41 +18,6 @@ mod service;
 
 #[cfg(test)]
 mod test;
-
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None, disable_help_flag = true)]
-struct Cli {
-    #[arg(
-        short,
-        long,
-        env,
-        default_value = "0.0.0.0",
-        help = "Host address to listen on"
-    )]
-    host: String,
-
-    #[arg(
-        short,
-        long,
-        env,
-        default_value_t = 3000,
-        help = "Port to listen on"
-    )]
-    port: u16,
-
-    #[arg(long, env, help = "Number of threads to process requests")]
-    threads: Option<NonZeroUsize>,
-
-    #[arg(long)]
-    completions: Option<Shell>,
-
-    #[arg(long, action = clap::ArgAction::Help, help = "Print help information")]
-    help: (),
-}
-
-fn print_completions<G: Generator>(gen: G, app: &mut Command) {
-    generate(gen, app, app.get_name().to_string(), &mut io::stdout());
-}
 
 async fn shutdown_signal() {
     // Wait for the CTRL+C signal
@@ -93,8 +56,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::parse();
 
     if let Some(generator) = args.completions {
-        let mut app = Cli::command();
-        print_completions(generator, &mut app);
+        args.print_completions(generator);
         return Ok(());
     }
 
