@@ -1,8 +1,10 @@
 use crate::args::*;
 use std::net::ToSocketAddrs;
+use std::time::Duration;
 use tokio::net::TcpListener;
 use tokio::{runtime, signal};
 use tower::ServiceBuilder;
+use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -46,10 +48,10 @@ async fn shutdown_signal() {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::registry()
-        .with(tracing_subscriber::EnvFilter::new(
-            std::env::var("RUST_LOG")
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
                 .unwrap_or_else(|_| "httpbox=debug,tower_http=debug".into()),
-        ))
+        )
         .with(tracing_subscriber::fmt::layer())
         .init();
 
@@ -76,12 +78,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let runtime = runtime::Builder::new_multi_thread()
         .worker_threads(threads.get())
         .enable_io()
+        .enable_time()
         .build()?;
 
     tracing::info!("Listening on {} with {} threads", addr, threads);
     runtime.block_on(async {
         let service = ServiceBuilder::new()
             .layer(TraceLayer::new_for_http())
+            .layer(TimeoutLayer::new(Duration::from_secs(30)))
             .service(service::router());
 
         let listener = TcpListener::bind(addr).await.unwrap();
