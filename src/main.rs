@@ -1,18 +1,11 @@
 use clap::{Command, CommandFactory, Parser};
 use clap_complete::{generate, Generator, Shell};
-use futures::prelude::*;
-use hyper::server::conn::http1;
-use hyper::Request as HTTPRequest;
-use hyper_util::rt::TokioIo;
 use std::io;
 use std::net::ToSocketAddrs;
 use std::num::NonZeroUsize;
 use tokio::net::TcpListener;
-use tokio::{runtime, signal, sync::watch};
-use tokio_stream::wrappers::TcpListenerStream;
-use tower::Service;
+use tokio::{runtime, signal};
 use tower::ServiceBuilder;
-use tower::ServiceExt;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -22,6 +15,7 @@ mod http;
 mod num_cpus;
 mod random;
 mod router;
+mod server;
 mod service;
 
 #[cfg(test)]
@@ -129,75 +123,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .service(service::router());
 
         let listener = TcpListener::bind(addr).await.unwrap();
-        let (close_tx, close_rx) = watch::channel(());
 
-        let conn_stream =
-            TcpListenerStream::new(listener).take_until(shutdown_signal());
+        let server = server::Server::new(listener, service)
+            .with_graceful_shutdown(shutdown_signal());
 
-        let conn_stream = conn_stream.and_then(|stream| async {
-            let addr = stream.peer_addr()?;
-            let stream = TokioIo::new(stream);
-
-            // Inject the client addr into the request
-            let tower_service = service.clone().map_request(
-                move |mut req: HTTPRequest<_>| {
-                    req.extensions_mut().insert(addr);
-                    req
-                },
-            );
-
-            let close_rx = close_rx.clone();
-
-            runtime.spawn(async move {
-                let hyper_service = hyper::service::service_fn(
-                    move |request: hyper::Request<_>| {
-                        tower_service.clone().call(request)
-                    },
-                );
-
-                let conn = http1::Builder::new()
-                    .serve_connection(stream, hyper_service).with_upgrades();
-
-                let mut conn = std::pin::pin!(conn);
-
-                loop {
-                    tokio::select! {
-                        // Poll the connection. This completes when the client has closed the
-                        // connection, graceful shutdown has completed, or we encounter a TCP error.
-                        result = conn.as_mut() => {
-                            if let Err(err) = result {
-                                tracing::error!("Error serving connection: {err:#}");
-                            }
-                            break;
-                        }
-                        // Start graceful shutdown when we receive a shutdown signal.
-                        //
-                        // We use a loop to continue polling the connection to allow requests to finish
-                        _ = shutdown_signal() => {
-                            tracing::debug!("signal received, starting graceful shutdown");
-                            conn.as_mut().graceful_shutdown();
-                        }
-                    }
-                }
-
-                // Drop the watch receiver to signal to `main` that this task is done.
-                drop(close_rx);
-            });
-
-            Ok(())
-        });
-
-        // Run the listener stream to completion
-        let _ = conn_stream.map(Ok).forward(futures::sink::drain()).await;
-
-        drop(close_rx);
-
-        // Wait for all tasks to complete.
-        tracing::debug!(
-            "waiting for {} tasks to finish",
-            close_tx.receiver_count()
-        );
-        close_tx.closed().await;
+        let _ = server.serve().await;
     });
     Ok(())
 }
