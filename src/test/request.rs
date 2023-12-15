@@ -3,11 +3,10 @@
 use crate::handler::Handler;
 use crate::headers::ContentLength;
 use crate::headers::{Header, HeaderMapExt};
-use crate::http::Request;
+use crate::http::{Body, Request};
 use futures::prelude::*;
 use hyper::header::{HeaderName, HeaderValue};
 use hyper::http::{Request as HTTPRequest, Response as HTTPResponse};
-use hyper::Body;
 use hyper::Method;
 use std::convert::TryFrom;
 use std::net::SocketAddr;

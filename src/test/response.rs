@@ -1,4 +1,6 @@
+use crate::http::Body;
 use async_trait::async_trait;
+use http_body_util::BodyExt;
 
 #[async_trait]
 pub trait TestResponseExt: Sized {
@@ -9,9 +11,9 @@ pub trait TestResponseExt: Sized {
 }
 
 #[async_trait]
-impl TestResponseExt for hyper::Response<hyper::Body> {
+impl TestResponseExt for hyper::Response<Body> {
     async fn read_body(self) -> anyhow::Result<Vec<u8>> {
-        let bytes = hyper::body::to_bytes(self.into_body()).await?;
+        let bytes = BodyExt::collect(self.into_body()).await?.to_bytes();
         Ok(bytes.to_vec())
     }
 }

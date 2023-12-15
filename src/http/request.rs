@@ -1,6 +1,6 @@
+use super::Body;
 use crate::headers::{Header, HeaderMapExt};
 use hyper::http::Request as HTTPRequest;
-use hyper::Body;
 use std::net::SocketAddr;
 use uri_path::PathMatch;
 
@@ -36,10 +36,6 @@ impl Request {
         de::deserialize(self.params.clone()).ok()
     }
 
-    pub fn body(&mut self) -> Body {
-        std::mem::replace(self.req.body_mut(), Body::empty())
-    }
-
     pub fn typed_header<H: Header>(&self) -> Option<H> {
         self.req.headers().typed_get::<H>()
     }
@@ -61,5 +57,11 @@ impl core::ops::Deref for Request {
 
     fn deref(&self) -> &Self::Target {
         &self.req
+    }
+}
+
+impl core::ops::DerefMut for Request {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.req
     }
 }

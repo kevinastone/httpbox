@@ -1,4 +1,4 @@
-use hyper::{Body, Method, Request as HTTPRequest};
+use hyper::{Method, Request as HTTPRequest};
 use std::collections::BTreeMap;
 use uri_path::{Path, PathMatch};
 
@@ -73,7 +73,7 @@ impl Route {
         self.example_path.as_ref().map(String::as_ref)
     }
 
-    pub fn matches(&self, req: &HTTPRequest<Body>) -> Option<PathMatch> {
+    pub fn matches<B>(&self, req: &HTTPRequest<B>) -> Option<PathMatch> {
         if self.method() != req.method() {
             return None;
         }
