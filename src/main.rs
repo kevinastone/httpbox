@@ -77,7 +77,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
 
-    let threads = args.threads.unwrap_or_else(num_cpus::num_cpus);
+    let threads = args.threads;
     let addr = (args.host.clone(), args.port)
         .to_socket_addrs()
         .ok()

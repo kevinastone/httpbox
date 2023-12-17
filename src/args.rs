@@ -1,3 +1,4 @@
+use crate::num_cpus;
 use clap::CommandFactory;
 pub use clap::Parser;
 use clap_complete::{generate, Generator, Shell};
@@ -28,8 +29,8 @@ pub struct Cli {
     )]
     pub port: u16,
 
-    #[arg(long, env, help = "Number of threads to process requests")]
-    pub threads: Option<NonZeroUsize>,
+    #[arg(long, env, default_value_t = num_cpus::num_cpus(), help = "Number of threads to process requests")]
+    pub threads: NonZeroUsize,
 
     #[arg(long, action = clap::ArgAction::Help, help = "Print help information")]
     pub help: (),
@@ -40,5 +41,24 @@ impl Cli {
         let mut cmd = Self::command();
         let bin_name = cmd.get_name().to_string();
         generate(gen, &mut cmd, bin_name, &mut io::stdout());
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn verify_cli() {
+        use clap::CommandFactory;
+        Cli::command().debug_assert()
+    }
+
+    #[test]
+    fn test_args_defaults() {
+        let args = Cli::parse_from(vec!["httpbox"]);
+        assert_eq!(args.host, "0.0.0.0");
+        assert_eq!(args.port, 3000u16);
+        assert_eq!(args.threads, num_cpus::num_cpus());
     }
 }
