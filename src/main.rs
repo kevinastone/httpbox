@@ -1,4 +1,5 @@
 use crate::args::*;
+use std::net::SocketAddr;
 use std::net::ToSocketAddrs;
 use std::time::Duration;
 use tokio::net::TcpListener;
@@ -46,6 +47,20 @@ async fn shutdown_signal() {
     }
 }
 
+async fn run_server(addr: SocketAddr) -> std::io::Result<()> {
+    let service = ServiceBuilder::new()
+        .layer(TraceLayer::new_for_http())
+        .layer(TimeoutLayer::new(Duration::from_secs(30)))
+        .service(service::router());
+
+    let listener = TcpListener::bind(addr).await.unwrap();
+
+    let server = server::Server::new(listener, service)
+        .with_graceful_shutdown(shutdown_signal());
+
+    server.serve().await
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing_subscriber::registry()
         .with(
@@ -82,18 +97,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .build()?;
 
     tracing::info!("Listening on {} with {} threads", addr, threads);
-    runtime.block_on(async {
-        let service = ServiceBuilder::new()
-            .layer(TraceLayer::new_for_http())
-            .layer(TimeoutLayer::new(Duration::from_secs(30)))
-            .service(service::router());
-
-        let listener = TcpListener::bind(addr).await.unwrap();
-
-        let server = server::Server::new(listener, service)
-            .with_graceful_shutdown(shutdown_signal());
-
-        let _ = server.serve().await;
-    });
+    let _ = runtime.block_on(run_server(addr));
     Ok(())
 }
