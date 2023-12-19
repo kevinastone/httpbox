@@ -64,15 +64,12 @@ impl RouterBuilder {
     }
 }
 
-pub struct RouterInternal {
+struct RouterInternal {
     endpoints: Vec<Endpoint>,
 }
 
 impl RouterInternal {
-    pub fn route<B>(
-        &self,
-        req: &HTTPRequest<B>,
-    ) -> Option<(&Endpoint, PathMatch)> {
+    fn route<B>(&self, req: &HTTPRequest<B>) -> Option<(&Endpoint, PathMatch)> {
         self.endpoints.iter().find_map(|endpoint| {
             endpoint.route.matches(req).map(|params| (endpoint, params))
         })
@@ -92,9 +89,7 @@ impl Router {
     }
 }
 
-impl<B: Into<Body> + std::marker::Send + 'static> Service<HTTPRequest<B>>
-    for Router
-{
+impl<B: Into<Body> + Send + 'static> Service<HTTPRequest<B>> for Router {
     type Response = Response;
     type Error = hyper::http::Error;
     #[allow(clippy::type_complexity)]

@@ -11,7 +11,6 @@ use sync_wrapper::SyncWrapper;
 type BoxBody = http_body_util::combinators::UnsyncBoxBody<Bytes, Error>;
 type BoxError = Box<dyn std::error::Error + Send + Sync>;
 
-/// Errors that can happen when using axum.
 #[derive(Debug)]
 pub struct Error {
     inner: BoxError,
