@@ -1,0 +1,117 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: release-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: "Build ${{ matrix.os }} (${{ matrix.rust }})"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        rust:
+          - stable
+          - beta
+        os: [ windows-latest, ubuntu-latest, macos-latest ]
+      fail-fast: false
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Setup Rust Toolchain
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.rust }}
+    - name: Build
+      run: cargo build --release --verbose
+    - name: Run tests
+      run: cargo test --release --verbose
+    - name: Rename file (Windows)
+      if: startsWith(matrix.os, 'windows')
+      run: Rename-Item -Path target/release/httpbox.exe -NewName httpbox-${{ matrix.os }}-${{ matrix.rust }}.exe
+      shell: pwsh
+    - name: Rename file (Ubuntu & macOS)
+      if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
+      run: mv target/release/httpbox target/release/httpbox-${{ matrix.os }}-${{ matrix.rust }}
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: httpbox-${{ matrix.os }}-${{ matrix.rust }}${{ startsWith(matrix.os, 'windows') && '.exe' || '' }}
+        path: |
+          target/release/httpbox-${{ matrix.os }}-${{ matrix.rust }}${{ startsWith(matrix.os, 'windows') && '.exe' || '' }}
+
+  create-release:
+    runs-on: ubuntu-latest
+    needs: build
+    # if: github.ref == 'refs/heads/master'
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # allows for tags access
+    - uses: actions/download-artifact@v4
+      name: Download for Ubuntu (stable)
+      with:
+        name: httpbox-ubuntu-latest-stable
+        path: release-artifacts/
+    - uses: actions/download-artifact@v4
+      name: Download for Ubuntu (beta)
+      with:
+        name: httpbox-ubuntu-latest-beta
+        path: release-artifacts/
+    - uses: actions/download-artifact@v4
+      name: Download for Windows (stable)
+      with:
+        name: httpbox-windows-latest-stable.exe
+        path: release-artifacts/
+    - uses: actions/download-artifact@v4
+      name: Download for Windows (beta)
+      with:
+        name: httpbox-windows-latest-beta.exe
+        path: release-artifacts/
+    - uses: actions/download-artifact@v4
+      name: Download for macOS (stable)
+      with:
+        name: httpbox-macos-latest-stable
+        path: release-artifacts/
+    - uses: actions/download-artifact@v4
+      name: Download for macOS (beta)
+      with:
+        name: httpbox-macos-latest-beta
+        path: release-artifacts/
+    - name: Rename artifacts
+      run: |
+        ls -la
+        mv httpbox-ubuntu-latest-stable httpbox-ubuntu-stable
+        mv httpbox-ubuntu-latest-beta httpbox-ubuntu-beta
+        mv httpbox-windows-latest-stable.exe httpbox-windows-stable.exe
+        mv httpbox-windows-latest-beta.exe httpbox-windows-beta.exe
+        mv httpbox-macos-latest-stable httpbox-macos-stable
+        mv httpbox-macos-latest-beta httpbox-macos-beta
+      working-directory: release-artifacts
+    - name: Create release
+      uses: ncipollo/release-action@v1.13.0
+      with:
+        replacesArtifacts: true
+        allowUpdates: true
+        artifactErrorsFailBuild: true
+        artifacts: "release-artifacts/*"
+        body: ${{ github.event.head_commit.message }}
+        prerelease: true
+        name: Nightly Release
+        tag: nightly-build
+    - name: Update nightly-build tag
+      run: |
+        git tag -f nightly-build
+        git push -f origin nightly-build
