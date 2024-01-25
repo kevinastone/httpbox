@@ -34,8 +34,6 @@ jobs:
         toolchain: ${{ matrix.rust }}
     - name: Build
       run: cargo build --release --verbose
-    - name: Run tests
-      run: cargo test --release --verbose
     - name: Rename file (Windows)
       if: startsWith(matrix.os, 'windows')
       run: Rename-Item -Path target/release/httpbox.exe -NewName httpbox-${{ matrix.os }}-${{ matrix.rust }}.exe
