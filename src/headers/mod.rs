@@ -4,10 +4,12 @@ mod ip;
 mod location;
 
 pub use self::auth::*;
+#[allow(unused_imports)]
 pub use self::cookie::*;
 pub use self::cookie::{Cookie, SetCookie}; // Needed to de-conflict glob import from headers;
 pub use self::ip::*;
 pub use self::location::Location; // Needed to de-conflict glob import from headers;
+#[allow(unused_imports)]
 pub use self::location::*;
 pub use headers::*;
 
