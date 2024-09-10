@@ -1,12 +1,8 @@
 use crate::headers::{Error, Header, HeaderName, HeaderValue};
-use lazy_static::lazy_static;
 use std::iter;
 use std::net::IpAddr;
 
-lazy_static! {
-    static ref X_FORWARDED_FOR: HeaderName =
-        HeaderName::from_static("x-forwarded-for");
-}
+static X_FORWARDED_FOR: HeaderName = HeaderName::from_static("x-forwarded-for");
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct XForwardedFor {
