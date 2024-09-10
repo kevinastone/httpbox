@@ -21,7 +21,6 @@ hyper = { version = "1.0", features = ["full"] }
 hyper-util = { version = "0.1.1", features = ["tokio", "server", "server-auto"] }
 http-body-util = "0.1.0"
 itertools = "^0.10.0"
-lazy_static = "^1.4.0"
 mime = "^0.3.13"
 num_cpus = "^1.13.0"
 rand = { version="^0.8", features = ["small_rng"]}

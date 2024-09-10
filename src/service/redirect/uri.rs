@@ -1,14 +1,12 @@
 use crate::headers::Host;
 use crate::http::Request;
 use crate::http::Uri;
-use lazy_static::lazy_static;
 use std::env;
+use std::sync::LazyLock;
 use url::Url;
 
-lazy_static! {
-    static ref BASE_URL: Option<Url> =
-        env::var_os("BASE_URL")?.into_string().ok()?.parse().ok();
-}
+static BASE_URL: LazyLock<Option<Url>> =
+    LazyLock::new(|| env::var_os("BASE_URL")?.into_string().ok()?.parse().ok());
 
 fn host_to_url(host: &str) -> anyhow::Result<Url> {
     Ok(Uri::builder()
