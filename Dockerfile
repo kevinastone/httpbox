@@ -1,4 +1,4 @@
-FROM rust as build
+FROM rust AS build
 
 WORKDIR /app
 
@@ -16,6 +16,6 @@ COPY templates ./templates
 RUN cargo build --release
 ENTRYPOINT ["cargo"]
 
-FROM debian:stable-slim as release
+FROM debian:stable-slim AS release
 COPY --from=build /app/target/release/httpbox /usr/local/bin/
 ENTRYPOINT ["/usr/local/bin/httpbox"]
