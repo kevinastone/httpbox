@@ -8,6 +8,7 @@ mod cache;
 mod cookies;
 mod delay;
 mod headers;
+mod healthz;
 mod index;
 mod ip;
 mod method;
@@ -161,5 +162,8 @@ pub fn router() -> Router {
     let routes = std::iter::once(&index_route).chain(builder.routes());
     let index: crate::service::index::Index = routes.into();
 
-    builder.install(index, index_route).build()
+    builder
+        .install(crate::service::healthz::healthz, route(path!("healthz")))
+        .install(index, index_route)
+        .build()
 }
