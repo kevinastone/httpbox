@@ -17,5 +17,6 @@ RUN cargo build --release
 ENTRYPOINT ["cargo"]
 
 FROM debian:stable-slim AS release
+ENV PORT=80
 COPY --from=build /app/target/release/httpbox /usr/local/bin/
 ENTRYPOINT ["/usr/local/bin/httpbox"]

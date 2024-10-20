@@ -5,6 +5,9 @@ kill_signal = "SIGINT"
 kill_timeout = 5
 processes = []
 
+[build]
+  image = "ghcr.io/kevinastone/httpbox:master"
+
 [env]
 
 [experimental]
@@ -13,7 +16,7 @@ processes = []
 
 [[services]]
   http_checks = []
-  internal_port = 3000
+  internal_port = 80
   processes = ["app"]
   protocol = "tcp"
   script_checks = []
