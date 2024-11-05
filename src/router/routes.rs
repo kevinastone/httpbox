@@ -97,3 +97,22 @@ impl From<RouteBuilder> for Route {
 pub fn route<P: Into<Path>>(path: P) -> RouteBuilder {
     RouteBuilder::new(path)
 }
+
+mod test {
+    use super::*;
+    use uri_path::path;
+
+    #[test]
+    fn test_example_path() {
+        let route: Route = route(path!("foo" / "bar"))
+            .add_example_param("id", "123")
+            .add_example_param("name", "baz")
+            .description("foo bar")
+            .into();
+
+        assert_eq!(
+            route.example_path(),
+            Some("/foo/bar?id=123&name=baz")
+        );
+    }
+}
