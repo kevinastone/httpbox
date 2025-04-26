@@ -46,13 +46,13 @@ macro_rules! path_test {
     }};
 
     (@assertion $path:ident, params, $input:literal => $map:tt) => {{
-        let params = path_test!(@map ::std::collections::HashMap::new, $map)
+        let params: ::std::collections::HashMap<&'static str, String> = path_test!(@map ::std::collections::HashMap::new, $map)
             .into_iter()
             .map(|(k, v): (&'static str, &str)| (k, v.to_string()))
             .collect();
         assert_eq!(
             $path.matches($input).unwrap(),
-            params
+            params.into()
         );
     }};
 

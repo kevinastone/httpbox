@@ -14,7 +14,14 @@ fn segmented(str: &str) -> impl Iterator<Item = &str> {
     str.split('/').filter(|seg| !seg.is_empty())
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PathMatch(HashMap<&'static str, String>);
+
+impl From<HashMap<&'static str, String>> for PathMatch {
+    fn from(hashmap: HashMap<&'static str, String>) -> Self {
+        Self(hashmap)
+    }
+}
 
 impl Default for PathMatch {
     fn default() -> Self {
