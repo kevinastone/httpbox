@@ -43,6 +43,21 @@ impl DerefMut for PathMatch {
     }
 }
 
+impl<'de, E> serde::de::IntoDeserializer<'de, E> for PathMatch
+where
+    E: serde::de::Error,
+{
+    type Deserializer = serde::de::value::MapDeserializer<
+        'de,
+        <HashMap<&'static str, String> as IntoIterator>::IntoIter,
+        E,
+    >;
+
+    fn into_deserializer(self) -> Self::Deserializer {
+        serde::de::value::MapDeserializer::new(self.0.into_iter())
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Path(pub Vec<PathSegment>);
 
