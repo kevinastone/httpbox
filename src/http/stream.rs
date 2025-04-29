@@ -5,7 +5,7 @@ use std::convert::Infallible;
 
 pub(crate) fn ok_stream<T, S: Stream<Item = T>>(
     stream: S,
-) -> impl TryStream<Ok = T, Error = Infallible> {
+) -> impl Stream<Item = Result<T, Infallible>> {
     stream.map(Ok)
 }
 
