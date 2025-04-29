@@ -98,6 +98,7 @@ pub fn route<P: Into<Path>>(path: P) -> RouteBuilder {
     RouteBuilder::new(path)
 }
 
+#[cfg(test)]
 mod test {
     use super::*;
     use uri_path::path;
@@ -110,9 +111,6 @@ mod test {
             .description("foo bar")
             .into();
 
-        assert_eq!(
-            route.example_path(),
-            Some("/foo/bar?id=123&name=baz")
-        );
+        assert_eq!(route.example_path(), Some("/foo/bar?id=123&name=baz"));
     }
 }
