@@ -1,12 +1,9 @@
 use futures::prelude::*;
-use http_body::{Body as HttpBody, Frame, SizeHint};
-use http_body_util::BodyExt;
-use hyper::body::{Bytes, Incoming};
-use pin_project_lite::pin_project;
+use http_body_util::{BodyExt, StreamBody};
+use hyper::body::{Body as HttpBody, Bytes, Frame, Incoming, SizeHint};
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::{error::Error as StdError, fmt};
-use sync_wrapper::SyncWrapper;
 
 type BoxBody = http_body_util::combinators::UnsyncBoxBody<Bytes, Error>;
 type BoxError = Box<dyn std::error::Error + Send + Sync>;
@@ -74,7 +71,7 @@ impl Body {
         B: HttpBody<Data = Bytes> + Send + 'static,
         B::Error: Into<BoxError>,
     {
-        try_downcast(body).unwrap_or_else(|body| Self(boxed(body)))
+        Self(boxed(body))
     }
 
     /// Create an empty body.
@@ -85,15 +82,15 @@ impl Body {
     /// Create a new `Body` from a [`Stream`].
     ///
     /// [`Stream`]: futures::stream::Stream
-    pub fn from_stream<S>(stream: S) -> Self
+    pub fn from_stream<S, D, E>(stream: S) -> Self
     where
-        S: TryStream + Send + 'static,
-        S::Ok: Into<Bytes>,
-        S::Error: Into<BoxError>,
+        S: Stream<Item = Result<D, E>> + Sync + Send + 'static,
+        D: Into<Bytes>,
+        E: Into<BoxError>,
     {
-        Self::new(StreamBody {
-            stream: SyncWrapper::new(stream),
-        })
+        Self::new(StreamBody::new(
+            stream.map_ok(|item| Frame::data(item.into())),
+        ))
     }
 }
 
@@ -149,55 +146,6 @@ impl HttpBody for Body {
     #[inline]
     fn is_end_stream(&self) -> bool {
         self.0.is_end_stream()
-    }
-}
-
-impl Stream for Body {
-    type Item = Result<Bytes, Error>;
-
-    #[inline]
-    fn poll_next(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<Self::Item>> {
-        loop {
-            match futures::ready!(self.as_mut().poll_frame(cx)?) {
-                Some(frame) => match frame.into_data() {
-                    Ok(data) => return Poll::Ready(Some(Ok(data))),
-                    Err(_frame) => {}
-                },
-                None => return Poll::Ready(None),
-            }
-        }
-    }
-}
-
-pin_project! {
-    struct StreamBody<S> {
-        #[pin]
-        stream: SyncWrapper<S>,
-    }
-}
-
-impl<S> HttpBody for StreamBody<S>
-where
-    S: TryStream,
-    S::Ok: Into<Bytes>,
-    S::Error: Into<BoxError>,
-{
-    type Data = Bytes;
-    type Error = Error;
-
-    fn poll_frame(
-        self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
-        let stream = self.project().stream.get_pin_mut();
-        match futures::ready!(stream.try_poll_next(cx)) {
-            Some(Ok(chunk)) => Poll::Ready(Some(Ok(Frame::data(chunk.into())))),
-            Some(Err(err)) => Poll::Ready(Some(Err(Error::new(err)))),
-            None => Poll::Ready(None),
-        }
     }
 }
 
