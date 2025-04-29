@@ -5,6 +5,8 @@ use itertools::EitherOrBoth;
 use itertools::Itertools;
 #[cfg(feature = "regex")]
 pub use regex;
+use serde::de::IntoDeserializer;
+use serde::Deserialize;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt;
 use std::iter::FromIterator;
@@ -14,7 +16,9 @@ fn segmented(str: &str) -> impl Iterator<Item = &str> {
     str.split('/').filter(|seg| !seg.is_empty())
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(transparent)]
+#[serde(bound(deserialize = "'de: 'static"))]
 pub struct PathMatch(HashMap<&'static str, String>);
 
 impl From<HashMap<&'static str, String>> for PathMatch {
@@ -43,18 +47,17 @@ impl DerefMut for PathMatch {
     }
 }
 
-impl<'de, E> serde::de::IntoDeserializer<'de, E> for PathMatch
+impl<'de, E> IntoDeserializer<'de, E> for PathMatch
 where
     E: serde::de::Error,
 {
-    type Deserializer = serde::de::value::MapDeserializer<
+    type Deserializer = <HashMap<&'static str, String> as IntoDeserializer<
         'de,
-        <HashMap<&'static str, String> as IntoIterator>::IntoIter,
         E,
-    >;
+    >>::Deserializer;
 
     fn into_deserializer(self) -> Self::Deserializer {
-        serde::de::value::MapDeserializer::new(self.0.into_iter())
+        self.0.into_deserializer()
     }
 }
 

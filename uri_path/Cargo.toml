@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 itertools = "^0.10.0"
 regex = { version = "1", optional = true }
-serde = { version = "1.0.219" }
+serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
 paste = "0.1"
