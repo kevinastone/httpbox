@@ -16,7 +16,7 @@ fn segmented(str: &str) -> impl Iterator<Item = &str> {
     str.split('/').filter(|seg| !seg.is_empty())
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Deserialize)]
 #[serde(transparent)]
 #[serde(bound(deserialize = "'de: 'static"))]
 pub struct PathMatch(HashMap<&'static str, String>);
@@ -24,12 +24,6 @@ pub struct PathMatch(HashMap<&'static str, String>);
 impl From<HashMap<&'static str, String>> for PathMatch {
     fn from(hashmap: HashMap<&'static str, String>) -> Self {
         Self(hashmap)
-    }
-}
-
-impl Default for PathMatch {
-    fn default() -> Self {
-        Self(HashMap::new())
     }
 }
 
@@ -97,7 +91,7 @@ impl Path {
                 PathSegment::Literal(str) => segments.push(str),
                 PathSegment::Dynamic(param) => {
                     let value = params.remove(param.name)?;
-                    segments.push(&value)
+                    segments.push(value)
                 }
             }
         }
@@ -222,7 +216,7 @@ impl<'a> PathAndQuery<'a> {
     }
 }
 
-impl<'a> fmt::Display for PathAndQuery<'a> {
+impl fmt::Display for PathAndQuery<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,

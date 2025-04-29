@@ -81,7 +81,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = (args.host.clone(), args.port)
         .to_socket_addrs()
         .ok()
-        .and_then(|iter| iter.last())
+        .and_then(|mut iter| iter.next_back())
         .unwrap_or_else(|| {
             panic!(
                 "Invalid listening address: {}:{}",
