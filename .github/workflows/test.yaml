@@ -25,3 +25,6 @@ jobs:
       - name: Run uri_path tests
         run: cargo test --verbose
         working-directory: ./uri_path
+      - name: Run hyper_body tests
+        run: cargo test --verbose
+        working-directory: ./hyper_body
