@@ -64,4 +64,18 @@ mod test {
         let body = res.read_body_utf8().await.unwrap();
         assert_eq!(body, "127.0.0.1");
     }
+
+    #[tokio::test]
+    async fn test_ip_x_forwarded_for_prioritized() {
+        let res = request()
+            .typed_header(XForwardedFor::client("5.6.7.8".parse().unwrap()))
+            .client_addr("127.0.0.1:1234".parse().unwrap())
+            .handle(ip)
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::OK);
+        let body = res.read_body_utf8().await.unwrap();
+        assert_eq!(body, "5.6.7.8");
+    }
 }

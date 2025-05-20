@@ -51,7 +51,7 @@ impl RequestBuilder {
         let value = TryFrom::try_from(value)
             .map_err(|_| ())
             .expect("invalid header value");
-        self.req.headers_mut().insert(name, value);
+        self.req.headers_mut().append(name, value);
         self
     }
 

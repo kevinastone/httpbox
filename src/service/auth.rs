@@ -156,4 +156,81 @@ mod test {
 
         assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
     }
+
+    #[tokio::test]
+    async fn test_basic_non_basic_auth_header() {
+        let auth = Authorization::bearer("some-token").unwrap();
+
+        let res = request()
+            .param("user", "my-username")
+            .param("passwd", "my-password")
+            .typed_header(auth)
+            .handle(basic)
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
+        assert_eq!(
+            res.headers().typed_get::<WWWAuthenticate>().unwrap(),
+            WWWAuthenticate::basic_realm(REALM),
+        )
+    }
+
+    #[tokio::test]
+    async fn test_basic_invalid_basic_auth_header() {
+        // This header is technically valid as a HeaderValue, but not as a Basic auth value
+        let res = request()
+            .param("user", "my-username")
+            .param("passwd", "my-password")
+            .header("Authorization", "Basic invalid-format")
+            .handle(basic)
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
+        assert_eq!(
+            res.headers().typed_get::<WWWAuthenticate>().unwrap(),
+            WWWAuthenticate::basic_realm(REALM),
+        )
+    }
+
+    #[tokio::test]
+    async fn test_bearer_non_bearer_auth_header() {
+        let auth = Authorization::basic("user", "pass");
+
+        let res = request()
+            .param("token", "my-token")
+            .typed_header(auth)
+            .handle(bearer)
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn test_bearer_invalid_bearer_auth_header() {
+        // This header is technically valid as a HeaderValue, but not as a Bearer auth value
+        let res = request()
+            .param("token", "my-token")
+            .header("Authorization", "Bearer invalid-format")
+            .handle(bearer)
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
+    }
+
+    #[tokio::test]
+    async fn test_bearer_missing_param() {
+        let auth = Authorization::bearer("my-token").unwrap();
+
+        let res = request()
+            .typed_header(auth)
+            .handle(bearer)
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
+    }
 }
