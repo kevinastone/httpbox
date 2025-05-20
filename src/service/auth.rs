@@ -106,6 +106,18 @@ mod test {
             WWWAuthenticate::basic_realm(REALM),
         )
     }
+
+    #[tokio::test]
+    async fn test_basic_missing_params() {
+        let res = request().handle(basic).await.unwrap();
+
+        assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
+        assert_eq!(
+            res.headers().typed_get::<WWWAuthenticate>().unwrap(),
+            WWWAuthenticate::basic_realm(REALM),
+        );
+    }
+
     #[tokio::test]
     async fn test_bearer_no_authorization() {
         let res = request()
