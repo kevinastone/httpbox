@@ -230,9 +230,9 @@ impl fmt::Display for PathAndQuery<'_> {
             write!(
                 f,
                 "?{}",
-                self.query.iter().format_with("&", |(k, v), f| f(
-                    &format_args!("{}={}", k, v)
-                ))
+                self.query
+                    .iter()
+                    .format_with("&", |(k, v), f| f(&format_args!("{k}={v}")))
             )?;
         }
 

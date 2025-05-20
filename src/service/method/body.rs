@@ -9,7 +9,7 @@ fn parse_url_encoded_body(raw_body: &[u8]) -> anyhow::Result<String> {
         serde_urlencoded::from_bytes::<Vec<(String, String)>>(raw_body)?
             .iter()
             .format_with("\n", |(key, value), f| {
-                f(&format_args!("{} = {}", key, value))
+                f(&format_args!("{key} = {value}"))
             })
             .to_string(),
     )

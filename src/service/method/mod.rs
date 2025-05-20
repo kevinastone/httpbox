@@ -9,7 +9,7 @@ pub async fn get(req: Request) -> Result {
             .map_err(|_| bad_request())?
             .into_iter()
             .format_with("\n", |(key, value), f| {
-                f(&format_args!("{} = {}", key, value))
+                f(&format_args!("{key} = {value}"))
             })
             .to_string()
     };

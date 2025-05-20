@@ -43,7 +43,7 @@ pub struct BasicRealm(String);
 
 impl From<&BasicRealm> for HeaderValue {
     fn from(realm: &BasicRealm) -> Self {
-        format!("{}", realm).parse().unwrap()
+        format!("{realm}").parse().unwrap()
     }
 }
 

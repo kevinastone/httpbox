@@ -30,7 +30,7 @@ pub async fn relative(req: Request) -> Result {
     let n = min(n - 1, 100);
 
     let url = if n > 0 {
-        format!("/relative-redirect/{}", n)
+        format!("/relative-redirect/{n}")
     } else {
         String::from("/")
     };
@@ -43,7 +43,7 @@ pub async fn absolute(req: Request) -> Result {
     let n = req.param::<u16>("n").ok_or_else(bad_request)?;
     let n = min(n - 1, 100);
     let url = if n > 0 {
-        format!("/absolute-redirect/{}", n)
+        format!("/absolute-redirect/{n}")
     } else {
         String::from("/")
     };

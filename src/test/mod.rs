@@ -1,5 +1,3 @@
-#![cfg(test)]
-
 pub(crate) mod headers;
 mod request;
 mod response;

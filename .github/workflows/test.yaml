@@ -18,8 +18,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
+          components: clippy
       - name: Build
         run: cargo build --verbose
+      - name: Check with clippy
+        run: cargo clippy --verbose --all-targets --all-features -- -D warnings
       - name: Run tests
         run: cargo test --verbose
       - name: Run uri_path tests

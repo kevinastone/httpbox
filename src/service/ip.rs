@@ -8,7 +8,7 @@ pub async fn ip(req: Request) -> Result {
         .or_else(|| Some(req.client_addr()?.ip()))
         .ok_or_else(bad_request)?;
 
-    ok(format!("{}", ip))
+    ok(format!("{ip}"))
 }
 
 #[cfg(test)]
