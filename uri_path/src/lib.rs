@@ -80,7 +80,7 @@ impl Path {
     pub fn replace(
         &self,
         params: &BTreeMap<&'static str, &'static str>,
-    ) -> Option<PathAndQuery> {
+    ) -> Option<PathAndQuery<'_>> {
         let mut segments = vec![];
         let mut params = params.clone();
 
