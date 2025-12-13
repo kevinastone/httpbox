@@ -1,7 +1,6 @@
 [package]
 name = "hyper_body"
 version = "0.1.0"
-authors = ["Kevin Stone <kevinastone@gmail.com>"]
 edition = "2021"
 
 [dependencies]

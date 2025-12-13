@@ -1,30 +1,32 @@
-# syntax = denzp/cargo-wharf-frontend:v0.1.0-alpha.0
-
 [package]
 name = "httpbox"
 version = "0.2.0"
-authors = ["Kevin Stone <kevinastone@gmail.com>"]
 edition = "2018"
-repository = "https://github.com/kevinastone/httpbox"
 rust-version = "1.80.1"
+repository = "https://github.com/kevinastone/httpbox"
+
+[[bin]]
+name = "httpbox"
+path = "src/main.rs"
 
 [dependencies]
+anyhow = "^1.0.27"
 askama = "^0.11"
 async-trait = "^0.1"
 clap = { version = "^4.0.29", features = ["derive", "env"] }
 clap_complete = "^4.0"
 cookie = "^0.16.0"
-anyhow = "^1.0.27"
 futures = "^0.3.1"
 futures-timer = "^3.0"
 headers = "^0.4"
-hyper = { version = "1.0", features = ["full"] }
-hyper-util = { version = "0.1.1", features = [
-    "tokio",
-    "server",
-    "server-auto",
-] }
 http-body-util = "0.1.0"
+hyper = { version = "1.0", features = ["full"] }
+hyper_body = { path = "hyper_body" }
+hyper-util = { version = "0.1.1", features = [
+  "server",
+  "server-auto",
+  "tokio",
+] }
 itertools = "^0.10.0"
 mime = "^0.3.13"
 num_cpus = "^1.13.0"
@@ -32,32 +34,16 @@ rand = { version = "^0.8", features = ["small_rng"] }
 serde = "^1.0.98"
 serde_derive = "^1.0.98"
 serde_urlencoded = "^0.7"
-url = "^2.2.1"
 tokio = { version = "1.25.0", features = ["full"] }
 tokio-stream = { version = "0.1.14", features = ["net"] }
 tower = { version = "^0.4.12", features = ["full"] }
-tower-http = { version = "^0.5", features = ["trace", "timeout"] }
+tower-http = { version = "^0.5", features = ["timeout", "trace"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uri_path = { path = "uri_path" }
-hyper_body = { path = "hyper_body" }
-
-[[bin]]
-name = "httpbox"
-path = "src/main.rs"
+url = "^2.2.1"
 
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"
 lto = "thin"
-
-[package.metadata.wharf.builder]
-image = "rust"
-
-[[package.metadata.wharf.binary]]
-name = "httpbox"
-destination = "/usr/local/bin/httpbox"
-
-[package.metadata.wharf.output]
-image = "debian:stable-slim"
-entrypoint = ["/usr/local/bin/httpbox"]
