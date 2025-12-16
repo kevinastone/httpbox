@@ -1,6 +1,6 @@
 # httpbox
 
-![Build Status](https://github.com/github/docs/actions/workflows/test.yml/badge.svg)
+[![Test](https://github.com/kevinastone/httpbox/actions/workflows/test.yaml/badge.svg)](https://github.com/kevinastone/httpbox/actions/workflows/test.yaml)
 
 httpbox is an HTTP test tool that provides a number of endpoints for testing a
 variety of HTTP features similar to [httpbin](http://httpbin.org).  It is
