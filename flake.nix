@@ -62,12 +62,14 @@
             with pkgs;
             dockerTools.buildLayeredImage {
               name = "httpbox";
-              contents = [ httpbox ];
-              config = {
-                Entrypoint = [ "${httpbox}/bin/httpbox" ];
-                Env = [ "PORT=80" ];
-              };
+              config.Env = [ "PORT=80" ];
+              config.Entrypoint = [ "${httpbox}/bin/httpbox" ];
             };
+        };
+
+        apps.skopeo = {
+          type = "app";
+          program = "${pkgs.skopeo}/bin/skopeo";
         };
 
         formatter = lib.buildPackage {
@@ -84,6 +86,9 @@
               rustfmt
               pre-commit
               rustPackages.clippy
+            ];
+            packages = [
+              skopeo
             ];
             RUST_SRC_PATH = rustPlatform.rustLibSrc;
             # RUSTC_VERSION = overrides.toolchain.channel;
