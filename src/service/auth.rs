@@ -225,11 +225,7 @@ mod test {
     async fn test_bearer_missing_param() {
         let auth = Authorization::bearer("my-token").unwrap();
 
-        let res = request()
-            .typed_header(auth)
-            .handle(bearer)
-            .await
-            .unwrap();
+        let res = request().typed_header(auth).handle(bearer).await.unwrap();
 
         assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
     }

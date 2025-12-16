@@ -95,9 +95,12 @@ mod test {
             .unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
-        let warnings: Vec<&HeaderValue> = res.headers().get_all("Warning").iter().collect();
+        let warnings: Vec<&HeaderValue> =
+            res.headers().get_all("Warning").iter().collect();
         assert_eq!(warnings.len(), 2);
-        assert!(warnings.contains(&&HeaderValue::from_static("199 Miscellaneous warning")));
-        assert!(warnings.contains(&&HeaderValue::from_static("299 Another warning")));
+        assert!(warnings
+            .contains(&&HeaderValue::from_static("199 Miscellaneous warning")));
+        assert!(warnings
+            .contains(&&HeaderValue::from_static("299 Another warning")));
     }
 }
