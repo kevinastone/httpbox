@@ -31,31 +31,46 @@
           stable.rustfmt
           stable.clippy
         ];
-        naersk-lib = pkgs.callPackage naersk {
+        lib = pkgs.callPackage naersk {
           cargo = toolchain;
           rustc = toolchain;
         };
       in
       {
         packages = rec {
-          httpbox = naersk-lib.buildPackage ./.;
+          httpbox = lib.buildPackage ./.;
+          bin = httpbox;
           default = httpbox;
-        };
-        checks = {
-          check = naersk-lib.buildPackage {
+
+          check = lib.buildPackage {
             src = ./.;
             mode = "check";
+            release = false;
           };
-          clippy = naersk-lib.buildPackage {
+          clippy = lib.buildPackage {
             src = ./.;
             mode = "clippy";
+            release = false;
           };
-          test = naersk-lib.buildPackage {
+          test = lib.buildPackage {
             src = ./.;
             mode = "test";
+            release = false;
           };
+
+          image =
+            with pkgs;
+            dockerTools.buildLayeredImage {
+              name = "httpbox";
+              contents = [ httpbox ];
+              config = {
+                Entrypoint = [ "${httpbox}/bin/httpbox" ];
+                Env = [ "PORT=80" ];
+              };
+            };
         };
-        formatter = naersk-lib.buildPackage {
+
+        formatter = lib.buildPackage {
           src = ./.;
           mode = "fmt";
         };
