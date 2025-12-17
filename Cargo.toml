@@ -27,7 +27,7 @@ hyper-util = { version = "0.1.1", features = [
   "server-auto",
   "tokio",
 ] }
-itertools = "^0.10.0"
+itertools = "^0.14.0"
 mime = "^0.3.13"
 num_cpus = "^1.13.0"
 rand = { version = "^0.9" }
