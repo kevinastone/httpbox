@@ -11,6 +11,8 @@
       inputs.fenix.follows = "fenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    treefmt-nix.url = "github:numtide/treefmt-nix";
+    treefmt-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
@@ -20,6 +22,7 @@
       utils,
       naersk,
       fenix,
+      treefmt-nix,
     }:
     utils.lib.eachDefaultSystem (
       system:
@@ -35,6 +38,14 @@
         lib = pkgs.callPackage naersk {
           cargo = toolchain;
           rustc = toolchain;
+        };
+        treefmtStack = treefmt-nix.lib.evalModule pkgs {
+          projectRootFile = "flake.nix";
+          programs.rustfmt = {
+            enable = true;
+            package = toolchain;
+            edition = "2018";
+          };
         };
       in
       {
@@ -65,6 +76,15 @@
               name = "httpbox";
               config.Env = [ "PORT=80" ];
               config.Entrypoint = [ "${httpbox}/bin/httpbox" ];
+              config.Labels = {
+                "org.opencontainers.image.title" = "httpbox";
+                "org.opencontainers.image.source" = "https://github.com/kevinatone/httpbox";
+                "org.opencontainers.image.revision" = lib.commitIdFromGitRepo ./.;
+                "org.opencontainers.image.description" = ''
+                  httpbox is an HTTP test tool that provides a number of endpoints for testing a
+                  variety of HTTP features similar to [httpbin](http://httpbin.org).
+                '';
+              };
             };
         };
 
@@ -73,10 +93,7 @@
           program = "${pkgs.skopeo}/bin/skopeo";
         };
 
-        formatter = lib.buildPackage {
-          src = ./.;
-          mode = "fmt";
-        };
+        formatter = treefmtStack.config.build.wrapper;
         devShells.default =
           with pkgs;
           mkShell {
