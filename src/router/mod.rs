@@ -1,6 +1,6 @@
 use crate::handler::Handler;
 use crate::http::{
-    internal_server_error, not_found, Body, Error, Request, Response,
+    Body, Error, Request, Response, internal_server_error, not_found,
 };
 use futures::prelude::*;
 use hyper::Request as HTTPRequest;
@@ -12,7 +12,7 @@ use uri_path::PathMatch;
 
 mod routes;
 
-pub use self::routes::{route, Route};
+pub use self::routes::{Route, route};
 
 async fn handle_panics(
     fut: impl Future<Output = crate::http::Result>,

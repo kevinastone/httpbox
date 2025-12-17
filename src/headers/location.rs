@@ -1,5 +1,5 @@
 use crate::headers::{Error, Header, HeaderName, HeaderValue};
-use hyper::http::{header, Uri};
+use hyper::http::{Uri, header};
 use std::iter;
 
 static LOCATION: &HeaderName = &header::LOCATION;
@@ -52,7 +52,7 @@ mod test {
     use super::Location;
     use crate::headers::HeaderMapExt;
     use crate::test::headers::encode;
-    use hyper::http::{header, HeaderMap, Uri};
+    use hyper::http::{HeaderMap, Uri, header};
 
     #[test]
     fn test_encode_relative_location() {

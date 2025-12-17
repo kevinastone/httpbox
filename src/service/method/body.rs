@@ -1,5 +1,5 @@
 use crate::headers::ContentType;
-use crate::http::{bad_request, ok, Bytes, Request, Result};
+use crate::http::{Bytes, Request, Result, bad_request, ok};
 use http_body_util::BodyExt;
 use itertools::Itertools;
 use std::str;
@@ -56,7 +56,7 @@ pub async fn body(mut req: Request) -> Result {
 #[cfg(test)]
 mod test {
     use super::{
-        content_type_decoder, parse_url_encoded_body, ContentTypeDecoder,
+        ContentTypeDecoder, content_type_decoder, parse_url_encoded_body,
     };
     use crate::headers::ContentType;
     use crate::test::*;

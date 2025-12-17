@@ -1,16 +1,10 @@
-use crate::http::{bad_request, ok, Request, Result};
+use crate::http::{Request, Result, bad_request, ok};
 use futures_timer::Delay;
 use std::cmp::min;
 use std::time::Duration;
 
 macro_rules! substitute_in_test {
-    ($value:expr => $substitute:expr) => {{
-        if cfg!(test) {
-            $substitute
-        } else {
-            $value
-        }
-    }};
+    ($value:expr => $substitute:expr) => {{ if cfg!(test) { $substitute } else { $value } }};
 }
 
 pub async fn delay(req: Request) -> Result {

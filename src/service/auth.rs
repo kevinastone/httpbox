@@ -1,7 +1,7 @@
-use crate::headers::authorization::{Basic, Bearer};
 use crate::headers::Authorization;
 use crate::headers::WWWAuthenticate;
-use crate::http::{ok, response, Error, Request, Result, StatusCode};
+use crate::headers::authorization::{Basic, Bearer};
+use crate::http::{Error, Request, Result, StatusCode, ok, response};
 
 use serde_derive::Deserialize;
 

@@ -1,8 +1,8 @@
 [package]
 name = "httpbox"
 version = "0.2.0"
-edition = "2021"
-rust-version = "1.80.1"
+edition = "2024"
+rust-version = "1.85.0"
 repository = "https://github.com/kevinastone/httpbox"
 
 [[bin]]
@@ -30,7 +30,7 @@ hyper-util = { version = "0.1.1", features = [
 itertools = "^0.10.0"
 mime = "^0.3.13"
 num_cpus = "^1.13.0"
-rand = { version = "^0.8", features = ["small_rng"] }
+rand = { version = "^0.9" }
 serde = "^1.0.98"
 serde_derive = "^1.0.98"
 serde_urlencoded = "^0.7"

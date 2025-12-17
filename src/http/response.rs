@@ -20,8 +20,8 @@ impl ResponseTypedHeaderExt for hyper::http::response::Builder {
 mod wrapper {
     use super::{Body, Error, ResponseTypedHeaderExt, Result};
     use crate::headers::Header;
-    use hyper::header::{HeaderName, HeaderValue};
     use hyper::StatusCode;
+    use hyper::header::{HeaderName, HeaderValue};
     use std::convert::TryFrom;
 
     pub struct ResponseWrapper(pub hyper::http::response::Builder);

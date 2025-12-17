@@ -1,6 +1,6 @@
-use crate::http::{bad_request, ok, response, Request, Result};
+use crate::http::{Request, Result, bad_request, ok, response};
 use hyper::header::{HeaderName, HeaderValue};
-use itertools::{process_results, Itertools};
+use itertools::{Itertools, process_results};
 
 pub async fn headers(req: Request) -> Result {
     let request_headers = req
@@ -98,9 +98,14 @@ mod test {
         let warnings: Vec<&HeaderValue> =
             res.headers().get_all("Warning").iter().collect();
         assert_eq!(warnings.len(), 2);
-        assert!(warnings
-            .contains(&&HeaderValue::from_static("199 Miscellaneous warning")));
-        assert!(warnings
-            .contains(&&HeaderValue::from_static("299 Another warning")));
+        assert!(
+            warnings.contains(&&HeaderValue::from_static(
+                "199 Miscellaneous warning"
+            ))
+        );
+        assert!(
+            warnings
+                .contains(&&HeaderValue::from_static("299 Another warning"))
+        );
     }
 }

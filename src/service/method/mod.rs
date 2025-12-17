@@ -1,6 +1,6 @@
 mod body;
 use self::body::body;
-use crate::http::{bad_request, ok, Request, Result};
+use crate::http::{Request, Result, bad_request, ok};
 use itertools::Itertools;
 
 pub async fn get(req: Request) -> Result {

@@ -1,5 +1,5 @@
 use crate::headers::XForwardedFor;
-use crate::http::{bad_request, ok, Request, Result};
+use crate::http::{Request, Result, bad_request, ok};
 
 pub async fn ip(req: Request) -> Result {
     let ip = req

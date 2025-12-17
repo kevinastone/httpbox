@@ -1,4 +1,4 @@
-use uri_path::{path, Path};
+use uri_path::{Path, path};
 
 macro_rules! path_test {
     (@assertion $path:ident, matches, $expected:literal) => {

@@ -1,5 +1,5 @@
 use crate::handler::Handler;
-use crate::http::{html, Bytes, Request, Result};
+use crate::http::{Bytes, Request, Result, html};
 use crate::router::Route;
 use askama::Template;
 use async_trait::async_trait;

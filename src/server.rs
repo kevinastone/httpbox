@@ -1,7 +1,7 @@
 use futures::prelude::*;
+use hyper::Request as HTTPRequest;
 use hyper::body::{Body, Incoming};
 use hyper::server::conn::http1;
-use hyper::Request as HTTPRequest;
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpListener;
 use tokio::sync::watch;

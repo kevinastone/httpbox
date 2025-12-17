@@ -1,6 +1,6 @@
 use crate::headers::ContentLength;
 use crate::headers::ContentType;
-use crate::http::{bad_request, body_from_stream, response, Request, Result};
+use crate::http::{Request, Result, bad_request, body_from_stream, response};
 use crate::random::rng;
 use futures::prelude::*;
 use rand::Rng;
@@ -18,7 +18,7 @@ pub fn iter_bytes(
     seed: Option<u32>,
 ) -> impl ExactSizeIterator<Item = u8> {
     let mut rng = rng(seed);
-    (0..count).map(move |_| rng.gen::<u8>())
+    (0..count).map(move |_| rng.random::<u8>())
 }
 
 pub async fn bytes(req: Request) -> Result {

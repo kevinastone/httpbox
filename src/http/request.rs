@@ -5,7 +5,7 @@ use std::net::SocketAddr;
 use uri_path::PathMatch;
 
 mod de {
-    use serde::de::{value::Error, Deserialize, IntoDeserializer};
+    use serde::de::{Deserialize, IntoDeserializer, value::Error};
 
     pub fn deserialize<'de, IS, T>(raw: IS) -> Result<T, Error>
     where

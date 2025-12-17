@@ -44,7 +44,7 @@
           programs.rustfmt = {
             enable = true;
             package = toolchain;
-            edition = "2021";
+            edition = "2024";
           };
         };
       in
@@ -79,7 +79,6 @@
               config.Labels = {
                 "org.opencontainers.image.title" = "httpbox";
                 "org.opencontainers.image.source" = "https://github.com/kevinatone/httpbox";
-                "org.opencontainers.image.revision" = lib.commitIdFromGitRepo ./.;
                 "org.opencontainers.image.description" = ''
                   httpbox is an HTTP test tool that provides a number of endpoints for testing a
                   variety of HTTP features similar to [httpbin](http://httpbin.org).

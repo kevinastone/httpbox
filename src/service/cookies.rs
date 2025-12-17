@@ -1,5 +1,5 @@
 use crate::headers::{Cookie, SetCookie};
-use crate::http::{bad_request, ok, response, Request, Result};
+use crate::http::{Request, Result, bad_request, ok, response};
 use cookie::Cookie as HTTPCookie;
 use itertools::Itertools;
 

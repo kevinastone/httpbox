@@ -1,7 +1,7 @@
 use crate::num_cpus;
 use clap::CommandFactory;
 pub use clap::Parser;
-use clap_complete::{generate, Generator, Shell};
+use clap_complete::{Generator, Shell, generate};
 use std::io;
 use std::num::NonZeroUsize;
 
@@ -37,10 +37,10 @@ pub struct Cli {
 }
 
 impl Cli {
-    pub fn print_completions<G: Generator>(&self, gen: G) {
+    pub fn print_completions<G: Generator>(&self, generator: G) {
         let mut cmd = Self::command();
         let bin_name = cmd.get_name().to_string();
-        generate(gen, &mut cmd, bin_name, &mut io::stdout());
+        generate(generator, &mut cmd, bin_name, &mut io::stdout());
     }
 }
 

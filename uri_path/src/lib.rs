@@ -5,8 +5,8 @@ use itertools::EitherOrBoth;
 use itertools::Itertools;
 #[cfg(feature = "regex")]
 pub use regex;
-use serde::de::IntoDeserializer;
 use serde::Deserialize;
+use serde::de::IntoDeserializer;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt;
 use std::iter::FromIterator;

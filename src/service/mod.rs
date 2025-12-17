@@ -1,4 +1,4 @@
-use crate::router::{route, Route, Router};
+use crate::router::{Route, Router, route};
 use hyper::http::Method;
 use uri_path::path;
 

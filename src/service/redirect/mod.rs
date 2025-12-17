@@ -1,7 +1,7 @@
 mod uri;
 
 use self::uri::absolute_url;
-use crate::http::{bad_request, redirect_to, Request, Result};
+use crate::http::{Request, Result, bad_request, redirect_to};
 use hyper::Uri;
 use serde_derive::Deserialize;
 use std::cmp::min;
@@ -66,7 +66,7 @@ mod test {
     use crate::headers::Location;
     use crate::test::*;
     use hyper::http::StatusCode;
-    use hyper::http::{uri::Authority, Uri};
+    use hyper::http::{Uri, uri::Authority};
 
     #[tokio::test]
     async fn test_redirect_to() {

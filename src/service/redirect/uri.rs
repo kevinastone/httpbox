@@ -49,7 +49,7 @@ mod test {
     use super::{absolute_uri, host_from_headers, host_to_url};
     use crate::headers::Host;
     use crate::test::*;
-    use hyper::http::{uri::Authority, Uri};
+    use hyper::http::{Uri, uri::Authority};
 
     #[test]
     fn test_host_to_url() {

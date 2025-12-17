@@ -96,9 +96,11 @@ mod test {
 
     #[test]
     fn test_parse_err_basic_realm() {
-        assert!("Missing realm=\"Test Realm\""
-            .parse::<BasicRealm>()
-            .is_err())
+        assert!(
+            "Missing realm=\"Test Realm\""
+                .parse::<BasicRealm>()
+                .is_err()
+        )
     }
 
     #[test]

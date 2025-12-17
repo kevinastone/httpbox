@@ -14,7 +14,7 @@ fn to_bytes(val: u32) -> <Rng as SeedableRng>::Seed {
 pub fn rng(seed: Option<u32>) -> Rng {
     match seed {
         Some(seed) => Rng::from_seed(to_bytes(seed)),
-        None => Rng::from_rng(thread_rng()).unwrap(),
+        None => Rng::from_os_rng(),
     }
 }
 
