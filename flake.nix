@@ -99,6 +99,7 @@
             nativeBuildInputs = [ toolchain ];
             packages = [
               skopeo
+              cargo-outdated
             ];
             RUST_SRC_PATH = rustPlatform.rustLibSrc;
           };
