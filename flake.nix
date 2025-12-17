@@ -61,7 +61,7 @@
 
           image =
             with pkgs;
-            dockerTools.buildLayeredImage {
+            dockerTools.buildImage {
               name = "httpbox";
               config.Env = [ "PORT=80" ];
               config.Entrypoint = [ "${httpbox}/bin/httpbox" ];
