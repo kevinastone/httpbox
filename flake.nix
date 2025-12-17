@@ -81,18 +81,10 @@
           with pkgs;
           mkShell {
             nativeBuildInputs = [ toolchain ];
-            buildInputs = [
-              cargo
-              rustc
-              rustfmt
-              pre-commit
-              rustPackages.clippy
-            ];
             packages = [
               skopeo
             ];
             RUST_SRC_PATH = rustPlatform.rustLibSrc;
-            # RUSTC_VERSION = overrides.toolchain.channel;
           };
       }
     );
