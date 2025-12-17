@@ -2,3 +2,4 @@ target
 result
 .cargo
 *.rs.bk
+.direnv
