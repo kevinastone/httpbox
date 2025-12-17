@@ -9,6 +9,7 @@
     naersk = {
       url = "github:nix-community/naersk/master";
       inputs.fenix.follows = "fenix";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
