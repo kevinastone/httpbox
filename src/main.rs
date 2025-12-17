@@ -50,7 +50,10 @@ async fn shutdown_signal() {
 async fn run_server(addr: SocketAddr) -> std::io::Result<()> {
     let service = ServiceBuilder::new()
         .layer(TraceLayer::new_for_http())
-        .layer(TimeoutLayer::new(Duration::from_secs(30)))
+        .layer(TimeoutLayer::with_status_code(
+            http::StatusCode::REQUEST_TIMEOUT,
+            Duration::from_secs(30),
+        ))
         .service(service::router());
 
     let listener = TcpListener::bind(addr).await.unwrap();

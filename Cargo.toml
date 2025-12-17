@@ -15,7 +15,7 @@ askama = "^0.14"
 async-trait = "^0.1"
 clap = { version = "^4.0.29", features = ["derive", "env"] }
 clap_complete = "^4.0"
-cookie = "^0.16.0"
+cookie = "^0.18.1"
 futures = "^0.3.1"
 futures-timer = "^3.0"
 headers = "^0.4"
@@ -36,8 +36,8 @@ serde_derive = "^1.0.98"
 serde_urlencoded = "^0.7"
 tokio = { version = "1.25.0", features = ["full"] }
 tokio-stream = { version = "0.1.14", features = ["net"] }
-tower = { version = "^0.4.12", features = ["full"] }
-tower-http = { version = "^0.5", features = ["timeout", "trace"] }
+tower = { version = "^0.5.2", features = ["full"] }
+tower-http = { version = "^0.6.8", features = ["timeout", "trace"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 uri_path = { path = "uri_path" }
