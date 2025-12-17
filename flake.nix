@@ -85,12 +85,8 @@
                 '';
               };
             };
-        };
 
-        apps.skopeo = {
-          type = "app";
-          meta = pkgs.skopeo.meta;
-          program = "${pkgs.skopeo}/bin/skopeo";
+          skopeo = pkgs.skopeo;
         };
 
         formatter = treefmtStack.config.build.wrapper;
