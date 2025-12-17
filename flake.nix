@@ -44,7 +44,7 @@
           programs.rustfmt = {
             enable = true;
             package = toolchain;
-            edition = "2018";
+            edition = "2021";
           };
         };
       in
