@@ -28,7 +28,7 @@
       system:
       let
         pkgs = import nixpkgs { inherit system; };
-        stable = fenix.packages.${system}.stable;
+        inherit (fenix.packages.${system}) stable;
         toolchain = fenix.packages.${system}.combine [
           stable.cargo
           stable.rustc
@@ -45,6 +45,15 @@
             enable = true;
             package = toolchain;
             edition = "2024";
+          };
+          # Nix formatters
+          programs.nixfmt.enable = true;
+          programs.statix.enable = true;
+          programs.deadnix.enable = true;
+          settings.formatter = {
+            deadnix.priority = 1;
+            statix.priority = 2;
+            nixfmt.priority = 3;
           };
         };
       in
@@ -86,7 +95,7 @@
               };
             };
 
-          skopeo = pkgs.skopeo;
+          inherit (pkgs) skopeo;
         };
 
         formatter = treefmtStack.config.build.wrapper;
