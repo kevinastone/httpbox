@@ -17,12 +17,12 @@
 
   outputs =
     {
-      self,
       nixpkgs,
       utils,
       naersk,
       fenix,
       treefmt-nix,
+      ...
     }:
     utils.lib.eachDefaultSystem (
       system:
