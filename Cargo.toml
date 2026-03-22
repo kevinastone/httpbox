@@ -2,7 +2,7 @@
 name = "httpbox"
 version = "0.2.0"
 edition = "2024"
-rust-version = "1.85.0"
+rust-version = "1.94.0"
 repository = "https://github.com/kevinastone/httpbox"
 
 [[bin]]
@@ -19,10 +19,10 @@ cookie = "^0.18.1"
 futures = "^0.3.1"
 futures-timer = "^3.0"
 headers = "^0.4"
-http-body-util = "0.1.0"
-hyper = { version = "1.0", features = ["full"] }
+http-body-util = "^0.1.0"
+hyper = { version = "^1.0", features = ["full"] }
 hyper_body = { path = "hyper_body" }
-hyper-util = { version = "0.1.1", features = [
+hyper-util = { version = "^0.1.20", features = [
   "server",
   "server-auto",
   "tokio",
@@ -34,12 +34,12 @@ rand = { version = "^0.9" }
 serde = "^1.0.98"
 serde_derive = "^1.0.98"
 serde_urlencoded = "^0.7"
-tokio = { version = "1.25.0", features = ["full"] }
-tokio-stream = { version = "0.1.14", features = ["net"] }
+tokio = { version = "^1.50.0", features = ["full"] }
+tokio-stream = { version = "^0.1.18", features = ["net"] }
 tower = { version = "^0.5.2", features = ["full"] }
 tower-http = { version = "^0.6.8", features = ["timeout", "trace"] }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing = "^0.1"
+tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
 uri_path = { path = "uri_path" }
 url = "^2.2.1"
 
