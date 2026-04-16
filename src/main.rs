@@ -13,7 +13,6 @@ mod args;
 mod handler;
 mod headers;
 mod http;
-mod num_cpus;
 mod random;
 mod router;
 mod server;
