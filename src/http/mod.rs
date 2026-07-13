@@ -1,5 +1,3 @@
-#![allow(clippy::result_large_err)]
-
 pub use hyper::body::Bytes;
 pub use hyper::http::{StatusCode, Uri};
 

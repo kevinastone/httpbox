@@ -3,14 +3,14 @@ use super::Response;
 #[derive(Debug)]
 pub enum Error {
     HyperError(hyper::http::Error),
-    Failure(Response),
+    Failure(Box<Response>),
 }
 
 impl Error {
     pub async fn into_result(self) -> hyper::http::Result<Response> {
         match self {
             Self::HyperError(e) => Err(e),
-            Self::Failure(res) => Ok(res),
+            Self::Failure(res) => Ok(*res),
         }
     }
 }
@@ -18,7 +18,7 @@ impl Error {
 impl From<hyper::http::Result<Response>> for Error {
     fn from(result: hyper::http::Result<Response>) -> Self {
         match result {
-            Ok(res) => Self::Failure(res),
+            Ok(res) => Self::Failure(Box::new(res)),
             Err(e) => Self::HyperError(e),
         }
     }
