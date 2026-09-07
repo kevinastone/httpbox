@@ -13,6 +13,7 @@ RUN cargo vendor > .cargo/config
 COPY Readme.md ./
 COPY src ./src
 COPY templates ./templates
+COPY assets ./assets
 RUN cargo build --release
 ENTRYPOINT ["cargo"]
 

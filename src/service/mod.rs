@@ -7,6 +7,7 @@ mod bytes;
 mod cache;
 mod cookies;
 mod delay;
+mod favicon;
 mod headers;
 mod healthz;
 mod index;
@@ -163,6 +164,14 @@ pub fn router() -> Router {
     let index: crate::service::index::Index = routes.into();
 
     builder
+        .install(
+            crate::service::favicon::favicon,
+            route(path!("favicon.ico")),
+        )
+        .install(
+            crate::service::favicon::favicon,
+            route(path!("favicon.svg")),
+        )
         .install(crate::service::healthz::healthz, route(path!("healthz")))
         .install(index, index_route)
         .build()
