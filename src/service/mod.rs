@@ -2,12 +2,12 @@ use crate::router::{Route, Router, route};
 use hyper::http::Method;
 use uri_path::path;
 
+mod assets;
 mod auth;
 mod bytes;
 mod cache;
 mod cookies;
 mod delay;
-mod favicon;
 mod headers;
 mod healthz;
 mod index;
@@ -165,12 +165,8 @@ pub fn router() -> Router {
 
     builder
         .install(
-            crate::service::favicon::favicon,
-            route(path!("favicon.ico")),
-        )
-        .install(
-            crate::service::favicon::favicon,
-            route(path!("favicon.svg")),
+            crate::service::assets::assets,
+            route(path!("assets" / [path ~ r".*"])),
         )
         .install(crate::service::healthz::healthz, route(path!("healthz")))
         .install(index, index_route)
