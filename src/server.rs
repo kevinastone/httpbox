@@ -1,8 +1,9 @@
 use futures::prelude::*;
 use hyper::Request as HTTPRequest;
 use hyper::body::{Body, Incoming};
-use hyper::server::conn::http1;
-use hyper_util::rt::TokioIo;
+use hyper_util::rt::{TokioExecutor, TokioIo, TokioTimer};
+use hyper_util::server::conn::auto;
+use std::time::Duration;
 use tokio::net::TcpListener;
 use tokio::sync::watch;
 use tokio_stream::wrappers::TcpListenerStream;
@@ -72,34 +73,48 @@ where
         let service = self.service;
         let conn_stream = self.conn_stream;
 
+        let mut auto_builder = auto::Builder::new(TokioExecutor::new());
+        auto_builder
+            .http1()
+            .timer(TokioTimer::new())
+            .header_read_timeout(Duration::from_secs(30));
+        auto_builder
+            .http2()
+            .timer(TokioTimer::new())
+            .keep_alive_interval(Duration::from_secs(60))
+            .keep_alive_timeout(Duration::from_secs(10));
+
+        let conn_close_rx = close_rx.clone();
         let conn_stream = conn_stream
             .take_until(self.shutdown_signal)
-            .and_then(|stream| async {
-                let addr = stream.peer_addr()?;
-                let stream = TokioIo::new(stream);
+            .and_then(move |stream| {
+                let auto_builder = auto_builder.clone();
+                let mut close_rx = conn_close_rx.clone();
+                let service = service.clone();
 
-                // Inject the client addr into the request
-                let tower_service = service.clone().map_request(
-                    move |mut req: HTTPRequest<_>| {
-                        req.extensions_mut().insert(addr);
-                        req
-                    },
-                );
+                async move {
+                    let addr = stream.peer_addr()?;
+                    let stream = TokioIo::new(stream);
 
-                let mut close_rx = close_rx.clone();
-
-                tokio::task::spawn(async move {
-                    let hyper_service = hyper::service::service_fn(
-                        move |request: HTTPRequest<_>| {
-                            tower_service.clone().call(request)
+                    // Inject the client addr into the request
+                    let tower_service = service.map_request(
+                        move |mut req: HTTPRequest<_>| {
+                            req.extensions_mut().insert(addr);
+                            req
                         },
                     );
 
-                    let conn = http1::Builder::new()
-                        .serve_connection(stream, hyper_service)
-                        .with_upgrades();
+                    tokio::task::spawn(async move {
+                        let hyper_service = hyper::service::service_fn(
+                            move |request: HTTPRequest<_>| {
+                                tower_service.clone().call(request)
+                            },
+                        );
 
-                    let mut conn = std::pin::pin!(conn);
+                        let conn = auto_builder
+                            .serve_connection_with_upgrades(stream, hyper_service);
+
+                        let mut conn = std::pin::pin!(conn);
 
                     loop {
                         tokio::select! {
@@ -126,7 +141,7 @@ where
                 });
 
                 Ok(())
-            });
+            }});
 
         // Run the listener stream to completion
         let _ = conn_stream.map(Ok).forward(futures::sink::drain()).await;
