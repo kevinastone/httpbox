@@ -132,6 +132,7 @@ where
         let _ = conn_stream.map(Ok).forward(futures::sink::drain()).await;
 
         drop(close_rx);
+        let _ = close_tx.send(());
 
         // Wait for all tasks to complete.
         tracing::debug!(
