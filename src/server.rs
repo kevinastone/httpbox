@@ -159,3 +159,52 @@ where
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use http_body_util::Empty;
+    use hyper::client::conn::http2;
+    use tokio::net::TcpStream;
+
+    #[tokio::test]
+    async fn test_http2_cleartext_request() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+
+        let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
+        let server = Server::new(listener, crate::service::router())
+            .with_graceful_shutdown(async move {
+                let _ = shutdown_rx.await;
+            });
+
+        let server_task = tokio::spawn(async move {
+            server.serve().await.unwrap();
+        });
+
+        let stream = TokioIo::new(TcpStream::connect(addr).await.unwrap());
+        let (mut sender, conn) = http2::handshake(TokioExecutor::new(), stream)
+            .await
+            .expect("HTTP/2 handshake failed");
+
+        tokio::spawn(async move {
+            if let Err(err) = conn.await {
+                eprintln!("HTTP/2 connection error: {err}");
+            }
+        });
+
+        let req = hyper::Request::builder()
+            .uri(format!("http://{addr}/healthz"))
+            .version(hyper::Version::HTTP_2)
+            .body(Empty::<hyper::body::Bytes>::new())
+            .unwrap();
+
+        let res = sender.send_request(req).await.unwrap();
+
+        assert_eq!(res.version(), hyper::Version::HTTP_2);
+        assert_eq!(res.status(), hyper::http::StatusCode::OK);
+
+        let _ = shutdown_tx.send(());
+        let _ = server_task.await;
+    }
+}
