@@ -64,4 +64,16 @@ mod test {
         assert_eq!(args.port, 3000u16);
         assert_eq!(args.threads, default_threads());
     }
+
+    #[test]
+    fn test_short_host_flag() {
+        let args = Cli::parse_from(vec!["httpbox", "-h", "127.0.0.1"]);
+        assert_eq!(args.host, "127.0.0.1");
+    }
+
+    #[test]
+    fn test_help_flag() {
+        let err = Cli::try_parse_from(vec!["httpbox", "--help"]).unwrap_err();
+        assert_eq!(err.kind(), clap::error::ErrorKind::DisplayHelp);
+    }
 }

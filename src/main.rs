@@ -55,7 +55,7 @@ async fn run_server(addr: SocketAddr) -> std::io::Result<()> {
         ))
         .service(service::router());
 
-    let listener = TcpListener::bind(addr).await.unwrap();
+    let listener = TcpListener::bind(addr).await?;
 
     let server = server::Server::new(listener, service)
         .with_graceful_shutdown(shutdown_signal());
@@ -80,17 +80,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let threads = args.threads;
-    let addr = (args.host.clone(), args.port)
-        .to_socket_addrs()
-        .ok()
-        .and_then(|mut iter| iter.next_back())
-        .unwrap_or_else(|| {
-            panic!(
-                "Invalid listening address: {}:{}",
-                args.host.clone(),
-                args.port
+    let addr = (args.host.as_str(), args.port)
+        .to_socket_addrs()?
+        .next_back()
+        .ok_or_else(|| {
+            std::io::Error::new(
+                std::io::ErrorKind::AddrNotAvailable,
+                format!("Invalid listening address: {}:{}", args.host, args.port),
             )
-        });
+        })?;
 
     let runtime = runtime::Builder::new_multi_thread()
         .worker_threads(threads.get())
@@ -99,6 +97,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .build()?;
 
     tracing::info!("Listening on {} with {} threads", addr, threads);
-    let _ = runtime.block_on(run_server(addr));
+    runtime.block_on(run_server(addr))?;
     Ok(())
 }
