@@ -9,6 +9,13 @@ repository = "https://github.com/kevinastone/httpbox"
 name = "httpbox"
 path = "src/main.rs"
 
+[workspace]
+members = [
+  ".",
+  "hyper_body",
+  "uri_path",
+]
+
 [dependencies]
 anyhow = "^1.0.27"
 askama = "^0.14"

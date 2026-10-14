@@ -20,14 +20,8 @@ jobs:
           toolchain: ${{ matrix.rust }}
           components: clippy
       - name: Build
-        run: cargo build --verbose
+        run: cargo build --verbose --workspace
       - name: Check with clippy
-        run: cargo clippy --verbose --all-targets --all-features -- -D warnings
+        run: cargo clippy --verbose --workspace --all-targets --all-features -- -D warnings
       - name: Run tests
-        run: cargo test --verbose
-      - name: Run uri_path tests
-        run: cargo test --verbose
-        working-directory: ./uri_path
-      - name: Run hyper_body tests
-        run: cargo test --verbose
-        working-directory: ./hyper_body
+        run: cargo test --verbose --workspace
