@@ -185,4 +185,37 @@ mod test {
             &Uri::from_static("http://example.com/")
         )
     }
+
+    #[tokio::test]
+    async fn test_absolute_redirect_with_authority() {
+        let res = request()
+            .path("http://example.com/absolute-redirect/5")
+            .param("n", "5")
+            .handle(absolute)
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::FOUND);
+        assert_eq!(
+            res.headers().typed_get::<Location>().unwrap().uri(),
+            &Uri::from_static("http://example.com/absolute-redirect/4")
+        );
+    }
+
+    #[tokio::test]
+    async fn test_absolute_redirect_with_x_forwarded_proto() {
+        let res = request()
+            .typed_header(Host::from(Authority::from_static("example.com")))
+            .header("x-forwarded-proto", "https")
+            .param("n", "5")
+            .handle(absolute)
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::FOUND);
+        assert_eq!(
+            res.headers().typed_get::<Location>().unwrap().uri(),
+            &Uri::from_static("https://example.com/absolute-redirect/4")
+        );
+    }
 }
