@@ -3,7 +3,7 @@ mod uri;
 use self::uri::absolute_url;
 use crate::http::{Request, Result, bad_request, redirect_to};
 use hyper::Uri;
-use serde_derive::Deserialize;
+use serde::Deserialize;
 use std::cmp::min;
 
 #[derive(Deserialize)]
@@ -27,7 +27,7 @@ pub async fn redirect(req: Request) -> Result {
 
 pub async fn relative(req: Request) -> Result {
     let n = req.param::<u16>("n").ok_or_else(bad_request)?;
-    let n = min(n - 1, 100);
+    let n = min(n.saturating_sub(1), 100);
 
     let url = if n > 0 {
         format!("/relative-redirect/{n}")
@@ -41,7 +41,7 @@ pub async fn relative(req: Request) -> Result {
 
 pub async fn absolute(req: Request) -> Result {
     let n = req.param::<u16>("n").ok_or_else(bad_request)?;
-    let n = min(n - 1, 100);
+    let n = min(n.saturating_sub(1), 100);
     let url = if n > 0 {
         format!("/absolute-redirect/{n}")
     } else {
@@ -128,6 +128,17 @@ mod test {
     }
 
     #[tokio::test]
+    async fn test_relative_redirect_zero() {
+        let res = request().param("n", "0").handle(relative).await.unwrap();
+
+        assert_eq!(res.status(), StatusCode::FOUND);
+        assert_eq!(
+            res.headers().typed_get::<Location>().unwrap().uri(),
+            &Uri::from_static("/")
+        )
+    }
+
+    #[tokio::test]
     async fn test_absolute_redirect() {
         let res = request()
             .typed_header(Host::from(Authority::from_static("example.com")))
@@ -148,6 +159,22 @@ mod test {
         let res = request()
             .typed_header(Host::from(Authority::from_static("example.com")))
             .param("n", "1")
+            .handle(absolute)
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::FOUND);
+        assert_eq!(
+            res.headers().typed_get::<Location>().unwrap().uri(),
+            &Uri::from_static("http://example.com/")
+        )
+    }
+
+    #[tokio::test]
+    async fn test_absolute_redirect_zero() {
+        let res = request()
+            .typed_header(Host::from(Authority::from_static("example.com")))
+            .param("n", "0")
             .handle(absolute)
             .await
             .unwrap();
