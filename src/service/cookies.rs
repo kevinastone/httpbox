@@ -1,6 +1,7 @@
-use crate::headers::{Cookie, SetCookie};
+use crate::headers::Cookie;
 use crate::http::{Request, Result, bad_request, ok, response};
 use cookie::Cookie as HTTPCookie;
+use hyper::header::HeaderValue;
 use itertools::Itertools;
 
 pub async fn cookies(req: Request) -> Result {
@@ -23,7 +24,10 @@ pub async fn set_cookies(req: Request) -> Result {
         .query::<Vec<(String, String)>>()
         .map_err(|_| bad_request())?
     {
-        res = res.typed_header(SetCookie(HTTPCookie::new(k, v)));
+        let cookie = HTTPCookie::new(k, v);
+        let header_val = HeaderValue::try_from(cookie.to_string())
+            .map_err(|_| bad_request())?;
+        res = res.header(hyper::header::SET_COOKIE, header_val);
     }
 
     res.into()
@@ -32,6 +36,7 @@ pub async fn set_cookies(req: Request) -> Result {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::headers::SetCookie;
     use crate::headers::HeaderMapExt;
     use crate::test::*;
     use hyper::http::StatusCode;
@@ -87,5 +92,25 @@ mod test {
             res.headers().typed_get::<SetCookie>().unwrap(),
             SetCookie(HTTPCookie::new("test", "value"))
         )
+    }
+
+    #[tokio::test]
+    async fn test_set_multiple_cookies() {
+        let res = request()
+            .path("/?first=value&second=another")
+            .handle(set_cookies)
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), StatusCode::OK);
+        let cookies: Vec<String> = res
+            .headers()
+            .get_all(hyper::header::SET_COOKIE)
+            .iter()
+            .map(|v| v.to_str().unwrap().to_string())
+            .collect();
+        assert_eq!(cookies.len(), 2);
+        assert!(cookies.contains(&"first=value".to_string()));
+        assert!(cookies.contains(&"second=another".to_string()));
     }
 }

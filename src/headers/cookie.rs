@@ -6,6 +6,7 @@ use std::iter;
 use std::ops::Deref;
 
 static COOKIE: &HeaderName = &header::COOKIE;
+#[allow(dead_code)]
 static SET_COOKIE: &HeaderName = &header::SET_COOKIE;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -52,6 +53,7 @@ impl<'a> Deref for Cookie<'a> {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub struct SetCookie<'a>(pub HTTPCookie<'a>);
 
