@@ -89,6 +89,10 @@ pub fn bad_request() -> Error {
     response().status(StatusCode::BAD_REQUEST).into()
 }
 
+pub fn payload_too_large() -> Error {
+    response().status(StatusCode::PAYLOAD_TOO_LARGE).into()
+}
+
 pub fn internal_server_error() -> Error {
     response().status(StatusCode::INTERNAL_SERVER_ERROR).into()
 }

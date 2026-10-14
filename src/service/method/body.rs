@@ -1,8 +1,10 @@
 use crate::headers::ContentType;
-use crate::http::{Bytes, Request, Result, bad_request, ok};
-use http_body_util::BodyExt;
+use crate::http::{Bytes, Request, Result, bad_request, ok, payload_too_large};
+use http_body_util::{BodyExt, Limited};
 use itertools::Itertools;
 use std::str;
+
+pub const MAX_BODY_SIZE: usize = 2 * 1024 * 1024; // 2 MB
 
 fn parse_url_encoded_body(raw_body: &[u8]) -> anyhow::Result<String> {
     Ok(
@@ -43,12 +45,18 @@ fn parse_body(req: &Request, chunk: &Bytes) -> anyhow::Result<String> {
 }
 
 pub async fn body(mut req: Request) -> Result {
-    let body = req
-        .body_mut()
+    let req_body = std::mem::take(req.body_mut());
+    let collected = Limited::new(req_body, MAX_BODY_SIZE)
         .collect()
         .await
-        .map_err(|_| bad_request())?
-        .to_bytes();
+        .map_err(|err| {
+            if err.downcast_ref::<http_body_util::LengthLimitError>().is_some() {
+                payload_too_large()
+            } else {
+                bad_request()
+            }
+        })?;
+    let body = collected.to_bytes();
     let content = parse_body(&req, &body).map_err(|_| bad_request())?;
     ok(content)
 }
@@ -107,5 +115,17 @@ mod test {
             ContentTypeDecoder::UrlEncoded => (),
             _ => panic!("Incorrect decoder"),
         };
+    }
+
+    #[tokio::test]
+    async fn test_body_payload_too_large() {
+        let large_body = vec![b'a'; super::MAX_BODY_SIZE + 1];
+        let res = request()
+            .body(large_body)
+            .handle(super::body)
+            .await
+            .unwrap();
+
+        assert_eq!(res.status(), hyper::http::StatusCode::PAYLOAD_TOO_LARGE);
     }
 }
