@@ -3,7 +3,7 @@ use crate::headers::WWWAuthenticate;
 use crate::headers::authorization::{Basic, Bearer};
 use crate::http::{Error, Request, Result, StatusCode, ok, response};
 
-use serde_derive::Deserialize;
+use serde::Deserialize;
 
 pub(crate) const REALM: &str = "User Visible Realm";
 
