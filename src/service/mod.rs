@@ -166,7 +166,7 @@ pub fn router() -> Router {
     builder
         .install(
             crate::service::assets::assets,
-            route(path!("assets" / [path ~ r".*"])),
+            route(path!("assets" / *path)),
         )
         .install(crate::service::healthz::healthz, route(path!("healthz")))
         .install(index, index_route)

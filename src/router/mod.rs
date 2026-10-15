@@ -124,6 +124,7 @@ mod test {
 
     use super::*;
     use crate::http::Request;
+    use crate::test::TestResponseExt;
     use hyper::http::Request as HTTPRequest;
     use hyper::http::StatusCode;
 
@@ -141,5 +142,28 @@ mod test {
         let body = Body::empty();
         let res = service.call(HTTPRequest::new(body)).await.unwrap();
         assert_eq!(res.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    }
+
+    #[tokio::test]
+    async fn test_catch_all_route() {
+        let handler = |req: Request| async move {
+            let path = req.param::<String>("path").unwrap();
+            crate::http::response().body(path)
+        };
+
+        let router = Router::builder()
+            .install(handler, route(path!("static" / *path)))
+            .build();
+        let mut service = router;
+
+        let req = HTTPRequest::builder()
+            .uri("/static/css/theme/dark.css")
+            .body(Body::empty())
+            .unwrap();
+
+        let res = service.call(req).await.unwrap();
+        assert_eq!(res.status(), StatusCode::OK);
+        let body = res.read_body().await.unwrap();
+        assert_eq!(body, "css/theme/dark.css".as_bytes());
     }
 }
