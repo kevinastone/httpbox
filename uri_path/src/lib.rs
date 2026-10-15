@@ -1,7 +1,6 @@
 #[macro_use]
 mod macros;
 
-use itertools::EitherOrBoth;
 use itertools::Itertools;
 #[cfg(feature = "regex")]
 pub use regex;
@@ -61,20 +60,28 @@ pub struct Path(pub Vec<PathSegment>);
 impl Path {
     pub fn matches(&self, path: &str) -> Option<PathMatch> {
         let mut params = PathMatch::default();
-        for el in self.iter().zip_longest(segmented(path)) {
-            match el {
-                EitherOrBoth::Both(expected, actual) => {
-                    if !expected.matches(actual) {
+        let mut path_segs = segmented(path);
+
+        for expected in self.iter() {
+            match expected {
+                PathSegment::Literal(expected_str) => {
+                    if path_segs.next()? != *expected_str {
                         return None;
                     }
-                    if let PathSegment::Dynamic(param) = expected {
-                        params.insert(param.name, actual.to_owned());
-                    }
                 }
-                _ => return None,
+                PathSegment::Dynamic(param) => {
+                    let matched_val = param.matches(&mut path_segs)?;
+                    params.insert(param.name, matched_val);
+                }
             }
         }
-        Some(params)
+
+        // If all expected segments were consumed, ensure no actual path segments remain
+        if path_segs.next().is_none() {
+            Some(params)
+        } else {
+            None
+        }
     }
 
     pub fn replace(
@@ -155,17 +162,55 @@ impl fmt::Display for PathToken {
 pub struct PathParam {
     name: &'static str,
     token: PathToken,
+    catch_all: bool,
 }
 
 impl PathParam {
     pub fn new(name: &'static str, token: PathToken) -> Self {
-        Self { name, token }
+        Self {
+            name,
+            token,
+            catch_all: false,
+        }
+    }
+
+    pub fn catch_all(name: &'static str, token: PathToken) -> Self {
+        Self {
+            name,
+            token,
+            catch_all: true,
+        }
+    }
+
+    pub fn is_catch_all(&self) -> bool {
+        self.catch_all
+    }
+
+    pub fn matches<'a>(&self, path_segs: &mut impl Iterator<Item = &'a str>) -> Option<String> {
+        if self.catch_all {
+            let remaining = path_segs.collect::<Vec<_>>();
+            if remaining.is_empty() {
+                return None;
+            }
+            let joined = remaining.join("/");
+            if !self.token.matches(&joined) {
+                return None;
+            }
+            Some(joined)
+        } else {
+            let actual = path_segs.next()?;
+            if !self.token.matches(actual) {
+                return None;
+            }
+            Some(actual.to_owned())
+        }
     }
 }
 
 impl fmt::Display for PathParam {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, ":{}", self.name)
+        let prefix = if self.catch_all { "*" } else { ":" };
+        write!(f, "{}{}", prefix, self.name)
     }
 }
 
@@ -176,7 +221,7 @@ pub enum PathSegment {
 }
 
 impl PathSegment {
-    fn matches(&self, path: &str) -> bool {
+    pub fn matches(&self, path: &str) -> bool {
         match self {
             Self::Literal(str) => str == &path,
             Self::Dynamic(param) => param.token.matches(path),

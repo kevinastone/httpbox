@@ -107,6 +107,22 @@ path_test! {
             {param: "value"} => "/test/value",
             {param: "value", first: "other", second: "another"} => "/test/value?first=other&second=another",
         },
+    },
+    catch_all(path!("assets" / *path)) {
+        matches: ["/assets/favicon.ico", "/assets/css/style.css", "/assets/deep/nested/file.txt"],
+        non_matches: ["/", "/assets", "/other/file.txt"],
+        params: {
+            "/assets" => None,
+            "/assets/favicon.ico" => {path: "favicon.ico"},
+            "/assets/css/style.css" => {path: "css/style.css"},
+            "/assets/deep/nested/file.txt" => {path: "deep/nested/file.txt"},
+            "/other/file.txt" => None,
+        },
+        replace: {
+            {} => None,
+            {path: "css/style.css"} => "/assets/css/style.css",
+            {path: "css/style.css", v: "1"} => "/assets/css/style.css?v=1",
+        },
     }
 }
 
@@ -141,6 +157,22 @@ path_test! {
             {} => None,
             {param: "user-123"} => "/test/user-123",
             {param: "user-123", first: "other", second: "another"} => "/test/user-123?first=other&second=another",
+        },
+    },
+    regex_catch_all(path!("assets" / *[path ~ r".*\.(svg|png)"])) {
+        matches: ["/assets/favicon.svg", "/assets/images/logo.png", "/assets/nested/deep/icon.svg"],
+        non_matches: ["/assets", "/assets/style.css", "/assets/nested/doc.txt"],
+        params: {
+            "/assets" => None,
+            "/assets/style.css" => None,
+            "/assets/favicon.svg" => {path: "favicon.svg"},
+            "/assets/images/logo.png" => {path: "images/logo.png"},
+            "/assets/nested/deep/icon.svg" => {path: "nested/deep/icon.svg"},
+        },
+        replace: {
+            {} => None,
+            {path: "favicon.svg"} => "/assets/favicon.svg",
+            {path: "images/logo.png", v: "2"} => "/assets/images/logo.png?v=2",
         },
     },
 }
