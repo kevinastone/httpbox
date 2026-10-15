@@ -148,11 +148,7 @@ mod test {
 
     #[tokio::test]
     async fn test_bytes_capped_at_max() {
-        let res = request()
-            .param("n", "200000")
-            .handle(bytes)
-            .await
-            .unwrap();
+        let res = request().param("n", "200000").handle(bytes).await.unwrap();
 
         assert_eq!(res.status(), StatusCode::OK);
         assert_eq!(res.read_body().await.unwrap().len(), MAX_BYTES as usize);

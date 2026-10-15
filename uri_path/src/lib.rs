@@ -186,7 +186,10 @@ impl PathParam {
         self.catch_all
     }
 
-    pub fn matches<'a>(&self, path_segs: &mut impl Iterator<Item = &'a str>) -> Option<String> {
+    pub fn matches<'a>(
+        &self,
+        path_segs: &mut impl Iterator<Item = &'a str>,
+    ) -> Option<String> {
         if self.catch_all {
             let remaining = path_segs.collect::<Vec<_>>();
             if remaining.is_empty() {

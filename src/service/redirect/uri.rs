@@ -211,25 +211,19 @@ mod test {
 
     #[test]
     fn test_scheme_from_request_x_forwarded_proto() {
-        let req = request()
-            .header("x-forwarded-proto", "https")
-            .build();
+        let req = request().header("x-forwarded-proto", "https").build();
         assert_eq!(scheme_from_request(&req), "https");
     }
 
     #[test]
     fn test_scheme_from_request_x_forwarded_proto_chained() {
-        let req = request()
-            .header("x-forwarded-proto", "https, http")
-            .build();
+        let req = request().header("x-forwarded-proto", "https, http").build();
         assert_eq!(scheme_from_request(&req), "https");
     }
 
     #[test]
     fn test_scheme_from_request_x_forwarded_proto_whitespace() {
-        let req = request()
-            .header("x-forwarded-proto", "   https   ")
-            .build();
+        let req = request().header("x-forwarded-proto", "   https   ").build();
         assert_eq!(scheme_from_request(&req), "https");
     }
 

@@ -50,7 +50,10 @@ pub async fn body(mut req: Request) -> Result {
         .collect()
         .await
         .map_err(|err| {
-            if err.downcast_ref::<http_body_util::LengthLimitError>().is_some() {
+            if err
+                .downcast_ref::<http_body_util::LengthLimitError>()
+                .is_some()
+            {
                 payload_too_large()
             } else {
                 bad_request()

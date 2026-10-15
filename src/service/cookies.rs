@@ -36,8 +36,8 @@ pub async fn set_cookies(req: Request) -> Result {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::headers::SetCookie;
     use crate::headers::HeaderMapExt;
+    use crate::headers::SetCookie;
     use crate::test::*;
     use hyper::http::StatusCode;
 

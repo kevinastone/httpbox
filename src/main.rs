@@ -86,7 +86,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .ok_or_else(|| {
             std::io::Error::new(
                 std::io::ErrorKind::AddrNotAvailable,
-                format!("Invalid listening address: {}:{}", args.host, args.port),
+                format!(
+                    "Invalid listening address: {}:{}",
+                    args.host, args.port
+                ),
             )
         })?;
 
