@@ -47,7 +47,7 @@ pub fn router() -> Router {
             crate::service::method::patch,
             route(path!("patch"))
                 .method(Method::PATCH)
-                .description("Returns PUT data"),
+                .description("Returns PATCH data"),
         )
         .install(
             crate::service::method::put,
