@@ -46,21 +46,19 @@ fn host_from_headers(req: &Request) -> anyhow::Result<Url> {
     host_to_url(&host, scheme)
 }
 
-fn absolute_uri(req: &Request, uri: &Uri) -> anyhow::Result<Uri> {
+pub fn absolute_uri(req: &Request, uri: &Uri) -> anyhow::Result<Uri> {
     if uri.scheme().is_some() {
         Ok(uri.clone())
     } else {
-        let base = match BASE_URL.clone() {
-            Some(url) => url,
+        let base = match BASE_URL.as_ref() {
+            Some(url) => url.clone(),
             None => host_from_headers(req)?,
         };
 
-        Ok(base.join(&uri.to_string())?.to_string().parse()?)
+        let path = uri.path_and_query().map_or(uri.path(), |pq| pq.as_str());
+        let joined = base.join(path)?;
+        Ok(joined.as_str().parse()?)
     }
-}
-
-pub fn absolute_url(req: &Request, uri: &Uri) -> anyhow::Result<Url> {
-    Ok(absolute_uri(req, uri)?.to_string().parse()?)
 }
 
 #[cfg(test)]

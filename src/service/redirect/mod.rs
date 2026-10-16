@@ -1,6 +1,6 @@
 mod uri;
 
-use self::uri::absolute_url;
+use self::uri::absolute_uri;
 use crate::http::{Request, Result, bad_request, redirect_to};
 use hyper::Uri;
 use serde::Deserialize;
@@ -48,11 +48,9 @@ pub async fn absolute(req: Request) -> Result {
         String::from("/")
     };
 
-    let request_uri = req.uri();
-    let response_uri = absolute_url(&req, request_uri)
-        .and_then(|base| Ok(base.join(&url)?))
-        .and_then(|url| Ok(url.to_string().parse::<Uri>()?))
-        .map_err(|_| bad_request())?;
+    let relative_uri = url.parse::<Uri>().map_err(|_| bad_request())?;
+    let response_uri =
+        absolute_uri(&req, &relative_uri).map_err(|_| bad_request())?;
 
     redirect_to(response_uri)
 }
