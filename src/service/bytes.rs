@@ -1,6 +1,9 @@
 use crate::headers::ContentLength;
 use crate::headers::ContentType;
-use crate::http::{Request, Result, bad_request, body_from_stream, response};
+use crate::http::{
+    Request, Result, StreamChunkBytesExt, bad_request, body_from_stream,
+    response,
+};
 use crate::random::rng;
 use futures::prelude::*;
 use rand::Rng;
@@ -43,13 +46,15 @@ pub async fn stream_bytes(req: Request) -> Result {
     let query = req.query::<BytesQueryParams>().map_err(|_| bad_request())?;
 
     let data = iter_bytes(n, query.seed);
-    let chunk_size = query.chunk_size.map(NonZeroUsize::get).unwrap_or(1);
+    let chunk_size = query.chunk_size.unwrap_or(NonZeroUsize::MIN);
     let content_length = data.len() as u64;
 
     response()
         .typed_header(ContentType::octet_stream())
         .typed_header(ContentLength(content_length))
-        .body(body_from_stream(stream::iter(data).chunks(chunk_size)))
+        .body(body_from_stream(
+            stream::iter(data).chunks_bytes(chunk_size),
+        ))
 }
 
 #[cfg(test)]
