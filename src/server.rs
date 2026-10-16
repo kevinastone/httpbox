@@ -149,12 +149,20 @@ where
         drop(close_rx);
         let _ = close_tx.send(());
 
-        // Wait for all tasks to complete.
+        // Wait for all tasks to complete or timeout after 10 seconds.
         tracing::debug!(
             "waiting for {} tasks to finish",
             close_tx.receiver_count()
         );
-        close_tx.closed().await;
+        if tokio::time::timeout(Duration::from_secs(10), close_tx.closed())
+            .await
+            .is_err()
+        {
+            tracing::warn!(
+                "shutdown timeout reached with {} active connections remaining; forcing exit",
+                close_tx.receiver_count()
+            );
+        }
 
         Ok(())
     }
