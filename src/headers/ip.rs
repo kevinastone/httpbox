@@ -62,13 +62,16 @@ impl Header for XForwardedFor {
 
 impl From<&XForwardedFor> for HeaderValue {
     fn from(x_forwarded_for: &XForwardedFor) -> Self {
-        let mut output = x_forwarded_for.client.to_string();
+        use std::fmt::Write;
+        let mut output = String::new();
+        let _ = write!(output, "{}", x_forwarded_for.client);
         for proxy in &x_forwarded_for.proxies {
-            output += ", ";
-            output += &proxy.to_string();
+            let _ = write!(output, ", {proxy}");
         }
 
-        output.parse().unwrap()
+        HeaderValue::try_from(output).expect(
+            "IpAddr formatting is guaranteed to produce valid ASCII header values",
+        )
     }
 }
 
