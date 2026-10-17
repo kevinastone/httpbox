@@ -1,20 +1,20 @@
 use crate::http::{Request, Result};
-use async_trait::async_trait;
 use std::future::Future;
+use std::pin::Pin;
 
-#[async_trait]
+pub type BoxFuture<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
+
 pub trait Handler: Send {
-    async fn handle(&self, req: Request) -> Result;
+    fn handle<'a>(&'a self, req: Request) -> BoxFuture<'a, Result>;
 }
 
-#[async_trait]
 impl<F, Fut: 'static> Handler for F
 where
     Fut: Future<Output = Result> + Send,
     F: Fn(Request) -> Fut + Send + Sync,
 {
     #[inline]
-    async fn handle(&self, req: Request) -> Result {
-        self(req).await
+    fn handle<'a>(&'a self, req: Request) -> BoxFuture<'a, Result> {
+        Box::pin(self(req))
     }
 }

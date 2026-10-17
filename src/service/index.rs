@@ -1,8 +1,7 @@
-use crate::handler::Handler;
+use crate::handler::{BoxFuture, Handler};
 use crate::http::{Bytes, Request, Result, html};
 use crate::router::Route;
 use askama::Template;
-use async_trait::async_trait;
 
 #[derive(Template)]
 #[template(path = "index.html")]
@@ -13,10 +12,10 @@ struct IndexTemplate<'a> {
 #[derive(Debug, Clone)]
 pub struct Index(Bytes);
 
-#[async_trait]
 impl Handler for Index {
-    async fn handle(&self, _: Request) -> Result {
-        html(self.0.clone())
+    fn handle<'a>(&'a self, _: Request) -> BoxFuture<'a, Result> {
+        let content = self.0.clone();
+        Box::pin(async move { html(content) })
     }
 }
 
