@@ -1,7 +1,5 @@
-mod chunks;
-
-pub(crate) use self::chunks::*;
 use crate::http::Body;
+pub(crate) use chunk_bytes::*;
 use futures::prelude::*;
 use hyper::body::Bytes;
 use std::convert::Infallible;

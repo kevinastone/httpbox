@@ -1,6 +1,7 @@
 [workspace]
 members = [
   ".",
+  "chunk_bytes",
   "hyper_body",
   "uri_path",
 ]
@@ -17,8 +18,10 @@ hyper = "^1.0"
 itertools = "^0.14.0"
 proptest = "^1.6"
 serde = { version = "^1.0.98", features = ["derive"] }
+tokio = "^1.50.0"
 
 # Internal workspace crates
+chunk_bytes = { path = "chunk_bytes" }
 hyper_body = { path = "hyper_body" }
 uri_path = { path = "uri_path" }
 
@@ -36,6 +39,7 @@ path = "src/main.rs"
 [dependencies]
 anyhow = "^1.0.27"
 askama = "^0.14"
+chunk_bytes = { workspace = true }
 clap = { version = "^4.0.29", features = ["derive", "env"] }
 clap_complete = "^4.0"
 cookie = "^0.18.1"
@@ -55,7 +59,7 @@ rand = { version = "^0.9" }
 rust-embed = { version = "8.12.0", features = ["mime-guess"] }
 serde = { workspace = true }
 serde_urlencoded = "^0.7"
-tokio = { version = "^1.50.0", features = ["full"] }
+tokio = { workspace = true, features = ["full"] }
 tokio-stream = { version = "^0.1.18", features = ["net"] }
 tower = { version = "^0.5.2", features = ["full"] }
 tower-http = { version = "^0.6.8", features = ["timeout", "trace"] }

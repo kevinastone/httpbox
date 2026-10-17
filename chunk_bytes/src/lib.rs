@@ -1,10 +1,10 @@
+use bytes::Bytes;
 use futures::prelude::*;
-use hyper::body::Bytes;
 use std::num::NonZeroUsize;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-pub(crate) trait AsByteSlice {
+pub trait AsByteSlice {
     fn as_byte_slice(&self) -> &[u8];
 }
 
@@ -36,7 +36,7 @@ impl_as_byte_slice! {
     String => as_bytes,
 }
 
-pub(crate) trait StreamChunkBytesExt: Stream
+pub trait StreamChunkBytesExt: Stream
 where
     Self::Item: AsByteSlice,
 {
@@ -57,7 +57,7 @@ impl<S: Stream + ?Sized> StreamChunkBytesExt for S where S::Item: AsByteSlice {}
 
 #[derive(Debug)]
 #[must_use = "streams do nothing unless polled"]
-pub(crate) struct ChunksBytes<S> {
+pub struct ChunksBytes<S> {
     stream: S,
     capacity: NonZeroUsize,
     pending: Vec<u8>,
@@ -175,5 +175,44 @@ mod test {
         let chunks: Vec<Bytes> = stream.chunks_bytes(capacity).collect().await;
 
         assert!(chunks.is_empty());
+    }
+
+    proptest::proptest! {
+        #[test]
+        fn test_chunks_bytes_conservation(
+            input_slices in proptest::collection::vec(proptest::collection::vec(proptest::num::u8::ANY, 0..512), 0..20),
+            capacity in 1usize..2048,
+        ) {
+            let flat_expected: Vec<u8> = input_slices.iter().flatten().copied().collect();
+            let cap = NonZeroUsize::new(capacity).unwrap();
+
+            let stream = stream::iter(input_slices);
+            let chunks: Vec<Bytes> = futures::executor::block_on(stream.chunks_bytes(cap).collect());
+
+            let flat_actual: Vec<u8> =
+                chunks.iter().flat_map(|b| b.as_ref()).copied().collect();
+            proptest::prop_assert_eq!(flat_actual, flat_expected);
+        }
+
+        #[test]
+        fn test_chunks_bytes_size_bounds(
+            input_slices in proptest::collection::vec(proptest::collection::vec(proptest::num::u8::ANY, 0..256), 0..10),
+            capacity in 1usize..512,
+        ) {
+            let cap = NonZeroUsize::new(capacity).unwrap();
+            let stream = stream::iter(input_slices);
+            let chunks: Vec<Bytes> = futures::executor::block_on(stream.chunks_bytes(cap).collect());
+
+            for (i, chunk) in chunks.iter().enumerate() {
+                proptest::prop_assert!(!chunk.is_empty(), "chunk {} was empty", i);
+                proptest::prop_assert!(
+                    chunk.len() <= capacity,
+                    "chunk {} exceeded capacity (len: {}, cap: {})",
+                    i,
+                    chunk.len(),
+                    capacity
+                );
+            }
+        }
     }
 }
