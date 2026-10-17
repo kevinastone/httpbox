@@ -68,6 +68,9 @@ tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
 uri_path = { workspace = true }
 url = "^2.2.1"
 
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
+
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"
