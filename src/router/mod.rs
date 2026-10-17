@@ -14,6 +14,54 @@ mod routes;
 
 pub use self::routes::{Route, route};
 
+type BoxHandler = Box<dyn Handler + Sync>;
+
+#[derive(Default)]
+struct MethodMap<T> {
+    entries: Vec<(hyper::Method, T)>,
+}
+
+impl<T> MethodMap<T> {
+    fn get(&self, method: &hyper::Method) -> Option<&T> {
+        self.entries
+            .iter()
+            .find(|(m, _)| m == method)
+            .map(|(_, val)| val)
+    }
+
+    fn entry(&mut self, method: hyper::Method) -> Entry<'_, T> {
+        if let Some(pos) = self.entries.iter().position(|(m, _)| *m == method) {
+            Entry::Occupied(&mut self.entries[pos].1)
+        } else {
+            Entry::Vacant(self, method)
+        }
+    }
+}
+
+enum Entry<'a, T> {
+    Occupied(&'a mut T),
+    Vacant(&'a mut MethodMap<T>, hyper::Method),
+}
+
+impl<'a, T> Entry<'a, T> {
+    fn or_insert(self, default: T) -> &'a mut T {
+        match self {
+            Entry::Occupied(val) => val,
+            Entry::Vacant(map, method) => {
+                map.entries.push((method, default));
+                &mut map.entries.last_mut().unwrap().1
+            }
+        }
+    }
+
+    fn or_default(self) -> &'a mut T
+    where
+        T: Default,
+    {
+        self.or_insert(T::default())
+    }
+}
+
 async fn handle_panics(
     fut: impl Future<Output = crate::http::Result>,
 ) -> crate::http::Result {
@@ -23,7 +71,7 @@ async fn handle_panics(
 
 pub struct Endpoint {
     route: Route,
-    handler: Box<dyn Handler + Sync>,
+    handler: BoxHandler,
 }
 
 impl Endpoint {
@@ -58,21 +106,33 @@ impl RouterBuilder {
     }
 
     pub fn build(self) -> Router {
-        Router::new(RouterInternal {
-            endpoints: self.endpoints,
-        })
+        let mut routes_by_method: MethodMap<uri_path::Router<BoxHandler>> =
+            MethodMap::default();
+
+        for endpoint in self.endpoints {
+            let (method, path) = endpoint.route.into_parts();
+            routes_by_method
+                .entry(method)
+                .or_default()
+                .insert(path, endpoint.handler);
+        }
+
+        Router::new(RouterInternal { routes_by_method })
     }
 }
 
 struct RouterInternal {
-    endpoints: Vec<Endpoint>,
+    routes_by_method: MethodMap<uri_path::Router<BoxHandler>>,
 }
 
 impl RouterInternal {
-    fn route<B>(&self, req: &HTTPRequest<B>) -> Option<(&Endpoint, PathMatch)> {
-        self.endpoints.iter().find_map(|endpoint| {
-            endpoint.route.matches(req).map(|params| (endpoint, params))
-        })
+    fn route<B>(
+        &self,
+        req: &HTTPRequest<B>,
+    ) -> Option<(&BoxHandler, PathMatch)> {
+        let router = self.routes_by_method.get(req.method())?;
+        let matched = router.at(req.uri().path())?;
+        Some((matched.value, matched.params))
     }
 }
 
@@ -108,11 +168,11 @@ impl<B: Into<Body> + Send + 'static> Service<HTTPRequest<B>> for Router {
         let router = self.0.clone();
 
         async move {
-            let (endpoint, matched_path) =
+            let (handler, matched_path) =
                 router.route(&req).ok_or_else(not_found)?;
 
             let client_req = Request::new(req.map(|b| b.into()), matched_path);
-            handle_panics(endpoint.handler.handle(client_req)).await
+            handle_panics(handler.handle(client_req)).await
         }
         .or_else(|e: Error| e.into_result())
         .boxed()
