@@ -16,46 +16,50 @@ macro_rules! path {
         ))
     }};
 
-    // Internal TT-muncher implementation
-    (@parse $v:ident,) => {};
-    (@parse $v:ident, * [$i:ident ~ $re:literal]) => {{
-        $v.push($crate::PathSegment::Dynamic($crate::PathParam::catch_all(
-            stringify!($i),
-            $crate::PathToken::Regex($crate::regex::Regex::new($re).unwrap()),
-        )));
-    }};
-    (@parse $v:ident, * [$i:ident ~ $re:literal] / $($rest:tt)*) => {
+    // Catch-all patterns
+    (@collect [$($acc:expr,)*], * [$i:ident ~ $re:literal]) => {
+        vec![
+            $($acc,)*
+            $crate::PathSegment::Dynamic($crate::PathParam::catch_all(
+                stringify!($i),
+                $crate::PathToken::Regex($crate::regex::Regex::new($re).unwrap()),
+            ))
+        ]
+    };
+    (@collect [$($acc:expr,)*], * [$i:ident ~ $re:literal] / $($rest:tt)*) => {
         compile_error!("catch-all segment (*[" stringify!($i) " ~ ...]) must be the last segment in path");
     };
-    (@parse $v:ident, * $i:ident) => {
-        $v.push($crate::PathSegment::Dynamic($crate::PathParam::catch_all(
-            stringify!($i),
-            $crate::PathToken::Any,
-        )));
+    (@collect [$($acc:expr,)*], * $i:ident) => {
+        vec![
+            $($acc,)*
+            $crate::PathSegment::Dynamic($crate::PathParam::catch_all(
+                stringify!($i),
+                $crate::PathToken::Any,
+            ))
+        ]
     };
-    (@parse $v:ident, * $i:ident / $($rest:tt)*) => {
+    (@collect [$($acc:expr,)*], * $i:ident / $($rest:tt)*) => {
         compile_error!("catch-all segment (*" stringify!($i) ") must be the last segment in path");
     };
-    (@parse $v:ident, [$i:ident ~ $re:literal]) => {
-        $v.push($crate::path!(@segment [$i ~ $re]));
+
+    // Single/Multiple segment patterns
+    (@collect [$($acc:expr,)*], [$i:ident ~ $re:literal]) => {
+        vec![$($acc,)* $crate::path!(@segment [$i ~ $re])]
     };
-    (@parse $v:ident, [$i:ident ~ $re:literal] / $($rest:tt)*) => {
-        $v.push($crate::path!(@segment [$i ~ $re]));
-        $crate::path!(@parse $v, $($rest)*);
+    (@collect [$($acc:expr,)*], [$i:ident ~ $re:literal] / $($rest:tt)*) => {
+        $crate::path!(@collect [$($acc,)* $crate::path!(@segment [$i ~ $re]),], $($rest)*)
     };
-    (@parse $v:ident, $s:literal) => {
-        $v.push($crate::path!(@segment $s));
+    (@collect [$($acc:expr,)*], $s:literal) => {
+        vec![$($acc,)* $crate::path!(@segment $s)]
     };
-    (@parse $v:ident, $s:literal / $($rest:tt)*) => {
-        $v.push($crate::path!(@segment $s));
-        $crate::path!(@parse $v, $($rest)*);
+    (@collect [$($acc:expr,)*], $s:literal / $($rest:tt)*) => {
+        $crate::path!(@collect [$($acc,)* $crate::path!(@segment $s),], $($rest)*)
     };
-    (@parse $v:ident, $i:ident) => {
-        $v.push($crate::path!(@segment $i));
+    (@collect [$($acc:expr,)*], $i:ident) => {
+        vec![$($acc,)* $crate::path!(@segment $i)]
     };
-    (@parse $v:ident, $i:ident / $($rest:tt)*) => {
-        $v.push($crate::path!(@segment $i));
-        $crate::path!(@parse $v, $($rest)*);
+    (@collect [$($acc:expr,)*], $i:ident / $($rest:tt)*) => {
+        $crate::path!(@collect [$($acc,)* $crate::path!(@segment $i),], $($rest)*)
     };
 
     () => {{
@@ -63,8 +67,6 @@ macro_rules! path {
     }};
 
     ($($tokens:tt)+) => {{
-        let mut segments = vec![];
-        $crate::path!(@parse segments, $($tokens)+);
-        $crate::Path(segments)
+        $crate::Path($crate::path!(@collect [], $($tokens)+))
     }};
 }

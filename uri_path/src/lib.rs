@@ -1,5 +1,8 @@
 #[macro_use]
 mod macros;
+pub mod router;
+
+pub use self::router::Router;
 
 use itertools::Itertools;
 #[cfg(feature = "regex")]
@@ -11,7 +14,7 @@ use std::fmt;
 use std::iter::FromIterator;
 use std::ops::{Deref, DerefMut};
 
-fn segmented(str: &str) -> impl Iterator<Item = &str> {
+pub(crate) fn segmented(str: &str) -> impl Iterator<Item = &str> {
     str.split('/').filter(|seg| !seg.is_empty())
 }
 
@@ -19,6 +22,12 @@ fn segmented(str: &str) -> impl Iterator<Item = &str> {
 #[serde(transparent)]
 #[serde(bound(deserialize = "'de: 'static"))]
 pub struct PathMatch(HashMap<&'static str, String>);
+
+impl PathMatch {
+    pub fn new() -> Self {
+        Self(HashMap::new())
+    }
+}
 
 impl From<HashMap<&'static str, String>> for PathMatch {
     fn from(hashmap: HashMap<&'static str, String>) -> Self {
@@ -184,6 +193,14 @@ impl PathParam {
 
     pub fn is_catch_all(&self) -> bool {
         self.catch_all
+    }
+
+    pub(crate) fn name(&self) -> &'static str {
+        self.name
+    }
+
+    pub(crate) fn token(&self) -> &PathToken {
+        &self.token
     }
 
     pub fn matches<'a>(
