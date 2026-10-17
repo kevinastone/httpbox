@@ -1,4 +1,4 @@
-use bytes::Bytes;
+use bytes::{Bytes, BytesMut};
 use futures::prelude::*;
 use std::num::NonZeroUsize;
 use std::pin::Pin;
@@ -47,8 +47,7 @@ where
         ChunksBytes {
             stream: self,
             capacity,
-            pending: Vec::new(),
-            offset: 0,
+            pending: BytesMut::new(),
         }
     }
 }
@@ -60,8 +59,7 @@ impl<S: Stream + ?Sized> StreamChunkBytesExt for S where S::Item: AsByteSlice {}
 pub struct ChunksBytes<S> {
     stream: S,
     capacity: NonZeroUsize,
-    pending: Vec<u8>,
-    offset: usize,
+    pending: BytesMut,
 }
 
 impl<S> Stream for ChunksBytes<S>
@@ -77,29 +75,18 @@ where
     ) -> Poll<Option<Self::Item>> {
         let capacity = self.capacity.get();
 
-        let available = self.pending.len() - self.offset;
-        if available >= capacity {
-            let start = self.offset;
-            let end = start + capacity;
-            self.offset = end;
-            return Poll::Ready(Some(Bytes::copy_from_slice(
-                &self.pending[start..end],
-            )));
+        if self.pending.len() >= capacity {
+            return Poll::Ready(Some(self.pending.split_to(capacity).freeze()));
         }
 
-        while self.pending.len() - self.offset < capacity {
+        while self.pending.len() < capacity {
             match Pin::new(&mut self.stream).poll_next(cx) {
                 Poll::Ready(Some(chunk)) => {
-                    let offset = self.offset;
-                    if offset > 0 {
-                        self.pending.drain(..offset);
-                        self.offset = 0;
-                    }
                     self.pending.extend_from_slice(chunk.as_byte_slice());
                 }
                 Poll::Ready(None) => break,
                 Poll::Pending => {
-                    if self.pending.len() - self.offset == 0 {
+                    if self.pending.is_empty() {
                         return Poll::Pending;
                     }
                     break;
@@ -107,15 +94,11 @@ where
             }
         }
 
-        let remaining = self.pending.len() - self.offset;
-        if remaining == 0 {
+        if self.pending.is_empty() {
             Poll::Ready(None)
         } else {
-            let to_yield = std::cmp::min(remaining, capacity);
-            let start = self.offset;
-            let end = start + to_yield;
-            self.offset = end;
-            Poll::Ready(Some(Bytes::copy_from_slice(&self.pending[start..end])))
+            let to_yield = std::cmp::min(self.pending.len(), capacity);
+            Poll::Ready(Some(self.pending.split_to(to_yield).freeze()))
         }
     }
 }
