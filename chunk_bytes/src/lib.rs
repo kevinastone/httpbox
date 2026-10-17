@@ -103,6 +103,16 @@ where
     }
 }
 
+impl<S> stream::FusedStream for ChunksBytes<S>
+where
+    S: stream::FusedStream + Unpin,
+    S::Item: AsByteSlice,
+{
+    fn is_terminated(&self) -> bool {
+        self.stream.is_terminated() && self.pending.is_empty()
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -158,6 +168,28 @@ mod test {
         let chunks: Vec<Bytes> = stream.chunks_bytes(capacity).collect().await;
 
         assert!(chunks.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_chunks_bytes_fused_stream() {
+        use futures::stream::FusedStream;
+
+        let stream = stream::iter(vec![1u8, 2, 3]).fuse();
+        let capacity = NonZeroUsize::new(2).unwrap();
+        let mut chunk_stream = stream.chunks_bytes(capacity);
+
+        assert!(!chunk_stream.is_terminated());
+        let chunk1 = chunk_stream.next().await;
+        assert_eq!(chunk1, Some(Bytes::from_static(&[1, 2])));
+        assert!(!chunk_stream.is_terminated());
+
+        let chunk2 = chunk_stream.next().await;
+        assert_eq!(chunk2, Some(Bytes::from_static(&[3])));
+        assert!(chunk_stream.is_terminated());
+
+        let chunk3 = chunk_stream.next().await;
+        assert_eq!(chunk3, None);
+        assert!(chunk_stream.is_terminated());
     }
 
     proptest::proptest! {
