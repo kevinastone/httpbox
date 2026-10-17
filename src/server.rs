@@ -3,46 +3,57 @@ use hyper::Request as HTTPRequest;
 use hyper::body::{Body, Incoming};
 use hyper_util::rt::{TokioExecutor, TokioIo, TokioTimer};
 use hyper_util::server::conn::auto;
+use std::net::SocketAddr;
 use std::time::Duration;
-use tokio::net::TcpListener;
+use tokio::io::{AsyncRead, AsyncWrite};
+use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::watch;
 use tokio_stream::wrappers::TcpListenerStream;
 use tower::Service;
 use tower::ServiceExt;
 
-pub struct Server<S, F> {
-    conn_stream: TcpListenerStream,
+pub trait Connected {
+    fn remote_addr(&self) -> Option<SocketAddr> {
+        None
+    }
+}
+
+impl Connected for TcpStream {
+    fn remote_addr(&self) -> Option<SocketAddr> {
+        self.peer_addr().ok()
+    }
+}
+
+#[cfg(test)]
+impl Connected for tokio::io::DuplexStream {}
+
+pub struct Server<C, S, F> {
+    conn_stream: C,
     service: S,
     shutdown_signal: F,
 }
 
-impl<S, RespBody, E> Server<S, future::Pending<()>>
-where
-    S: Service<
-            HTTPRequest<Incoming>,
-            Response = hyper::Response<RespBody>,
-            Error = E,
-        > + Clone
-        + Send
-        + 'static,
-    S::Future: Send,
-    RespBody: Body + Send + 'static,
-    RespBody::Data: Send,
-    RespBody::Error: Sync + Send + std::error::Error,
-    E: Send + Sync + std::error::Error + 'static,
-{
+impl<S> Server<TcpListenerStream, S, future::Pending<()>> {
     pub fn new(listener: TcpListener, service: S) -> Self {
+        Self::from_stream(TcpListenerStream::new(listener), service)
+    }
+}
+
+impl<C, S> Server<C, S, future::Pending<()>> {
+    pub fn from_stream(conn_stream: C, service: S) -> Self {
         Self {
-            conn_stream: TcpListenerStream::new(listener),
+            conn_stream,
             service,
             shutdown_signal: future::pending(),
         }
     }
+}
 
+impl<C, S, F> Server<C, S, F> {
     pub fn with_graceful_shutdown<Fut: Future>(
         self,
         fut: Fut,
-    ) -> Server<S, Fut> {
+    ) -> Server<C, S, Fut> {
         Server {
             conn_stream: self.conn_stream,
             service: self.service,
@@ -51,8 +62,10 @@ where
     }
 }
 
-impl<S, F, RespBody, E> Server<S, F>
+impl<C, S, F, I, RespBody, E> Server<C, S, F>
 where
+    C: Stream<Item = std::io::Result<I>> + Unpin + Send + 'static,
+    I: AsyncRead + AsyncWrite + Connected + Send + Unpin + 'static,
     F: Future + Send + 'static,
     S: Service<
             HTTPRequest<Incoming>,
@@ -93,13 +106,15 @@ where
                 let service = service.clone();
 
                 async move {
-                    let addr = stream.peer_addr()?;
+                    let addr = stream.remote_addr();
                     let stream = TokioIo::new(stream);
 
-                    // Inject the client addr into the request
+                    // Inject the client addr into the request if available
                     let tower_service = service.map_request(
                         move |mut req: HTTPRequest<_>| {
-                            req.extensions_mut().insert(addr);
+                            if let Some(addr) = addr {
+                                req.extensions_mut().insert(addr);
+                            }
                             req
                         },
                     );
@@ -116,32 +131,33 @@ where
 
                         let mut conn = std::pin::pin!(conn);
 
-                    loop {
-                        tokio::select! {
-                            // Poll the connection. This completes when the client has closed the
-                            // connection, graceful shutdown has completed, or we encounter a TCP error.
-                            result = conn.as_mut() => {
-                                if let Err(err) = result {
-                                    tracing::error!("Error serving connection: {err:#}");
+                        loop {
+                            tokio::select! {
+                                // Poll the connection. This completes when the client has closed the
+                                // connection, graceful shutdown has completed, or we encounter a TCP error.
+                                result = conn.as_mut() => {
+                                    if let Err(err) = result {
+                                        tracing::error!("Error serving connection: {err:#}");
+                                    }
+                                    break;
                                 }
-                                break;
-                            }
-                            // Start graceful shutdown when we receive a shutdown signal.
-                            //
-                            // We use a loop to continue polling the connection to allow requests to finish
-                            _ = close_rx.changed() => {
-                                tracing::debug!("signal received, starting graceful shutdown");
-                                conn.as_mut().graceful_shutdown();
+                                // Start graceful shutdown when we receive a shutdown signal.
+                                //
+                                // We use a loop to continue polling the connection to allow requests to finish
+                                _ = close_rx.changed() => {
+                                    tracing::debug!("signal received, starting graceful shutdown");
+                                    conn.as_mut().graceful_shutdown();
+                                }
                             }
                         }
-                    }
 
-                    // Drop the watch receiver to signal to `main` that this task is done.
-                    drop(close_rx);
-                });
+                        // Drop the watch receiver to signal to `main` that this task is done.
+                        drop(close_rx);
+                    });
 
-                Ok(())
-            }});
+                    Ok(())
+                }
+            });
 
         // Run the listener stream to completion
         let _ = conn_stream.map(Ok).forward(futures::sink::drain()).await;
@@ -171,17 +187,18 @@ where
 #[cfg(test)]
 mod test {
     use super::*;
+    use futures::{future, stream};
     use http_body_util::Empty;
     use hyper::client::conn::http2;
-    use tokio::net::TcpStream;
 
     #[tokio::test]
     async fn test_http2_cleartext_request() {
-        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
-        let addr = listener.local_addr().unwrap();
+        let (client_conn, server_conn) = tokio::io::duplex(64 * 1024);
+        let incoming =
+            stream::once(future::ok(server_conn)).chain(stream::pending());
 
         let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel();
-        let server = Server::new(listener, crate::service::router())
+        let server = Server::from_stream(incoming, crate::service::router())
             .with_graceful_shutdown(async move {
                 let _ = shutdown_rx.await;
             });
@@ -190,7 +207,7 @@ mod test {
             server.serve().await.unwrap();
         });
 
-        let stream = TokioIo::new(TcpStream::connect(addr).await.unwrap());
+        let stream = TokioIo::new(client_conn);
         let (mut sender, conn) = http2::handshake(TokioExecutor::new(), stream)
             .await
             .expect("HTTP/2 handshake failed");
@@ -202,7 +219,7 @@ mod test {
         });
 
         let req = hyper::Request::builder()
-            .uri(format!("http://{addr}/healthz"))
+            .uri("http://localhost/healthz")
             .version(hyper::Version::HTTP_2)
             .body(Empty::<hyper::body::Bytes>::new())
             .unwrap();
