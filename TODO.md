@@ -58,12 +58,11 @@ pub async fn bytes(
 **Target:** `Server::serve` in `src/server.rs`
 
 ### Current State
-- `Server::serve` spawns detached tasks via `tokio::task::spawn` and relies on counting clones of a `watch::Receiver` (`close_tx.receiver_count()`) to wait for active connections during graceful shutdown.
+- `Server::serve` tracks connection tasks using `tokio_util::task::TaskTracker` during graceful shutdown.
 - It drives the listener stream using `.map(Ok).forward(futures::sink::drain())`.
 - There is no upper bound on concurrent open connections.
 
 ### Exercises
-- [ ] **Structured Concurrency with `JoinSet`:** Replace the detached `tokio::task::spawn` + `watch::Receiver` reference-counting pattern with `tokio::task::JoinSet`. Log any connection tasks that terminate with a panic (`JoinError::is_panic`).
-- [ ] **Explicit Accept Loop with `tokio::select!`:** Replace `.forward(futures::sink::drain())` with an explicit `loop` using `tokio::select!` over `conn_stream.next()`, `shutdown_signal`, and `join_set.join_next()` so completed connections are reaped continuously while the server runs.
+- [ ] **Explicit Accept Loop with `tokio::select!`:** Replace `.forward(futures::sink::drain())` with an explicit `loop` using `tokio::select!` over `conn_stream.next()` and `shutdown_signal` to drive connection acceptance.
 - [ ] **Connection Backpressure (`Semaphore`):** Add a configurable `max_connections` limit using `Arc<tokio::sync::Semaphore>` and `acquire_owned().await`, tying the permit's lifetime to the spawned connection task via RAII.
 

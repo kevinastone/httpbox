@@ -9,6 +9,7 @@ use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::watch;
 use tokio_stream::wrappers::TcpListenerStream;
+use tokio_util::task::TaskTracker;
 use tower::Service;
 use tower::ServiceExt;
 
@@ -82,6 +83,7 @@ where
 {
     pub async fn serve(self) -> std::io::Result<()> {
         let (close_tx, close_rx) = watch::channel(());
+        let tracker = TaskTracker::new();
 
         let service = self.service;
         let conn_stream = self.conn_stream;
@@ -97,13 +99,14 @@ where
             .keep_alive_interval(Duration::from_secs(60))
             .keep_alive_timeout(Duration::from_secs(10));
 
-        let conn_close_rx = close_rx.clone();
+        let tracker_spawn = tracker.clone();
         let conn_stream = conn_stream
             .take_until(self.shutdown_signal)
             .and_then(move |stream| {
                 let auto_builder = auto_builder.clone();
-                let mut close_rx = conn_close_rx.clone();
+                let mut close_rx = close_rx.clone();
                 let service = service.clone();
+                let tracker = tracker_spawn.clone();
 
                 async move {
                     let addr = stream.remote_addr();
@@ -119,7 +122,7 @@ where
                         },
                     );
 
-                    tokio::task::spawn(async move {
+                    tracker.spawn(async move {
                         let hyper_service = hyper::service::service_fn(
                             move |request: HTTPRequest<_>| {
                                 tower_service.clone().call(request)
@@ -150,9 +153,6 @@ where
                                 }
                             }
                         }
-
-                        // Drop the watch receiver to signal to `main` that this task is done.
-                        drop(close_rx);
                     });
 
                     Ok(())
@@ -162,21 +162,19 @@ where
         // Run the listener stream to completion
         let _ = conn_stream.map(Ok).forward(futures::sink::drain()).await;
 
-        drop(close_rx);
+        // Stop accepting new tracked tasks and notify existing connections to start graceful shutdown
+        tracker.close();
         let _ = close_tx.send(());
 
-        // Wait for all tasks to complete or timeout after 10 seconds.
-        tracing::debug!(
-            "waiting for {} tasks to finish",
-            close_tx.receiver_count()
-        );
-        if tokio::time::timeout(Duration::from_secs(10), close_tx.closed())
+        // Wait for all connection tasks to complete or timeout after 10 seconds.
+        tracing::debug!("waiting for {} tasks to finish", tracker.len());
+        if tokio::time::timeout(Duration::from_secs(10), tracker.wait())
             .await
             .is_err()
         {
             tracing::warn!(
                 "shutdown timeout reached with {} active connections remaining; forcing exit",
-                close_tx.receiver_count()
+                tracker.len()
             );
         }
 
