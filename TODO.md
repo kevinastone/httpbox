@@ -20,30 +20,7 @@ This document outlines hands-on refactoring exercises and feature additions desi
 
 ---
 
-## 2. Idiomatic Error Handling & `IntoResponse`
-
-**Target:** `src/http/error.rs`, `src/http/response.rs`, `src/service/method/body.rs`, and `hyper_body/src/lib.rs`
-
-### Current State
-- `http::Error` (`src/http/error.rs`) is an enum of `HyperError(hyper::http::Error)` and `Failure(Box<Response>)` used for early-returning HTTP error statuses via `?`.
-- `Error::into_result` is marked `async fn` despite doing no asynchronous work.
-- `http::Error` does not implement `std::fmt::Display` or `std::error::Error`.
-- `hyper_body::Error` wraps a `Box<dyn Error + Send + Sync>`, but does not expose `.downcast_ref::<T>()` or `.is::<T>()` helper methods.
-
-### Exercises
-- [ ] **Standard Error Traits:** Make `Error::into_result` a synchronous `fn`, and implement `std::fmt::Display` and `std::error::Error` (including `source()`) for `crate::http::Error`.
-- [ ] **Downcasting on `hyper_body::Error`:** Add `pub fn is<T: StdError + 'static>(&self) -> bool` and `pub fn downcast_ref<T: StdError + 'static>(&self) -> Option<&T>` to `hyper_body::Error` and add unit tests for them.
-- [ ] **`IntoResponse` Pattern:** Design an `IntoResponse` trait implemented for `Response`, `StatusCode`, `String`, `&'static str`, `(StatusCode, R)`, and `Result<T, E>` (where `T: IntoResponse, E: IntoResponse`). Refactor handlers to return domain-specific error enums (e.g., `BadRequest`, `PayloadTooLarge`) instead of raw `Box<Response>` wrappers.
-
-```rust
-pub trait IntoResponse {
-    fn into_response(self) -> crate::http::Result;
-}
-```
-
----
-
-## 3. Advanced Trait System: Type-Safe Request Extractors
+## 2. Advanced Trait System: Type-Safe Request Extractors
 
 **Target:** `Handler` in `src/handler.rs` and `Request` in `src/http/request.rs`
 
@@ -76,7 +53,7 @@ pub async fn bytes(
 
 ---
 
-## 4. Async Concurrency, Task Tracking & Backpressure
+## 3. Async Concurrency, Task Tracking & Backpressure
 
 **Target:** `Server::serve` in `src/server.rs`
 
@@ -92,7 +69,7 @@ pub async fn bytes(
 
 ---
 
-## 5. Macros, `LazyLock` & Compile-Time Validation
+## 4. Macros, `LazyLock` & Compile-Time Validation
 
 **Target:** `path!` macro in `uri_path/src/macros.rs`
 
