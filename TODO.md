@@ -11,10 +11,8 @@ This document outlines hands-on refactoring exercises and feature additions desi
 ### Current State
 1. Every matched route parameter allocates a new `String` on the heap (`HashMap<&'static str, String>`).
 2. `Request::params` in `src/http/request.rs` clones the entire `PathMatch` map just to deserialize it (`de::deserialize(self.params.clone())`).
-3. `Router::insert` in `uri_path/src/router.rs` compares tokens via `p.token().to_string() == param.token().to_string()`, allocating two `String`s because `regex::Regex` does not implement `PartialEq`.
 
 ### Exercises
-- [ ] **Custom `PartialEq` & `Eq` for `PathToken`:** Implement `PartialEq` and `Eq` on `PathToken` by comparing `re1.as_str() == re2.as_str()` for the `Regex` variant, then derive/implement `PartialEq` on `PathParam` and remove the `.to_string()` allocation in `Router::insert`.
 - [ ] **Zero-Clone Deserialization (`IntoDeserializer` for `&'a PathMatch`):** Implement `serde::de::IntoDeserializer<'de, E>` for `&'a PathMatch` (yielding `BorrowedStrDeserializer` or references) so `Request::params` can deserialize directly from `&self.params` without cloning the `HashMap`.
 - [ ] **Zero-Copy Route Matching (`PathMatch<'a>`):** Explore parameterizing `PathMatch<'a>` with `Cow<'a, str>` (borrowed `&'a str` for single-segment matches, owned `String` only when needed) and threading the lifetime through `Router::at<'r, 'p>(&'r self, path: &'p str) -> Option<Match<'r, 'p, T>>`.
 

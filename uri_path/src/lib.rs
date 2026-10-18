@@ -148,6 +148,18 @@ pub enum PathToken {
     Regex(regex::Regex),
 }
 
+impl PartialEq for PathToken {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Any, Self::Any) => true,
+            #[cfg(feature = "regex")]
+            (Self::Regex(a), Self::Regex(b)) => a.as_str() == b.as_str(),
+            #[cfg(feature = "regex")]
+            (Self::Any, Self::Regex(_)) | (Self::Regex(_), Self::Any) => false,
+        }
+    }
+}
+
 impl PathToken {
     pub fn matches(&self, path: &str) -> bool {
         match self {
@@ -168,7 +180,7 @@ impl fmt::Display for PathToken {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PathParam {
     name: &'static str,
     token: PathToken,

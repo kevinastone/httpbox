@@ -62,11 +62,9 @@ impl<T> Router<T> {
                         node.catch_all = Some((param, value));
                         return;
                     }
-                    if let Some(pos) = node.dynamic.iter().position(|(p, _)| {
-                        p.name() == param.name()
-                            && p.token().to_string()
-                                == param.token().to_string()
-                    }) {
+                    if let Some(pos) =
+                        node.dynamic.iter().position(|(p, _)| p == &param)
+                    {
                         node = &mut node.dynamic[pos].1;
                     } else {
                         node.dynamic.push((param, Node::default()));
