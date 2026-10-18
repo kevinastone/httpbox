@@ -7,8 +7,6 @@ pub use self::router::Router;
 #[cfg(feature = "regex")]
 #[doc(hidden)]
 pub use lazy_regex;
-#[cfg(feature = "serde")]
-use serde::de::IntoDeserializer;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt;
 use std::iter::FromIterator;
@@ -27,6 +25,15 @@ pub struct PathMatch(HashMap<&'static str, String>);
 impl PathMatch {
     pub fn new() -> Self {
         Self(HashMap::new())
+    }
+
+    #[cfg(feature = "serde")]
+    pub fn deserialize<'de, T: serde::de::Deserialize<'de>>(
+        &'de self,
+    ) -> Result<T, serde::de::value::Error> {
+        let iter = self.0.iter().map(|(&k, v)| (k, v.as_str()));
+        let deserializer = serde::de::value::MapDeserializer::new(iter);
+        T::deserialize(deserializer)
     }
 }
 
@@ -47,21 +54,6 @@ impl Deref for PathMatch {
 impl DerefMut for PathMatch {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
-    }
-}
-
-#[cfg(feature = "serde")]
-impl<'de, E> IntoDeserializer<'de, E> for PathMatch
-where
-    E: serde::de::Error,
-{
-    type Deserializer = <HashMap<&'static str, String> as IntoDeserializer<
-        'de,
-        E,
-    >>::Deserializer;
-
-    fn into_deserializer(self) -> Self::Deserializer {
-        self.0.into_deserializer()
     }
 }
 

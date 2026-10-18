@@ -4,19 +4,6 @@ use hyper::http::Request as HTTPRequest;
 use std::net::SocketAddr;
 use uri_path::PathMatch;
 
-mod de {
-    use serde::de::{Deserialize, IntoDeserializer, value::Error};
-
-    pub fn deserialize<'de, IS, T>(raw: IS) -> Result<T, Error>
-    where
-        IS: IntoDeserializer<'de, Error>,
-        T: Deserialize<'de>,
-    {
-        let deserializer = raw.into_deserializer();
-        T::deserialize(deserializer)
-    }
-}
-
 pub struct Request {
     req: HTTPRequest<Body>,
     params: PathMatch,
@@ -32,8 +19,8 @@ impl Request {
         T::from_str(str).ok()
     }
 
-    pub fn params<'a, T: serde::de::Deserialize<'a>>(&self) -> Option<T> {
-        de::deserialize(self.params.clone()).ok()
+    pub fn params<'a, T: serde::de::Deserialize<'a>>(&'a self) -> Option<T> {
+        self.params.deserialize().ok()
     }
 
     pub fn typed_header<H: Header>(&self) -> Option<H> {

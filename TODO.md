@@ -9,11 +9,9 @@ This document outlines hands-on refactoring exercises and feature additions desi
 **Target:** `PathMatch`, `PathToken`, and `Router` in `uri_path/src/lib.rs`, `uri_path/src/router.rs`, and `src/http/request.rs`
 
 ### Current State
-1. Every matched route parameter allocates a new `String` on the heap (`HashMap<&'static str, String>`).
-2. `Request::params` in `src/http/request.rs` clones the entire `PathMatch` map just to deserialize it (`de::deserialize(self.params.clone())`).
+Every matched route parameter allocates a new `String` on the heap (`HashMap<&'static str, String>`).
 
 ### Exercises
-- [ ] **Zero-Clone Deserialization (`IntoDeserializer` for `&'a PathMatch`):** Implement `serde::de::IntoDeserializer<'de, E>` for `&'a PathMatch` (yielding `BorrowedStrDeserializer` or references) so `Request::params` can deserialize directly from `&self.params` without cloning the `HashMap`.
 - [ ] **Zero-Copy Route Matching (`PathMatch<'a>`):** Explore parameterizing `PathMatch<'a>` with `Cow<'a, str>` (borrowed `&'a str` for single-segment matches, owned `String` only when needed) and threading the lifetime through `Router::at<'r, 'p>(&'r self, path: &'p str) -> Option<Match<'r, 'p, T>>`.
 
 ---
