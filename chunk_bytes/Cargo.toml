@@ -8,6 +8,7 @@ repository.workspace = true
 [dependencies]
 bytes = "^1.0"
 futures = { workspace = true }
+pin-project-lite = "^0.2"
 
 [dev-dependencies]
 proptest = { workspace = true }

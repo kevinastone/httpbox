@@ -4,34 +4,7 @@ This document outlines hands-on refactoring exercises and feature additions desi
 
 ---
 
-## 1. Pinning & Structural Projections (`Pin<&mut Self>`)
-
-**Target:** `ChunksBytes` in `chunk_bytes/src/lib.rs`
-
-### Current State
-`impl<S> Stream for ChunksBytes<S>` requires `S: Stream + Unpin` so that it can call `Pin::new(&mut self.stream).poll_next(cx)`.
-If you pass an `async` stream created via `futures::stream::unfold` or an async generator (which are `!Unpin` because they hold self-referential state across `.await` points), `.chunks_bytes()` will not compile unless the caller heap-pins it first (`Box::pin`).
-
-### Exercises
-- [ ] **Manual Structural Pinning:** Remove the `S: Unpin` bound on `ChunksBytes<S>` and implement structural pin projection for `stream: S` while keeping `pending: BytesMut` and `capacity: NonZeroUsize` unpinned. Document the `unsafe` invariants (specifically regarding `Drop` and moving fields out of `Self`).
-- [ ] **Safe Pin Projection (`pin-project-lite`):** Refactor `ChunksBytes<S>` to use `pin_project_lite::pin_project!` and compare the generated projection type with your manual implementation.
-- [ ] **Test with `!Unpin` Streams:** Add a unit test using `futures::stream::unfold` (without `Box::pin`) piped directly into `.chunks_bytes(...)`.
-
-```rust
-// Example goal: allow !Unpin streams directly
-let stream = futures::stream::unfold(0u8, |state| async move {
-    if state < 5 {
-        Some((vec![state, state + 1], state + 1))
-    } else {
-        None
-    }
-});
-let chunks: Vec<Bytes> = stream.chunks_bytes(capacity).collect().await;
-```
-
----
-
-## 2. Lifetimes, Borrowing & Custom Trait Implementations
+## 1. Lifetimes, Borrowing & Custom Trait Implementations
 
 **Target:** `PathMatch`, `PathToken`, and `Router` in `uri_path/src/lib.rs`, `uri_path/src/router.rs`, and `src/http/request.rs`
 
@@ -47,7 +20,7 @@ let chunks: Vec<Bytes> = stream.chunks_bytes(capacity).collect().await;
 
 ---
 
-## 3. Idiomatic Error Handling & `IntoResponse`
+## 2. Idiomatic Error Handling & `IntoResponse`
 
 **Target:** `src/http/error.rs`, `src/http/response.rs`, `src/service/method/body.rs`, and `hyper_body/src/lib.rs`
 
@@ -70,7 +43,7 @@ pub trait IntoResponse {
 
 ---
 
-## 4. Advanced Trait System: Type-Safe Request Extractors
+## 3. Advanced Trait System: Type-Safe Request Extractors
 
 **Target:** `Handler` in `src/handler.rs` and `Request` in `src/http/request.rs`
 
@@ -103,7 +76,7 @@ pub async fn bytes(
 
 ---
 
-## 5. Async Concurrency, Task Tracking & Backpressure
+## 4. Async Concurrency, Task Tracking & Backpressure
 
 **Target:** `Server::serve` in `src/server.rs`
 
@@ -119,7 +92,7 @@ pub async fn bytes(
 
 ---
 
-## 6. Macros, `LazyLock` & Compile-Time Validation
+## 5. Macros, `LazyLock` & Compile-Time Validation
 
 **Target:** `path!` macro in `uri_path/src/macros.rs`
 

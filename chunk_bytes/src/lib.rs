@@ -1,5 +1,6 @@
 use bytes::{Bytes, BytesMut};
 use futures::prelude::*;
+use pin_project_lite::pin_project;
 use std::num::NonZeroUsize;
 use std::pin::Pin;
 use std::task::{Context, Poll};
@@ -54,39 +55,43 @@ where
 
 impl<S: Stream + ?Sized> StreamChunkBytesExt for S where S::Item: AsByteSlice {}
 
-#[derive(Debug)]
-#[must_use = "streams do nothing unless polled"]
-pub struct ChunksBytes<S> {
-    stream: S,
-    capacity: NonZeroUsize,
-    pending: BytesMut,
+pin_project! {
+    #[derive(Debug)]
+    #[must_use = "streams do nothing unless polled"]
+    pub struct ChunksBytes<S> {
+        #[pin]
+        stream: S,
+        capacity: NonZeroUsize,
+        pending: BytesMut,
+    }
 }
 
 impl<S> Stream for ChunksBytes<S>
 where
-    S: Stream + Unpin,
+    S: Stream,
     S::Item: AsByteSlice,
 {
     type Item = Bytes;
 
     fn poll_next(
-        mut self: Pin<&mut Self>,
+        self: Pin<&mut Self>,
         cx: &mut Context<'_>,
     ) -> Poll<Option<Self::Item>> {
         let capacity = self.capacity.get();
+        let mut this = self.project();
 
-        if self.pending.len() >= capacity {
-            return Poll::Ready(Some(self.pending.split_to(capacity).freeze()));
+        if this.pending.len() >= capacity {
+            return Poll::Ready(Some(this.pending.split_to(capacity).freeze()));
         }
 
-        while self.pending.len() < capacity {
-            match Pin::new(&mut self.stream).poll_next(cx) {
+        while this.pending.len() < capacity {
+            match this.stream.as_mut().poll_next(cx) {
                 Poll::Ready(Some(chunk)) => {
-                    self.pending.extend_from_slice(chunk.as_byte_slice());
+                    this.pending.extend_from_slice(chunk.as_byte_slice());
                 }
                 Poll::Ready(None) => break,
                 Poll::Pending => {
-                    if self.pending.is_empty() {
+                    if this.pending.is_empty() {
                         return Poll::Pending;
                     }
                     break;
@@ -94,18 +99,18 @@ where
             }
         }
 
-        if self.pending.is_empty() {
+        if this.pending.is_empty() {
             Poll::Ready(None)
         } else {
-            let to_yield = std::cmp::min(self.pending.len(), capacity);
-            Poll::Ready(Some(self.pending.split_to(to_yield).freeze()))
+            let to_yield = std::cmp::min(this.pending.len(), capacity);
+            Poll::Ready(Some(this.pending.split_to(to_yield).freeze()))
         }
     }
 }
 
 impl<S> stream::FusedStream for ChunksBytes<S>
 where
-    S: stream::FusedStream + Unpin,
+    S: stream::FusedStream,
     S::Item: AsByteSlice,
 {
     fn is_terminated(&self) -> bool {

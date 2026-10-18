@@ -10,7 +10,7 @@ pub(crate) fn ok_stream<T, S: Stream<Item = T>>(
     stream.map(Ok)
 }
 
-pub(crate) fn body_from_stream<S: Stream + Send + Sync + 'static + Unpin>(
+pub(crate) fn body_from_stream<S: Stream + Send + Sync + 'static>(
     stream: S,
 ) -> Body
 where
