@@ -1,5 +1,5 @@
 use crate::headers::UserAgent;
-use crate::http::{Request, Result, bad_request, ok};
+use crate::http::*;
 
 pub async fn user_agent(req: Request) -> Result {
     let agent = req.typed_header::<UserAgent>().ok_or_else(bad_request)?;

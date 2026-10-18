@@ -1,6 +1,5 @@
 use crate::headers::Host;
-use crate::http::Request;
-use crate::http::Uri;
+use crate::http::*;
 use std::env;
 use std::sync::LazyLock;
 use url::Url;

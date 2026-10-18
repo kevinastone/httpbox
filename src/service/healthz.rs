@@ -1,4 +1,4 @@
-use crate::http::{Request, Result, ok};
+use crate::http::*;
 
 pub async fn healthz(_req: Request) -> Result {
     ok("OK")

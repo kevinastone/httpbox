@@ -73,7 +73,8 @@ impl RequestBuilder {
         if let Some(client_addr) = self.client_addr {
             req.extensions_mut().insert(client_addr);
         }
-        Request::new(req, self.params)
+        req.extensions_mut().insert(self.params);
+        req
     }
 
     pub async fn handle<H: Handler>(

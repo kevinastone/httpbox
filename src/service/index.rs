@@ -1,5 +1,5 @@
 use crate::handler::{BoxFuture, Handler};
-use crate::http::{Bytes, Request, Result, html};
+use crate::http::*;
 use crate::router::Route;
 use askama::Template;
 

@@ -1,5 +1,5 @@
 use crate::headers::{CacheControl, ContentType};
-use crate::http::{Request, Result, not_found, response};
+use crate::http::*;
 use rust_embed::Embed;
 use std::time::Duration;
 

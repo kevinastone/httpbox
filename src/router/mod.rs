@@ -1,7 +1,5 @@
 use crate::handler::Handler;
-use crate::http::{
-    Body, Error, Request, Response, internal_server_error, not_found,
-};
+use crate::http::{Body, Error, Response, internal_server_error, not_found};
 use futures::prelude::*;
 use hyper::Request as HTTPRequest;
 use std::pin::Pin;
@@ -171,7 +169,8 @@ impl<B: Into<Body> + Send + 'static> Service<HTTPRequest<B>> for Router {
             let (handler, matched_path) =
                 router.route(&req).ok_or_else(not_found)?;
 
-            let client_req = Request::new(req.map(|b| b.into()), matched_path);
+            let mut client_req = req.map(|b| b.into());
+            client_req.extensions_mut().insert(matched_path);
             handle_panics(handler.handle(client_req)).await
         }
         .or_else(|e: Error| e.into_result())
@@ -183,7 +182,7 @@ impl<B: Into<Body> + Send + 'static> Service<HTTPRequest<B>> for Router {
 mod test {
 
     use super::*;
-    use crate::http::Request;
+    use crate::http::*;
     use crate::test::TestResponseExt;
     use hyper::http::Request as HTTPRequest;
     use hyper::http::StatusCode;

@@ -1,8 +1,7 @@
 mod uri;
 
 use self::uri::absolute_uri;
-use crate::http::{Request, Result, bad_request, redirect_to};
-use hyper::Uri;
+use crate::http::*;
 use serde::Deserialize;
 use std::cmp::min;
 

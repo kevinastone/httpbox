@@ -1,4 +1,4 @@
-use crate::http::{Request, Result, StatusCode, bad_request, response};
+use crate::http::*;
 
 pub async fn status_code(req: Request) -> Result {
     let status = req.param::<StatusCode>("code").ok_or_else(bad_request)?;

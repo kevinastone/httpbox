@@ -1,5 +1,5 @@
 use crate::headers::{CacheControl, IfModifiedSince, IfNoneMatch};
-use crate::http::{Request, Result, StatusCode, bad_request, response};
+use crate::http::*;
 use std::time::Duration;
 
 pub async fn cache(req: Request) -> Result {
