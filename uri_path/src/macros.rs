@@ -10,22 +10,30 @@ macro_rules! path {
         ))
     };
     (@segment [$i:ident ~ $re:literal]) => {{
+        #[cfg(not(feature = "regex"))]
+        compile_error!("regex pattern matching in `path!` requires the `regex` feature on `uri_path`");
+
+        #[cfg(feature = "regex")]
         $crate::PathSegment::Dynamic($crate::PathParam::new(
             stringify!($i),
-            $crate::PathToken::Regex($crate::regex::Regex::new($re).unwrap()),
+            $crate::PathToken::Regex((*$crate::lazy_regex::regex!($re)).clone()),
         ))
     }};
 
     // Catch-all patterns
-    (@collect [$($acc:expr,)*], * [$i:ident ~ $re:literal]) => {
+    (@collect [$($acc:expr,)*], * [$i:ident ~ $re:literal]) => {{
+        #[cfg(not(feature = "regex"))]
+        compile_error!("regex pattern matching in `path!` requires the `regex` feature on `uri_path`");
+
+        #[cfg(feature = "regex")]
         vec![
             $($acc,)*
             $crate::PathSegment::Dynamic($crate::PathParam::catch_all(
                 stringify!($i),
-                $crate::PathToken::Regex($crate::regex::Regex::new($re).unwrap()),
+                $crate::PathToken::Regex((*$crate::lazy_regex::regex!($re)).clone()),
             ))
         ]
-    };
+    }};
     (@collect [$($acc:expr,)*], * [$i:ident ~ $re:literal] / $($rest:tt)*) => {
         compile_error!("catch-all segment (*[" stringify!($i) " ~ ...]) must be the last segment in path");
     };

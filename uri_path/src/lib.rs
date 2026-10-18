@@ -5,7 +5,8 @@ pub mod router;
 pub use self::router::Router;
 
 #[cfg(feature = "regex")]
-pub use regex;
+#[doc(hidden)]
+pub use lazy_regex;
 use serde::Deserialize;
 use serde::de::IntoDeserializer;
 use std::collections::{BTreeMap, HashMap};
