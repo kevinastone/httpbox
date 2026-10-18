@@ -7,7 +7,7 @@ pub use self::router::Router;
 #[cfg(feature = "regex")]
 #[doc(hidden)]
 pub use lazy_regex;
-use serde::Deserialize;
+#[cfg(feature = "serde")]
 use serde::de::IntoDeserializer;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt;
@@ -18,9 +18,10 @@ pub(crate) fn segmented(str: &str) -> impl Iterator<Item = &str> {
     str.split('/').filter(|seg| !seg.is_empty())
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Default, Deserialize)]
-#[serde(transparent)]
-#[serde(bound(deserialize = "'de: 'static"))]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(transparent))]
+#[cfg_attr(feature = "serde", serde(bound(deserialize = "'de: 'static")))]
 pub struct PathMatch(HashMap<&'static str, String>);
 
 impl PathMatch {
@@ -49,6 +50,7 @@ impl DerefMut for PathMatch {
     }
 }
 
+#[cfg(feature = "serde")]
 impl<'de, E> IntoDeserializer<'de, E> for PathMatch
 where
     E: serde::de::Error,
