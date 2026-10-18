@@ -1,4 +1,4 @@
-use crate::{Path, PathMatch, PathParam, PathSegment, segmented};
+use crate::{Path, PathMatch, PathParam, PathSegment};
 use std::collections::HashMap;
 
 /// Result of a successful router match containing a reference to the matched
@@ -81,22 +81,21 @@ impl<T> Router<T> {
 
     /// Matches a request URI path against the registered routes.
     pub fn at<'a>(&'a self, path: &str) -> Option<Match<'a, T>> {
-        let segments: Vec<&str> = segmented(path).collect();
-        let (value, params) = self.match_node(&self.root, &segments)?;
+        let trimmed = path.trim_matches('/');
+        let (value, params) = self.match_node(&self.root, trimmed)?;
         Some(Match { value, params })
     }
 
     fn match_node<'a>(
         &'a self,
         node: &'a Node<T>,
-        segments: &[&str],
+        path: &str,
     ) -> Option<(&'a T, PathMatch)> {
-        if segments.is_empty() {
+        if path.is_empty() {
             return node.value.as_ref().map(|val| (val, PathMatch::new()));
         }
 
-        let first = segments[0];
-        let rest = &segments[1..];
+        let (first, rest) = path.split_once('/').unwrap_or((path, ""));
 
         // 1. Exact literal match (highest precedence)
         if let Some(child) = node.literals.get(first)
@@ -116,13 +115,12 @@ impl<T> Router<T> {
         }
 
         // 3. Catch-all tail match (lowest precedence)
-        if let Some((param, val)) = &node.catch_all {
-            let joined = segments.join("/");
-            if param.token().matches(&joined) {
-                let mut params = PathMatch::new();
-                params.insert(param.name(), joined);
-                return Some((val, params));
-            }
+        if let Some((param, val)) = &node.catch_all
+            && param.token().matches(path)
+        {
+            let mut params = PathMatch::new();
+            params.insert(param.name(), path.to_owned());
+            return Some((val, params));
         }
 
         None

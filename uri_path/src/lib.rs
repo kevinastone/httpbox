@@ -4,7 +4,6 @@ pub mod router;
 
 pub use self::router::Router;
 
-use itertools::Itertools;
 #[cfg(feature = "regex")]
 pub use regex;
 use serde::Deserialize;
@@ -126,11 +125,10 @@ impl Deref for Path {
 
 impl fmt::Display for Path {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "/{}",
-            self.iter().format_with("/", |segment, f| f(segment))
-        )
+        for segment in self.iter() {
+            write!(f, "/{segment}")?;
+        }
+        Ok(())
     }
 }
 
@@ -283,22 +281,24 @@ impl<'a> PathAndQuery<'a> {
 
 impl fmt::Display for PathAndQuery<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            self.segments
-                .iter()
-                .format_with("/", |segment, f| f(segment))
-        )?;
+        let mut first = true;
+        for segment in &self.segments {
+            if first {
+                write!(f, "{segment}")?;
+                first = false;
+            } else {
+                write!(f, "/{segment}")?;
+            }
+        }
 
-        if !self.query.is_empty() {
-            write!(
-                f,
-                "?{}",
-                self.query
-                    .iter()
-                    .format_with("&", |(k, v), f| f(&format_args!("{k}={v}")))
-            )?;
+        let mut first = true;
+        for (k, v) in &self.query {
+            if first {
+                write!(f, "?{k}={v}")?;
+                first = false;
+            } else {
+                write!(f, "&{k}={v}")?;
+            }
         }
 
         Ok(())
