@@ -8,7 +8,7 @@ members = [
 
 [workspace.package]
 edition = "2024"
-rust-version = "1.94.0"
+rust-version = "1.100.0"
 repository = "https://github.com/kevinastone/httpbox"
 
 [workspace.dependencies]

@@ -2,11 +2,10 @@ use crate::http::Body;
 pub(crate) use chunk_bytes::*;
 use futures::prelude::*;
 use hyper::body::Bytes;
-use std::convert::Infallible;
 
 pub(crate) fn ok_stream<T, S: Stream<Item = T>>(
     stream: S,
-) -> impl Stream<Item = Result<T, Infallible>> {
+) -> impl Stream<Item = Result<T, !>> {
     stream.map(Ok)
 }
 
