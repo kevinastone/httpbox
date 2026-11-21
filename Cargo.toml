@@ -12,13 +12,13 @@ rust-version = "1.100.0"
 repository = "https://github.com/kevinastone/httpbox"
 
 [workspace.dependencies]
-futures = "^0.3.1"
-http-body-util = "^0.1.0"
-hyper = "^1.0"
-itertools = "^0.14.0"
-proptest = "^1.6"
-serde = { version = "^1.0.98", features = ["derive"] }
-tokio = "^1.50.0"
+futures = "^0.3.34"
+http-body-util = "^0.1.5"
+hyper = "^1.12"
+itertools = "^0.15.0"
+proptest = "^1.12"
+serde = { version = "^1.0.229", features = ["derive"] }
+tokio = "^1.54.1"
 
 # Internal workspace crates
 chunk_bytes = { path = "chunk_bytes" }
@@ -37,37 +37,37 @@ name = "httpbox"
 path = "src/main.rs"
 
 [dependencies]
-anyhow = "^1.0.27"
-askama = "^0.14"
+anyhow = "^1.0.104"
+askama = "^0.16"
 chunk_bytes = { workspace = true }
-clap = { version = "^4.0.29", features = ["derive", "env"] }
-clap_complete = "^4.0"
-cookie = "^0.18.1"
+clap = { version = "^4.6.9", features = ["derive", "env"] }
+clap_complete = "^4.6"
+cookie = "^0.18.2"
 futures = { workspace = true }
 headers = "^0.4"
 http-body-util = { workspace = true }
 hyper = { workspace = true, features = ["full"] }
 hyper_body = { workspace = true }
-hyper-util = { version = "^0.1.20", features = [
+hyper-util = { version = "^0.1.21", features = [
   "server",
   "server-auto",
   "tokio",
 ] }
 itertools = { workspace = true }
-mime = "^0.3.13"
-rand = { version = "^0.9" }
-rust-embed = { version = "8.12.0", features = ["mime-guess"] }
+mime = "^0.3.18"
+rand = { version = "^0.10" }
+rust-embed = { version = "8.14.0", features = ["mime-guess"] }
 serde = { workspace = true }
 serde_urlencoded = "^0.7"
 tokio = { workspace = true, features = ["full"] }
-tokio-stream = { version = "^0.1.18", features = ["net"] }
+tokio-stream = { version = "^0.1.19", features = ["net"] }
 tokio-util = { version = "^0.7", features = ["rt"] }
-tower = { version = "^0.5.2", features = ["full"] }
-tower-http = { version = "^0.6.8", features = ["timeout", "trace"] }
+tower = { version = "^0.5.3", features = ["full"] }
+tower-http = { version = "^0.7.1", features = ["timeout", "trace"] }
 tracing = "^0.1"
 tracing-subscriber = { version = "^0.3", features = ["env-filter"] }
 uri_path = { workspace = true }
-url = "^2.2.1"
+url = "^2.5.9"
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }

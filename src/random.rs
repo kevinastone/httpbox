@@ -1,26 +1,27 @@
+use rand::make_rng;
 use rand::prelude::*;
-use rand::rngs::SmallRng as Rng;
 
-fn to_bytes(val: u32) -> <Rng as SeedableRng>::Seed {
+fn to_bytes(val: u32) -> <SmallRng as SeedableRng>::Seed {
     let slice = val.to_le_bytes();
 
-    let mut seed = <Rng as SeedableRng>::Seed::default();
+    let mut seed = <SmallRng as SeedableRng>::Seed::default();
     for chunk in seed.as_mut().chunks_mut(4) {
         chunk.copy_from_slice(&slice);
     }
     seed
 }
 
-pub fn rng(seed: Option<u32>) -> Rng {
+pub fn rng(seed: Option<u32>) -> SmallRng {
     match seed {
-        Some(seed) => Rng::from_seed(to_bytes(seed)),
-        None => Rng::from_os_rng(),
+        Some(seed) => SmallRng::from_seed(to_bytes(seed)),
+        None => make_rng(),
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::Rng;
 
     #[test]
     fn rng_no_seed() {

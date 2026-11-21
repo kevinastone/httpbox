@@ -3,7 +3,7 @@ use crate::headers::ContentType;
 use crate::http::*;
 use crate::random::rng;
 use futures::prelude::*;
-use rand::Rng;
+use rand::prelude::*;
 use serde::Deserialize;
 use std::cmp::min;
 use std::iter::ExactSizeIterator;
